@@ -17,13 +17,13 @@ export default async function handler(req, res) {
 
   try {
     // Configura o formidable
-    const form = new IncomingForm({ keepExtensions: true });
+    const form = new IncomingForm({
+      keepExtensions: true,
+    });
 
     // Processa o upload
     const [fields, files] = await form.parse(req);
-
-    // Acessa o arquivo enviado
-    const file = files.file[0]; // Como o arquivo está dentro de um array
+    const file = files.file[0];
 
     if (!file) {
       return res.status(400).json({ error: "Nenhum arquivo enviado" });
@@ -33,21 +33,20 @@ export default async function handler(req, res) {
     const uploadDir = path.join(process.cwd(), "storage", "uploads");
 
     // Verificando se a pasta existe, se não, criando
-    try {
-      await fs.access(uploadDir);
-    } catch (err) {
-      await fs.mkdir(uploadDir, { recursive: true });
-    }
+    await fs.mkdir(uploadDir, { recursive: true });
 
-    // Define o caminho final para o arquivo no diretório uploads
+    // Caminho final para o arquivo no diretório de uploads
     const uploadPath = path.join(uploadDir, file.newFilename);
 
-    // Move o arquivo para o diretório de uploads
-    await fs.rename(file.filepath, uploadPath);
+    // Usando copyFile ao invés de rename, para evitar o erro EXDEV
+    await fs.copyFile(file.filepath, uploadPath);
+
+    // Opcional: Remover o arquivo temporário após a cópia
+    await fs.unlink(file.filepath);
 
     res.status(200).json({
       message: "Upload realizado com sucesso",
-      filename: file.originalFilename,
+      filename: file.newFilename,
       path: uploadPath,
     });
   } catch (error) {
