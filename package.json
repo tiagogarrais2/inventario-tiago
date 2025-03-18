@@ -11,7 +11,8 @@
   },
   "author": "Tiago das Graças Arrais",
   "dependencies": {
-    "next": "^13.1.6",
+    "formidable": "^3.5.2",
+    "next": "^15.2.2",
     "next-auth": "^4.24.11",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
