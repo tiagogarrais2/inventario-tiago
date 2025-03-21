@@ -3,16 +3,20 @@
   "version": "1.0.0",
   "description": "Sistema web para criação de inventários.",
   "scripts": {
-    "dev": "next dev",
+    "dev": "npm run services:up && next dev",
+    "services:up": "docker compose -f infra/compose.yaml up -d",
+    "services:stop": "docker compose -f infra/compose.yaml stop",
+    "services:down": "docker compose -f infra/compose.yaml down",
     "lint:check": "prettier-check .",
     "link:fix": "prettier-write .",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watchAll"
   },
   "author": "Tiago das Graças Arrais",
   "dependencies": {
     "next": "^15.2.2",
     "next-auth": "^4.24.11",
+    "pg": "^8.14.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
