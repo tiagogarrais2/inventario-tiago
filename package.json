@@ -1,27 +1,24 @@
 {
-  "name": "inventario",
-  "version": "1.0.0",
-  "description": "Sistema web para criação de inventários.",
+  "name": "Inventario",
+  "version": "0.1.0",
+  "private": true,
   "scripts": {
-    "dev": "npm run services:up && next dev",
-    "services:up": "docker compose -f infra/compose.yaml up -d",
-    "services:stop": "docker compose -f infra/compose.yaml stop",
-    "services:down": "docker compose -f infra/compose.yaml down",
-    "lint:check": "prettier-check .",
-    "link:fix": "prettier-write .",
-    "test": "jest",
-    "test:watch": "jest --watchAll"
+    "dev": "next dev --turbopack",
+    "build": "next build --turbopack",
+    "start": "next start",
+    "lint": "eslint"
   },
-  "author": "Tiago das Graças Arrais",
   "dependencies": {
-    "next": "^15.2.2",
-    "next-auth": "^4.24.11",
-    "pg": "^8.14.1",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "next": "15.5.3",
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
   },
   "devDependencies": {
-    "jest": "^29.6.2",
-    "prettier": "^3.5.3"
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "eslint": "^9",
+    "eslint-config-next": "15.5.3",
+    "prettier": "^3.6.2",
+    "tailwindcss": "^4"
   }
 }
