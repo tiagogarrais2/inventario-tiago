@@ -12,7 +12,10 @@ export async function POST(request) {
   const responsavel = formData.get("responsavel");
 
   if (!file || typeof file === "string" || !responsavel) {
-    return NextResponse.json({ error: "Arquivo ou responsável não enviado." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Arquivo ou responsável não enviado." },
+      { status: 400 }
+    );
   }
 
   const bytes = await file.arrayBuffer();
@@ -20,12 +23,12 @@ export async function POST(request) {
 
   // Cria nome da pasta: timestamp_nome
   const timestamp = Date.now();
-  const nomePasta = `${timestamp}_${sanitizeName(responsavel)}`;
-  const dir = path.join(process.cwd(), "inventarios", nomePasta);
+  const nomePasta = `inventario-${timestamp}-${sanitizeName(responsavel)}`;
+  const dir = path.join(process.cwd(), "public", nomePasta);
   await mkdir(dir, { recursive: true });
 
   // Salva o arquivo JSON recebido
-  const jsonPath = path.join(dir, file.name);
+  const jsonPath = path.join(dir, "inventario.json");
   await writeFile(jsonPath, buffer);
 
   // Lê e processa o conteúdo JSON
@@ -33,9 +36,12 @@ export async function POST(request) {
   try {
     records = JSON.parse(buffer.toString("utf-8"));
   } catch (err) {
-    return NextResponse.json({
-      error: "Erro ao processar JSON: " + err.message
-    }, { status: 400 });
+    return NextResponse.json(
+      {
+        error: "Erro ao processar JSON: " + err.message,
+      },
+      { status: 400 }
+    );
   }
 
   // Extrai e salva cabeçalhos
@@ -45,7 +51,7 @@ export async function POST(request) {
 
   // Extrai e salva lista de salas únicas
   // Supondo que o campo seja chamado "Sala" (ajuste se necessário)
-  const salaSet = new Set(records.map(r => r.SALA).filter(Boolean));
+  const salaSet = new Set(records.map((r) => r.SALA).filter(Boolean));
   const salasPath = path.join(dir, "salas.json");
   await writeFile(salasPath, JSON.stringify([...salaSet], null, 2));
 

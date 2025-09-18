@@ -1,15 +1,15 @@
-"use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
-export default function Executar() {
+export default function Listar({ atualizar }) {
   const [inventarios, setInventarios] = useState([]);
 
   useEffect(() => {
-    fetch("/api/inventarios")
+    fetch("/api/listar")
       .then((res) => res.json())
-      .then(setInventarios)
+      .then((data) => setInventarios(data.pastas || []))
       .catch(() => setInventarios([]));
-  }, []);
+  }, [atualizar]); // <- importante!
 
   return (
     <div>
@@ -17,7 +17,9 @@ export default function Executar() {
       <ul>
         {inventarios.length === 0 && <li>Nenhum inventário disponível.</li>}
         {inventarios.map((nome) => (
-          <li key={nome}>{nome}</li>
+          <li key={nome}>
+            <Link href={`/inventario/${nome}`}>{nome}</Link>
+          </li>
         ))}
       </ul>
     </div>

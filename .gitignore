@@ -1,4 +1,6 @@
 .next
 .env.development
 node_modules
-inventarios
+public/*
+# Permite o rastreamento da pasta public em si
+!public/.gitkeep
