@@ -1,11 +1,13 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation"; // Importa o roteador
 
 export default function InventarioPage({ params }) {
   const { nome } = params;
   const [valor, setValor] = useState("");
   const [resultado, setResultado] = useState(null);
   const [erro, setErro] = useState("");
+  const router = useRouter(); // Inicializa o roteador
 
   async function buscarInventario() {
     setErro("");
@@ -14,16 +16,15 @@ export default function InventarioPage({ params }) {
 
     try {
       const res = await fetch(`/${nome}/inventario.json`);
-      if (!res.ok) throw new Error("Item não encontrado.");
+      if (!res.ok) throw new Error("Inventário não encontrado.");
       const dados = await res.json();
 
-      // Procura pelo campo numero, tombo ou tombamento
       const achado = dados.find((item) => String(item.NUMERO) === valor);
 
       if (achado) {
         setResultado(achado);
       } else {
-        setErro("Item não encontrado.");
+        setErro("Item não encontrado."); // Mensagem de erro mais curta
       }
     } catch (e) {
       setErro("Erro ao buscar o item.");
@@ -43,6 +44,11 @@ export default function InventarioPage({ params }) {
       buscarInventario();
     }
   }
+  
+  // Função para redirecionar para a página de cadastro
+  function handleCadastrar() {
+    router.push(`/cadastrar?nome=${nome}&numero=${valor}`);
+  }
 
   return (
     <div>
@@ -55,7 +61,15 @@ export default function InventarioPage({ params }) {
         placeholder="Digite o número dotombo"
       />
       <button onClick={handleConfirmar}>Confirmar</button>
+      
+      {/* Exibe o erro e, se for "Item não encontrado", mostra o botão de cadastro */}
       {erro && <p style={{ color: "red" }}>{erro}</p>}
+      {erro === "Item não encontrado." && (
+        <button onClick={handleCadastrar} style={{ marginTop: 10 }}>
+          Cadastrar item
+        </button>
+      )}
+
       {resultado && (
         <pre style={{ textAlign: "left", background: "#eee", padding: 10 }}>
           {JSON.stringify(resultado, null, 2)}
