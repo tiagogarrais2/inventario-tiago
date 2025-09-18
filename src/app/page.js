@@ -1,5 +1,6 @@
 "use client"
 import { useRef, useState, useEffect } from "react";
+import Executar from "./components/Executar";
 
 export default function Home() {
   const [message, setMessage] = useState("");
@@ -73,6 +74,8 @@ export default function Home() {
         </form>
         {message && <p>{message}</p>}
       </div>
+
+      <Executar/>
 
       <div>
         <h2>Inventários recebidos</h2>
