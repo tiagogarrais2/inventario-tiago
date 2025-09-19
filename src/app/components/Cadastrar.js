@@ -3,29 +3,97 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 
+// Lista fixa de estados de conservação
+const ESTADOS_CONSERVACAO = [
+  "Bom",
+  "Regular",
+  "Ocioso",
+  "Recuperável",
+  "Antieconômico",
+];
+
+// Lista fixa de status
+const STATUS_OPTIONS = [
+  "Ativo",
+  "Baixado",
+  "Em Uso",
+  "Ocioso",
+  "Em Manutenção",
+  "Recuperável",
+  "Em Desfazimento",
+  "Extraviado/Desaparecido",
+];
+
 export default function Cadastrar() {
   const searchParams = useSearchParams();
-  
-  // Estados para gerenciar os dados do formulário
-  const [formData, setFormData] = useState({
-    numero: "",
-    descricao: "",
-    responsavel: "",
-    // Adicione outros campos aqui conforme a sua necessidade
-  });
 
-  // Preenche o formulário com o número passado na URL ao carregar a página
+  const [cabecalho, setCabecalho] = useState(null);
+  const [salasOptions, setSalasOptions] = useState([]);
+  const [formData, setFormData] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   useEffect(() => {
-    const numero = searchParams.get("numero");
-    if (numero) {
-      setFormData((prevData) => ({
-        ...prevData,
-        numero,
-      }));
+    async function fetchFormFields() {
+      const nome = searchParams.get("nome");
+      const numero = searchParams.get("numero");
+
+      if (!nome) {
+        setError("Parâmetro 'nome' ausente na URL.");
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const [cabecalhoRes, salasRes] = await Promise.all([
+          fetch(`/${nome}/cabecalhos.json`),
+          fetch(`/${nome}/salas.json`),
+        ]);
+
+        if (!cabecalhoRes.ok) {
+          throw new Error("Arquivo de cabeçalho não encontrado.");
+        }
+        if (!salasRes.ok) {
+          throw new Error("Arquivo de salas não encontrado ou inválido.");
+        }
+
+        let cabecalhoData = await cabecalhoRes.json();
+        const salasData = await salasRes.json();
+
+        cabecalhoData = [
+          "DATA DO INVENTARIO",
+          "SERVIDOR(A) INVENTARIANTE",
+          ...cabecalhoData,
+        ];
+
+        salasData.sort();
+
+        const initialData = {};
+        cabecalhoData.forEach((field) => {
+          initialData[field] = "";
+        });
+
+        const today = new Date().toISOString().split("T")[0];
+        initialData["DATA DO INVENTARIO"] = today;
+
+        if (numero) {
+          initialData["NUMERO"] = numero;
+        }
+
+        setCabecalho(cabecalhoData);
+        setSalasOptions(salasData);
+        setFormData(initialData);
+      } catch (e) {
+        console.error("Erro ao carregar dados do formulário:", e);
+        setError("Erro ao carregar o formulário. Por favor, tente novamente.");
+      } finally {
+        setIsLoading(false);
+      }
     }
+
+    fetchFormFields();
   }, [searchParams]);
 
-  // Função para lidar com a mudança nos campos do formulário
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -34,61 +102,122 @@ export default function Cadastrar() {
     }));
   };
 
-  // Função para lidar com o envio do formulário
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("Dados a serem cadastrados:", formData);
-    
-    // Aqui você faria a chamada para a sua API
-    // Exemplo: const res = await fetch("/api/cadastrar", {
-    //   method: "POST",
-    //   body: JSON.stringify(formData),
-    // });
-    
-    // Lógica para lidar com a resposta da API (sucesso/erro)
   };
+
+  if (isLoading) {
+    return <div style={{ padding: "20px" }}>Carregando formulário...</div>;
+  }
+
+  if (error) {
+    return <div style={{ padding: "20px", color: "red" }}>{error}</div>;
+  }
 
   return (
     <div style={{ padding: "20px" }}>
       <h1>Cadastrar Item de Inventário</h1>
       <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: "15px" }}>
-          <label htmlFor="numero">Número do Tombo:</label>
-          <input
-            type="text"
-            id="numero"
-            name="numero"
-            value={formData.numero}
-            onChange={handleChange}
-            readOnly // Torna o campo somente leitura para evitar que seja alterado
-            style={{ marginLeft: "10px", padding: "5px" }}
-          />
-        </div>
-        <div style={{ marginBottom: "15px" }}>
-          <label htmlFor="descricao">Descrição:</label>
-          <input
-            type="text"
-            id="descricao"
-            name="descricao"
-            value={formData.descricao}
-            onChange={handleChange}
-            style={{ marginLeft: "10px", padding: "5px" }}
-          />
-        </div>
-        <div style={{ marginBottom: "15px" }}>
-          <label htmlFor="responsavel">Pessoa Responsável:</label>
-          <input
-            type="text"
-            id="responsavel"
-            name="responsavel"
-            value={formData.responsavel}
-            onChange={handleChange}
-            style={{ marginLeft: "10px", padding: "5px" }}
-          />
-        </div>
-        
-        {/* Adicione outros campos de input aqui para o seu formulário */}
-        
+        {cabecalho?.map((fieldName) => {
+          if (fieldName === "#") {
+            return null;
+          }
+
+          const isNumero = fieldName === "NUMERO";
+          const isEstadoConservacao = fieldName === "ESTADO DE CONSERVAÇÃO";
+          const isSalaField = fieldName === "SALA";
+          const isDataInventario = fieldName === "DATA DO INVENTARIO";
+          const isServidorInventariante =
+            fieldName === "SERVIDOR(A) INVENTARIANTE";
+          const isStatusField = fieldName === "STATUS";
+
+          return (
+            <div key={fieldName} style={{ marginBottom: "15px" }}>
+              <label htmlFor={fieldName}>{fieldName}:</label>
+              {isEstadoConservacao ? (
+                <select
+                  id={fieldName}
+                  name={fieldName}
+                  value={formData[fieldName] || ""}
+                  onChange={handleChange}
+                  required
+                  style={{ marginLeft: "10px", padding: "5px" }}
+                >
+                  <option value="">Selecione uma opção</option>
+                  {ESTADOS_CONSERVACAO.map((estado) => (
+                    <option key={estado} value={estado}>
+                      {estado}
+                    </option>
+                  ))}
+                </select>
+              ) : isSalaField ? (
+                <select
+                  id={fieldName}
+                  name={fieldName}
+                  value={formData[fieldName] || ""}
+                  onChange={handleChange}
+                  required
+                  style={{ marginLeft: "10px", padding: "5px" }}
+                >
+                  <option value="">Selecione uma sala</option>
+                  {salasOptions.map((sala) => (
+                    <option key={sala} value={sala}>
+                      {sala}
+                    </option>
+                  ))}
+                </select>
+              ) : isDataInventario ? (
+                <input
+                  type="date"
+                  id={fieldName}
+                  name={fieldName}
+                  value={formData[fieldName] || ""}
+                  onChange={handleChange}
+                  readOnly
+                  required
+                  style={{ marginLeft: "10px", padding: "5px" }}
+                />
+              ) : isServidorInventariante ? (
+                <input
+                  type="text"
+                  id={fieldName}
+                  name={fieldName}
+                  value={formData[fieldName] || ""}
+                  onChange={handleChange}
+                  required
+                  style={{ marginLeft: "10px", padding: "5px" }}
+                />
+              ) : isStatusField ? (
+                <select
+                  id={fieldName}
+                  name={fieldName}
+                  value={formData[fieldName] || ""}
+                  onChange={handleChange}
+                  required
+                  style={{ marginLeft: "10px", padding: "5px" }}
+                >
+                  <option value="">Selecione um status</option>
+                  {STATUS_OPTIONS.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  id={fieldName}
+                  name={fieldName}
+                  value={formData[fieldName] || ""}
+                  onChange={handleChange}
+                  readOnly={isNumero}
+                  style={{ marginLeft: "10px", padding: "5px" }}
+                />
+              )}
+            </div>
+          );
+        })}
         <button type="submit" style={{ padding: "10px 20px" }}>
           Salvar Cadastro
         </button>

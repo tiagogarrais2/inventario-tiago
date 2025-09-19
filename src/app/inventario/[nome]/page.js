@@ -44,7 +44,7 @@ export default function InventarioPage({ params }) {
       buscarInventario();
     }
   }
-  
+
   // Função para redirecionar para a página de cadastro
   function handleCadastrar() {
     router.push(`/cadastrar?nome=${nome}&numero=${valor}`);
@@ -58,10 +58,10 @@ export default function InventarioPage({ params }) {
         value={valor}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
-        placeholder="Digite o número dotombo"
+        placeholder="Digite o número do tombo"
       />
       <button onClick={handleConfirmar}>Confirmar</button>
-      
+
       {/* Exibe o erro e, se for "Item não encontrado", mostra o botão de cadastro */}
       {erro && <p style={{ color: "red" }}>{erro}</p>}
       {erro === "Item não encontrado." && (
