@@ -38,7 +38,7 @@ export default function Criar({ onUploadConcluido }) {
         <h2>Criar um inventário</h2>
         <form onSubmit={handleUpload} encType="multipart/form-data">
           <label>
-            Nome da pessoa responsável:
+            Nome do(a) Servidor(a) responsável pelo envio do arquivo:
             <input
               type="text"
               value={responsavel}
@@ -46,10 +46,15 @@ export default function Criar({ onUploadConcluido }) {
               required
             />
           </label>
-
+          <br />
           <label>
-            Selecione um arquivo .json:
-            <input type="file" accept=".json" ref={fileInputRef} required />
+            Selecione um arquivo .json ou .csv:
+            <input
+              type="file"
+              accept=".json,.csv"
+              ref={fileInputRef}
+              required
+            />{" "}
           </label>
 
           <button type="submit">Enviar</button>
