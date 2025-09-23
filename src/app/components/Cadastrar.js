@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 
 // Lista fixa de estados de conservação
 const ESTADOS_CONSERVACAO = [
@@ -26,6 +26,7 @@ const STATUS_OPTIONS = [
 
 export default function Cadastrar() {
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   const [cabecalho, setCabecalho] = useState(null);
   const [salasOptions, setSalasOptions] = useState([]);
@@ -104,7 +105,24 @@ export default function Cadastrar() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Dados a serem cadastrados:", formData);
+    const nome = searchParams.get("nome");
+
+    try {
+      const res = await fetch('/api/add-inventario', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome, ...formData }),
+      });
+
+      if (res.ok) {
+        alert("Item cadastrado com sucesso!");
+        router.push(`/inventario/${nome}`); // Redireciona de volta
+      } else {
+        alert("Erro ao cadastrar.");
+      }
+    } catch (error) {
+      alert("Erro ao cadastrar.");
+    }
   };
 
   if (isLoading) {
