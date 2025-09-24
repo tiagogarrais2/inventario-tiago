@@ -12,8 +12,9 @@ export default function Home() {
 
   return (
     <div>
-      <Criar onUploadConcluido={handleUploadConcluido} />
       <Listar atualizar={atualizar} />
+      <hr />
+      <Criar onUploadConcluido={handleUploadConcluido} />
     </div>
   );
 }

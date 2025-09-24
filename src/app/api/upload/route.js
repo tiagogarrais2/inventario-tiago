@@ -16,7 +16,7 @@ export async function POST(request) {
   if (!file || typeof file === "string" || !responsavel) {
     return NextResponse.json(
       { error: "Arquivo ou responsável não enviado." },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -42,7 +42,7 @@ export async function POST(request) {
         {
           error: "Erro ao processar JSON. Verifique a formatação.",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
   } else if (fileName.endsWith(".csv")) {
@@ -62,14 +62,14 @@ export async function POST(request) {
         {
           error: "Erro ao processar CSV. Verifique o formato.",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
   } else {
     // Se o tipo não for suportado
     return NextResponse.json(
       { error: "Tipo de arquivo não suportado. Use .csv ou .json." },
-      { status: 400 }
+      { status: 400 },
     );
   }
   // --- Fim da lógica de processamento de arquivo ---
@@ -90,7 +90,7 @@ export async function POST(request) {
 
   // Extrai e salva lista única de setores
   const setorSet = new Set(
-    records.map((r) => r["SETOR DO RESPONSÁVEL"]).filter(Boolean)
+    records.map((r) => r["SETOR DO RESPONSÁVEL"]).filter(Boolean),
   );
   const setoresPath = path.join(dir, "setores.json");
   await writeFile(setoresPath, JSON.stringify([...setorSet], null, 2));

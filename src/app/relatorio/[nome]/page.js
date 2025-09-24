@@ -1,8 +1,8 @@
 "use client";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 
 export default function RelatorioPage({ params }) {
-  const { nome } = params;
+  const { nome } = React.use(params); // Desembrulha params com React.use()
   const [itensPorSala, setItensPorSala] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -37,7 +37,8 @@ export default function RelatorioPage({ params }) {
 
   return (
     <div style={{ padding: "20px" }}>
-      <h1>Relatório de Inventário - {nome}</h1>
+      <h2>Relatório Geral</h2>
+      <h2>{nome}</h2>
       {Object.keys(itensPorSala).map((sala) => (
         <div key={sala} style={{ marginBottom: "30px" }}>
           <h2>Sala: {sala}</h2>
@@ -56,8 +57,12 @@ export default function RelatorioPage({ params }) {
                 <strong>Número:</strong> {item.NUMERO} <br />
                 <strong>Descrição:</strong> {item.DESCRICAO || "N/A"} <br />
                 <strong>Status:</strong> {item.status || "N/A"} <br />
-                <strong>Inventariante:</strong> {item.inventariante || "N/A"} <br />
-                <strong>Data do Inventário:</strong> {item.dataInventario ? new Date(item.dataInventario).toLocaleDateString() : "Não inventariado"}
+                <strong>Inventariante:</strong> {item.inventariante || "N/A"}{" "}
+                <br />
+                <strong>Data do Inventário:</strong>{" "}
+                {item.dataInventario
+                  ? new Date(item.dataInventario).toLocaleDateString()
+                  : "Não inventariado"}
               </li>
             ))}
           </ul>

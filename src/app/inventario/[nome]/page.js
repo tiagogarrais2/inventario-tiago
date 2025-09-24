@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 export default function InventarioPage({ params }) {
@@ -11,13 +11,23 @@ export default function InventarioPage({ params }) {
   const [salaSelecionada, setSalaSelecionada] = useState("");
   const [inventariante, setInventariante] = useState("");
   const [statusSelecionado, setStatusSelecionado] = useState("Em Uso");
+  const [ultimoTombo, setUltimoTombo] = useState("");
+  const [notificacao, setNotificacao] = useState(""); // Novo estado para notificações persistentes
   const router = useRouter();
+  const inputRef = useRef(null);
 
   useEffect(() => {
     // Carrega inventariante do localStorage
     const inventarianteSalvo = localStorage.getItem("inventariante");
     if (inventarianteSalvo) {
       setInventariante(inventarianteSalvo);
+    }
+
+    // Carrega notificação persistente do localStorage
+    const notificacaoSalva = localStorage.getItem("notificacao");
+    if (notificacaoSalva) {
+      setNotificacao(notificacaoSalva);
+      localStorage.removeItem("notificacao"); // Remove após carregar
     }
 
     async function fetchSalas() {
@@ -38,6 +48,11 @@ export default function InventarioPage({ params }) {
       }
     }
     fetchSalas();
+
+    // Foca no input do tombo após carregamento
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
   }, [nome]);
 
   function handleSalaChange(e) {
@@ -75,17 +90,22 @@ export default function InventarioPage({ params }) {
   async function confirmarEncontrado() {
     if (!resultado || !inventariante) return;
 
-    const salaOriginal = resultado.SALA || ""; // Assume que o campo é SALA no objeto
-    const confirmarSala = salaSelecionada !== salaOriginal ? window.confirm(`A sala selecionada (${salaSelecionada}) difere da sala original (${salaOriginal}). Confirmar?`) : true;
+    const salaOriginal = resultado.SALA || "";
+    const confirmarSala =
+      salaSelecionada !== salaOriginal
+        ? window.confirm(
+            `A sala selecionada (${salaSelecionada}) difere da sala original (${salaOriginal}). Confirmar?`
+          )
+        : true;
 
     if (!confirmarSala) return;
 
     const dataInventario = new Date().toISOString();
 
     try {
-      const res = await fetch('/api/update-inventario', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/update-inventario", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           nome,
           numero: valor,
@@ -97,14 +117,18 @@ export default function InventarioPage({ params }) {
       });
 
       if (res.ok) {
-        alert("Item confirmado com sucesso!");
+        setUltimoTombo(valor); // Define o último tombo inventariado
         setResultado(null); // Limpa o resultado após confirmação
         setValor("");
+        // Mantém o foco no input do tombo
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
       } else {
-        alert("Erro ao confirmar.");
+        alert("Erro ao confirmar."); // Mantém alert para erro, ou substitua se quiser
       }
     } catch (error) {
-      alert("Erro ao confirmar.");
+      alert("Erro ao confirmar."); // Mantém alert para erro
     }
   }
 
@@ -126,26 +150,91 @@ export default function InventarioPage({ params }) {
     router.push(`/cadastrar?nome=${nome}&numero=${valor}`);
   }
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const nome = searchParams.get("nome");
+
+    try {
+      const res = await fetch("/api/add-inventario", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nome, ...formData }),
+      });
+
+      if (res.ok) {
+        localStorage.setItem(
+          "notificacao",
+          `O tombo ${formData["NUMERO"]} foi cadastrado!`
+        ); // Salva notificação com o número
+        router.push(`/inventario/${nome}`); // Redireciona de volta
+      } else {
+        alert("Erro ao cadastrar.");
+      }
+    } catch (error) {
+      alert("Erro ao cadastrar.");
+    }
+  };
+
   return (
     <div>
-      <h1>{nome}</h1>
-      <a href={`/relatorio/${nome}`} style={{ display: "block", marginBottom: 10 }}>
-        Ver Relatório
-      </a>
+      {/* Notificação fixa e centralizada */}
+      {notificacao && (
+        <div
+          style={{
+            position: "fixed",
+            top: "10px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            padding: "10px 20px",
+            backgroundColor: "#d4edda",
+            color: "#155724",
+            border: "1px solid #c3e6cb",
+            borderRadius: "4px",
+            zIndex: 1000,
+            fontWeight: "bold",
+          }}
+        >
+          {notificacao}
+        </div>
+      )}
+
+      {/* Último tombo inventariado */}
+      {ultimoTombo && (
+        <div
+          style={{
+            position: "fixed",
+            top: "50px", // Ajuste para não sobrepor a notificação
+            left: "50%",
+            transform: "translateX(-50%)",
+            padding: "10px 20px",
+            backgroundColor: "#d4edda",
+            color: "#155724",
+            border: "1px solid #c3e6cb",
+            borderRadius: "4px",
+            zIndex: 1000,
+            fontWeight: "bold",
+          }}
+        >
+          Último tombo inventariado: {ultimoTombo}
+        </div>
+      )}
+
+      <h2>{nome}</h2>
+      <button onClick={() => router.push(`/relatorio/${nome}`)}>
+        Relatório geral deste inventário
+      </button>
+      <hr />
+      <h2>Realizar inventário</h2>
+
       {/* Campo do inventariante */}
       <input
         type="text"
         value={inventariante}
         onChange={handleInventarianteChange}
         placeholder="Nome completo do servidor(a) inventariante"
-        style={{ marginBottom: 10, width: '100%' }}
       />
       {/* Campo de seleção de sala */}
-      <select
-        value={salaSelecionada}
-        onChange={handleSalaChange}
-        style={{ marginBottom: 10 }}
-      >
+      <select value={salaSelecionada} onChange={handleSalaChange}>
         {salas.map((sala) => (
           <option key={sala} value={sala}>
             {sala}
@@ -159,6 +248,7 @@ export default function InventarioPage({ params }) {
         onChange={handleChange}
         onKeyDown={handleKeyDown}
         placeholder="Digite o número do tombo"
+        ref={inputRef} // Adiciona ref para foco automático
       />
       <button onClick={handleConfirmar}>Confirmar</button>
 
@@ -171,11 +261,20 @@ export default function InventarioPage({ params }) {
 
       {resultado && (
         <div style={{ marginTop: 20 }}>
-          <pre style={{ textAlign: "left", background: "#eee", padding: 10, border: resultado.dataInventario ? "2px solid red" : "none" }}>
+          <pre
+            style={{
+              textAlign: "left",
+              background: "#eee",
+              padding: 10,
+              border: resultado.dataInventario ? "2px solid red" : "none",
+            }}
+          >
             {JSON.stringify(resultado, null, 2)}
           </pre>
           {resultado.dataInventario && (
-            <p style={{ color: "red", fontWeight: "bold" }}>Este item já foi inventariado.</p>
+            <p style={{ color: "red", fontWeight: "bold" }}>
+              Este item já foi inventariado.
+            </p>
           )}
           {/* Campos para confirmação - sempre mostra */}
           <select

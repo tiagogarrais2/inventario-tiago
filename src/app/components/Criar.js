@@ -35,7 +35,7 @@ export default function Criar({ onUploadConcluido }) {
   return (
     <div>
       <div>
-        <h2>Criar um inventário</h2>
+        <h2>Criar um novo inventário</h2>
         <form onSubmit={handleUpload} encType="multipart/form-data">
           <label>
             Nome do(a) Servidor(a) responsável pelo envio do arquivo:

@@ -1,3 +1,195 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Variáveis CSS para tema personalizado */
+:root {
+  --primary-color: #007bff;
+  --secondary-color: #6c757d;
+  --success-color: #28a745;
+  --danger-color: #dc3545;
+  --warning-color: #ffc107;
+  --info-color: #17a2b8;
+  --light-bg: #f8f9fa;
+  --dark-bg: #343a40;
+  --text-color: #212529;
+  --border-color: #dee2e6;
+  --shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Reset e estilos globais */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.6;
+  color: var(--text-color);
+  background-color: var(--light-bg);
+  margin: 0;
+  padding: 0;
+}
+
+/* Responsividade para telas horizontais (desktops/notebooks) */
+@media (min-width: 769px) {
+  body {
+    padding-left: 25vw;
+    padding-right: 25vw;
+    padding-bottom: 5vw;
+    padding-top: 5vw;
+  }
+}
+
+/* Para telas verticais (móveis/tablets), manter full width */
+@media (max-width: 768px) {
+  body {
+    padding-left: 10vw;
+    padding-right: 10vw;
+    padding-bottom: 5vw;
+    padding-top: 5vw;
+  }
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+p {
+  margin-bottom: 1rem;
+}
+
+/* Estilos para containers principais */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Estilos para formulários */
+form {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+}
+
+input,
+select,
+button {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+button:disabled {
+  background-color: var(--secondary-color);
+  cursor: not-allowed;
+}
+
+/* Estilos para listas e itens */
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+li {
+  background: white;
+  margin-bottom: 10px;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  border-left: 5px solid var(--primary-color);
+}
+
+/* Destaques para itens inventariados */
+.inventariado {
+  background-color: #d4edda !important;
+  border-left-color: var(--success-color) !important;
+  color: #155724;
+}
+
+.nao-inventariado {
+  background-color: #f8d7da !important;
+  border-left-color: var(--danger-color) !important;
+  color: #721c24;
+}
+
+/* Estilos para mensagens de erro e sucesso */
+.error {
+  color: var(--danger-color);
+  background-color: #f8d7da;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.success {
+  color: var(--success-color);
+  background-color: #d4edda;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+/* Responsividade básica */
+@media (max-width: 768px) {
+  .container {
+    padding: 10px;
+  }
+
+  input,
+  select,
+  button {
+    font-size: 14px;
+  }
+
+  li {
+    padding: 10px;
+  }
+}
+
+/* Animações simples */
+.fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

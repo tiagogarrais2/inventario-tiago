@@ -81,6 +81,12 @@ export default function Cadastrar() {
           initialData["NUMERO"] = numero;
         }
 
+        // Alimenta o inventariante do localStorage
+        const inventarianteSalvo = localStorage.getItem("inventariante");
+        if (inventarianteSalvo) {
+          initialData["SERVIDOR(A) INVENTARIANTE"] = inventarianteSalvo;
+        }
+
         setCabecalho(cabecalhoData);
         setSalasOptions(salasData);
         setFormData(initialData);
@@ -108,14 +114,17 @@ export default function Cadastrar() {
     const nome = searchParams.get("nome");
 
     try {
-      const res = await fetch('/api/add-inventario', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/add-inventario", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nome, ...formData }),
       });
 
       if (res.ok) {
-        alert("Item cadastrado com sucesso!");
+        localStorage.setItem(
+          "notificacao",
+          `Tombo n° ${formData["NUMERO"]} cadastrado com sucesso!`
+        );
         router.push(`/inventario/${nome}`); // Redireciona de volta
       } else {
         alert("Erro ao cadastrar.");
