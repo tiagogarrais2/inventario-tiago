@@ -1,8 +1,9 @@
 import "./globals.css";
 import Cabecalho from "./components/Cabecalho";
+import Providers from "./components/Providers";
 
 export const metadata = {
-  title: "Inventário",
+  title: "Inventário Tiago",
   description: "Aplicativo para controle de inventário",
   icons: {
     icon: "/favicon-32x32.png", // Ícone padrão
@@ -15,8 +16,10 @@ export default function RootLayout({ children }) {
   return (
     <html lang="pt-br">
       <body>
-        <Cabecalho />
-        {children}
+        <Providers>
+          <Cabecalho />
+          {children}
+        </Providers>
       </body>
     </html>
   );

@@ -47,15 +47,21 @@ export default function Cadastrar() {
 
       try {
         const [cabecalhoRes, salasRes] = await Promise.all([
-          fetch(`/${nome}/cabecalhos.json`),
-          fetch(`/${nome}/salas.json`),
+          fetch(`/api/cabecalhos?inventario=${encodeURIComponent(nome)}`),
+          fetch(`/api/salas?inventario=${encodeURIComponent(nome)}`),
         ]);
 
         if (!cabecalhoRes.ok) {
-          throw new Error("Arquivo de cabeçalho não encontrado.");
+          const errorData = await cabecalhoRes.json();
+          throw new Error(
+            errorData.error || "Arquivo de cabeçalho não encontrado."
+          );
         }
         if (!salasRes.ok) {
-          throw new Error("Arquivo de salas não encontrado ou inválido.");
+          const errorData = await salasRes.json();
+          throw new Error(
+            errorData.error || "Arquivo de salas não encontrado ou inválido."
+          );
         }
 
         let cabecalhoData = await cabecalhoRes.json();

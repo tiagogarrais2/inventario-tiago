@@ -1,6 +1,6 @@
 {
-  "name": "Inventario",
-  "version": "0.1.0",
+  "name": "inventario-tiago",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -11,6 +11,7 @@
   "dependencies": {
     "csv-parser": "^3.2.0",
     "next": "15.5.3",
+    "next-auth": "^4.24.11",
     "react": "19.1.0",
     "react-dom": "19.1.0"
   },

@@ -1,7 +1,26 @@
 import fs from "fs";
 import path from "path";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../auth/[...nextauth]/route";
+import { NextResponse } from "next/server";
+import { logAuditoria, obterIP } from "../../lib/auditoria";
 
-export async function GET(req, res) {
+export async function GET(request) {
+  // Verificar autenticação
+  const session = await getServerSession(authOptions);
+
+  if (!session) {
+    // Log de tentativa de acesso não autorizado
+    await logAuditoria("ACESSO_NEGADO_LISTAGEM", null, {
+      ip: obterIP(request),
+      motivo: "Usuario nao autenticado",
+    });
+
+    return NextResponse.json(
+      { error: "Acesso negado. Usuário não autenticado." },
+      { status: 401 }
+    );
+  }
   const baseDir = path.join(process.cwd(), "public");
   let pastasComArquivos = [];
 
@@ -25,11 +44,34 @@ export async function GET(req, res) {
       }
     }
 
-    return new Response(JSON.stringify({ pastas: pastasComArquivos }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
+    // Log de auditoria para acesso aos dados sensíveis
+    await logAuditoria("ACESSO_LISTAGEM_INVENTARIOS", session.user, {
+      ip: obterIP(request),
+      totalInventarios: pastasComArquivos.length,
+      inventarios: pastasComArquivos,
+      userAgent: request.headers.get("user-agent") || "N/A",
     });
+
+    console.log(
+      `[ACESSO_DADOS] ${session.user?.name || session.user?.email} acessou a listagem de inventários - Total: ${pastasComArquivos.length} inventários`
+    );
+
+    return new Response(
+      JSON.stringify({
+        pastas: pastasComArquivos,
+      }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
   } catch (error) {
+    // Log de erro
+    await logAuditoria("ERRO_LISTAGEM_INVENTARIOS", session.user, {
+      ip: obterIP(request),
+      erro: error.message,
+    });
+
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { "Content-Type": "application/json" },

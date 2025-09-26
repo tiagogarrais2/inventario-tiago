@@ -1,9 +1,12 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import GerenciadorPermissoes from "../../components/GerenciadorPermissoes";
 
 export default function InventarioPage({ params }) {
   const { nome } = React.use(params);
+  const { data: session, status } = useSession();
   const [valor, setValor] = useState("");
   const [resultado, setResultado] = useState(null);
   const [erro, setErro] = useState("");
@@ -12,11 +15,53 @@ export default function InventarioPage({ params }) {
   const [inventariante, setInventariante] = useState("");
   const [statusSelecionado, setStatusSelecionado] = useState("Em Uso");
   const [ultimoTombo, setUltimoTombo] = useState("");
-  const [notificacao, setNotificacao] = useState(""); // Novo estado para notificações persistentes
+  const [notificacao, setNotificacao] = useState("");
+  const [hasAccess, setHasAccess] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
+  const [accessLoading, setAccessLoading] = useState(true);
+  const [showPermissoes, setShowPermissoes] = useState(false);
   const router = useRouter();
   const inputRef = useRef(null);
 
+  // Verificar permissões de acesso
   useEffect(() => {
+    async function verificarPermissoes() {
+      if (status === "loading") return;
+
+      if (status === "unauthenticated") {
+        router.push("/");
+        return;
+      }
+
+      try {
+        // Verificar se tem permissão para acessar este inventário
+        const response = await fetch(
+          `/api/verificar-acesso?inventario=${nome}`
+        );
+        const data = await response.json();
+
+        if (response.ok) {
+          setHasAccess(data.hasAccess);
+          setIsOwner(data.isOwner);
+        } else {
+          setHasAccess(false);
+          setIsOwner(false);
+        }
+      } catch (error) {
+        console.error("Erro ao verificar permissões:", error);
+        setHasAccess(false);
+        setIsOwner(false);
+      }
+
+      setAccessLoading(false);
+    }
+
+    verificarPermissoes();
+  }, [nome, status, router]);
+
+  useEffect(() => {
+    if (!hasAccess || accessLoading) return;
+
     // Carrega inventariante do localStorage
     const inventarianteSalvo = localStorage.getItem("inventariante");
     if (inventarianteSalvo) {
@@ -32,8 +77,11 @@ export default function InventarioPage({ params }) {
 
     async function fetchSalas() {
       try {
-        const res = await fetch(`/${nome}/salas.json`);
-        if (!res.ok) throw new Error(`Erro ${res.status}: ${res.statusText}`);
+        const res = await fetch(`/api/salas?inventario=${encodeURIComponent(nome)}`);
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || `Erro ${res.status}: ${res.statusText}`);
+        }
         const data = await res.json();
         setSalas(data);
         const salaSalva = localStorage.getItem("salaSelecionada");
@@ -44,6 +92,7 @@ export default function InventarioPage({ params }) {
         }
       } catch (error) {
         console.error("Erro ao carregar salas:", error);
+        setErro(`Erro ao carregar salas: ${error.message}`);
         setSalas([]);
       }
     }
@@ -53,7 +102,7 @@ export default function InventarioPage({ params }) {
     if (inputRef.current) {
       inputRef.current.focus();
     }
-  }, [nome]);
+  }, [nome, hasAccess, accessLoading]);
 
   function handleSalaChange(e) {
     setSalaSelecionada(e.target.value);
@@ -71,19 +120,22 @@ export default function InventarioPage({ params }) {
     if (!valor) return;
 
     try {
-      const res = await fetch(`/${nome}/inventario.json`);
-      if (!res.ok) throw new Error("Inventário não encontrado.");
-      const dados = await res.json();
-
-      const achado = dados.find((item) => String(item.NUMERO) === valor);
-
-      if (achado) {
-        setResultado(achado);
-      } else {
-        setErro("Item não encontrado.");
+      const res = await fetch(`/api/inventario?inventario=${encodeURIComponent(nome)}&tombo=${encodeURIComponent(valor)}`);
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        if (res.status === 404 && errorData.error.includes("Item não encontrado")) {
+          setErro("Item não encontrado.");
+          return;
+        }
+        throw new Error(errorData.error || "Erro ao buscar item.");
       }
-    } catch (e) {
+
+      const item = await res.json();
+      setResultado(item);
+    } catch (error) {
       setErro("Erro ao buscar o item.");
+      console.error("Erro na busca:", error);
     }
   }
 
@@ -175,9 +227,61 @@ export default function InventarioPage({ params }) {
     }
   };
 
+  // Loading de autenticação
+  if (status === "loading" || accessLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[50vh]">
+        <div className="text-lg">Verificando permissões...</div>
+      </div>
+    );
+  }
+
+  // Usuário não autenticado
+  if (status === "unauthenticated") {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
+        <h1 className="text-2xl font-bold text-gray-800">Acesso Restrito</h1>
+        <p className="text-gray-600 text-center">
+          Você precisa estar autenticado para acessar inventários.
+        </p>
+      </div>
+    );
+  }
+
+  // Usuário não tem acesso ao inventário
+  if (!hasAccess) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
+        <h1 className="text-2xl font-bold text-red-600">Acesso Negado</h1>
+        <p className="text-gray-600 text-center">
+          Você não tem permissão para acessar este inventário.
+        </p>
+        <p className="text-sm text-gray-500 text-center">
+          Entre em contato com o proprietário do inventário para solicitar
+          acesso.
+        </p>
+        <button
+          onClick={() => router.push("/")}
+          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-200"
+        >
+          Voltar ao Início
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div>
-      {/* Notificação fixa e centralizada */}
+      {/* Gerenciador de Permissões Modal */}
+      {showPermissoes && (
+        <GerenciadorPermissoes
+          inventarioNome={nome}
+          isOwner={isOwner}
+          onClose={() => setShowPermissoes(false)}
+        />
+      )}
+
+      {/* Notificação persistente */}
       {notificacao && (
         <div
           style={{
@@ -198,12 +302,12 @@ export default function InventarioPage({ params }) {
         </div>
       )}
 
-      {/* Último tombo inventariado */}
+      {/* Notificação de último tombo inventariado */}
       {ultimoTombo && (
         <div
           style={{
             position: "fixed",
-            top: "50px", // Ajuste para não sobrepor a notificação
+            top: "70px", // Posiciona abaixo da primeira notificação
             left: "50%",
             transform: "translateX(-50%)",
             padding: "10px 20px",
@@ -219,7 +323,19 @@ export default function InventarioPage({ params }) {
         </div>
       )}
 
-      <h2>{nome}</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">{nome}</h2>
+        <div className="space-x-2">
+          {isOwner && (
+            <button
+              onClick={() => setShowPermissoes(true)}
+              className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded transition duration-200"
+            >
+              Gerenciar Acesso
+            </button>
+          )}
+        </div>
+      </div>
       <button onClick={() => router.push(`/relatorio/${nome}`)}>
         Relatório geral deste inventário
       </button>
