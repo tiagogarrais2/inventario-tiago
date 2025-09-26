@@ -62,10 +62,9 @@ export default function InventarioPage({ params }) {
   useEffect(() => {
     if (!hasAccess || accessLoading) return;
 
-    // Carrega inventariante do localStorage
-    const inventarianteSalvo = localStorage.getItem("inventariante");
-    if (inventarianteSalvo) {
-      setInventariante(inventarianteSalvo);
+    // Define inventariante automaticamente com base na sessão
+    if (session?.user?.name) {
+      setInventariante(session.user.name);
     }
 
     // Carrega notificação persistente do localStorage
@@ -77,10 +76,14 @@ export default function InventarioPage({ params }) {
 
     async function fetchSalas() {
       try {
-        const res = await fetch(`/api/salas?inventario=${encodeURIComponent(nome)}`);
+        const res = await fetch(
+          `/api/salas?inventario=${encodeURIComponent(nome)}`
+        );
         if (!res.ok) {
           const errorData = await res.json();
-          throw new Error(errorData.error || `Erro ${res.status}: ${res.statusText}`);
+          throw new Error(
+            errorData.error || `Erro ${res.status}: ${res.statusText}`
+          );
         }
         const data = await res.json();
         setSalas(data);
@@ -102,17 +105,14 @@ export default function InventarioPage({ params }) {
     if (inputRef.current) {
       inputRef.current.focus();
     }
-  }, [nome, hasAccess, accessLoading]);
+  }, [nome, hasAccess, accessLoading, session]);
 
   function handleSalaChange(e) {
     setSalaSelecionada(e.target.value);
     localStorage.setItem("salaSelecionada", e.target.value);
   }
 
-  function handleInventarianteChange(e) {
-    setInventariante(e.target.value);
-    localStorage.setItem("inventariante", e.target.value);
-  }
+  // Função removida - inventariante não é mais editável
 
   async function buscarInventario() {
     setErro("");
@@ -120,11 +120,16 @@ export default function InventarioPage({ params }) {
     if (!valor) return;
 
     try {
-      const res = await fetch(`/api/inventario?inventario=${encodeURIComponent(nome)}&tombo=${encodeURIComponent(valor)}`);
-      
+      const res = await fetch(
+        `/api/inventario?inventario=${encodeURIComponent(nome)}&tombo=${encodeURIComponent(valor)}`
+      );
+
       if (!res.ok) {
         const errorData = await res.json();
-        if (res.status === 404 && errorData.error.includes("Item não encontrado")) {
+        if (
+          res.status === 404 &&
+          errorData.error.includes("Item não encontrado")
+        ) {
           setErro("Item não encontrado.");
           return;
         }
@@ -306,11 +311,8 @@ export default function InventarioPage({ params }) {
       {ultimoTombo && (
         <div
           style={{
-            position: "fixed",
-            top: "70px", // Posiciona abaixo da primeira notificação
-            left: "50%",
-            transform: "translateX(-50%)",
             padding: "10px 20px",
+            textAlign: "center",
             backgroundColor: "#d4edda",
             color: "#155724",
             border: "1px solid #c3e6cb",
@@ -323,9 +325,9 @@ export default function InventarioPage({ params }) {
         </div>
       )}
 
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">{nome}</h2>
-        <div className="space-x-2">
+      <div>
+        <h2>{nome}</h2>
+        <div>
           {isOwner && (
             <button
               onClick={() => setShowPermissoes(true)}
@@ -342,13 +344,11 @@ export default function InventarioPage({ params }) {
       <hr />
       <h2>Realizar inventário</h2>
 
-      {/* Campo do inventariante */}
-      <input
-        type="text"
-        value={inventariante}
-        onChange={handleInventarianteChange}
-        placeholder="Nome completo do servidor(a) inventariante"
-      />
+      {/* Inventariante - exibido automaticamente */}
+      <p className="mb-4">
+        <strong>Inventariante:</strong>{" "}
+        {inventariante || "Carregando nome do usuário..."}
+      </p>
       {/* Campo de seleção de sala */}
       <select value={salaSelecionada} onChange={handleSalaChange}>
         {salas.map((sala) => (

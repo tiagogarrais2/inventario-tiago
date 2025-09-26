@@ -6,12 +6,12 @@ export default function Cabecalho() {
   const { data: session, status } = useSession();
 
   return (
-    <div className="flex justify-between items-center p-4 bg-gray-100 border-b border-gray-300">
+    <div>
       <h1>
         <Link href={"/"}>Sistema Inventário Tiago</Link>
       </h1>
 
-      <div className="flex items-center space-x-4">
+      <div>
         {status === "loading" && (
           <span className="text-gray-500">Carregando...</span>
         )}

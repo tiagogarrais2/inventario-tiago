@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 // Lista fixa de estados de conservação
 const ESTADOS_CONSERVACAO = [
@@ -27,6 +28,7 @@ const STATUS_OPTIONS = [
 export default function Cadastrar() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { data: session, status } = useSession();
 
   const [cabecalho, setCabecalho] = useState(null);
   const [salasOptions, setSalasOptions] = useState([]);
@@ -87,10 +89,9 @@ export default function Cadastrar() {
           initialData["NUMERO"] = numero;
         }
 
-        // Alimenta o inventariante do localStorage
-        const inventarianteSalvo = localStorage.getItem("inventariante");
-        if (inventarianteSalvo) {
-          initialData["SERVIDOR(A) INVENTARIANTE"] = inventarianteSalvo;
+        // Preenche automaticamente com o nome do usuário logado
+        if (session?.user?.name) {
+          initialData["SERVIDOR(A) INVENTARIANTE"] = session.user.name;
         }
 
         setCabecalho(cabecalhoData);
@@ -105,7 +106,7 @@ export default function Cadastrar() {
     }
 
     fetchFormFields();
-  }, [searchParams]);
+  }, [searchParams, session]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -139,6 +140,33 @@ export default function Cadastrar() {
       alert("Erro ao cadastrar.");
     }
   };
+
+  // Verificação de autenticação
+  if (status === "loading") {
+    return <div style={{ padding: "20px" }}>Verificando autenticação...</div>;
+  }
+
+  if (status === "unauthenticated") {
+    return (
+      <div style={{ padding: "20px", textAlign: "center" }}>
+        <h2>Acesso Restrito</h2>
+        <p>Você precisa estar autenticado para cadastrar itens.</p>
+        <button
+          onClick={() => router.push("/")}
+          style={{
+            padding: "10px 20px",
+            backgroundColor: "#007bff",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer",
+          }}
+        >
+          Voltar ao Início
+        </button>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return <div style={{ padding: "20px" }}>Carregando formulário...</div>;
@@ -217,9 +245,15 @@ export default function Cadastrar() {
                   id={fieldName}
                   name={fieldName}
                   value={formData[fieldName] || ""}
-                  onChange={handleChange}
+                  readOnly
                   required
-                  style={{ marginLeft: "10px", padding: "5px" }}
+                  style={{
+                    marginLeft: "10px",
+                    padding: "5px",
+                    backgroundColor: "#f5f5f5",
+                    color: "#666",
+                    cursor: "not-allowed",
+                  }}
                 />
               ) : isStatusField ? (
                 <select
