@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 
 export default function GerenciadorPermissoes({
@@ -13,13 +13,7 @@ export default function GerenciadorPermissoes({
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  useEffect(() => {
-    if (isOwner) {
-      carregarPermissoes();
-    }
-  }, [inventarioNome, isOwner]);
-
-  const carregarPermissoes = async () => {
+  const carregarPermissoes = useCallback(async () => {
     try {
       const response = await fetch(
         `/api/permissoes?inventario=${inventarioNome}`
@@ -31,7 +25,13 @@ export default function GerenciadorPermissoes({
     } catch (error) {
       console.error("Erro ao carregar permissões:", error);
     }
-  };
+  }, [inventarioNome]);
+
+  useEffect(() => {
+    if (isOwner) {
+      carregarPermissoes();
+    }
+  }, [isOwner, carregarPermissoes]);
 
   const adicionarPermissao = async (e) => {
     e.preventDefault();

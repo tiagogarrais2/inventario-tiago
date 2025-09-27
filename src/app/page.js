@@ -30,7 +30,7 @@ export default function Home() {
           Você precisa estar autenticado para acessar o sistema de inventário.
         </p>
         <p className="text-sm text-gray-500">
-          Use o botão "Entrar com Google" no cabeçalho para fazer login.
+          Use o botão &quot;Entrar com Google&quot; no cabeçalho para fazer login.
         </p>
         <div>
           <p className="text-sm text-blue-800 mb-2">
