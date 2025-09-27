@@ -1,9 +1,8 @@
-import fs from "fs";
-import path from "path";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
 import { NextResponse } from "next/server";
 import { hasPermission } from "../../lib/permissoes";
+import { CabecalhoService, AuditoriaService } from "../../../lib/services.js";
 
 export async function GET(request) {
   // Verificar autenticação
@@ -27,31 +26,8 @@ export async function GET(request) {
   }
 
   try {
-    const baseDir = path.join(process.cwd(), "public");
-
-    // Verificar se a pasta existe diretamente
-    let nomePasta = nomeInventario;
-
-    // Se não encontrar diretamente, buscar pasta que termina com o nome
-    if (!fs.existsSync(path.join(baseDir, nomePasta))) {
-      const pastas = fs
-        .readdirSync(baseDir, { withFileTypes: true })
-        .filter((dirent) => dirent.isDirectory())
-        .map((dirent) => dirent.name)
-        .filter((pasta) => pasta.endsWith(`-${nomeInventario}`));
-
-      if (pastas.length === 0) {
-        return NextResponse.json(
-          { error: "Inventário não encontrado." },
-          { status: 404 }
-        );
-      }
-
-      nomePasta = pastas[0];
-    }
-
     // Verificar permissões de acesso ao inventário
-    const permissao = await hasPermission(nomePasta, session.user.email);
+    const permissao = await hasPermission(nomeInventario, session.user.email);
 
     if (!permissao.hasAccess) {
       return NextResponse.json(
@@ -63,20 +39,26 @@ export async function GET(request) {
       );
     }
 
-    const cabecalhosPath = path.join(baseDir, nomePasta, "cabecalhos.json");
+    // Buscar cabeçalhos do inventário no banco de dados
+    const cabecalhos = await CabecalhoService.listByInventario(nomeInventario);
 
-    if (!fs.existsSync(cabecalhosPath)) {
+    if (cabecalhos.length === 0) {
       return NextResponse.json(
-        { error: "Arquivo de cabeçalhos não encontrado." },
+        { error: "Nenhum cabeçalho encontrado para este inventário." },
         { status: 404 }
       );
     }
 
-    const cabecalhosData = JSON.parse(fs.readFileSync(cabecalhosPath, "utf8"));
-
-    return NextResponse.json(cabecalhosData);
+    return NextResponse.json(cabecalhos);
   } catch (error) {
     console.error("Erro ao buscar cabeçalhos:", error);
+
+    // Log do erro para auditoria
+    await AuditoriaService.log("ERRO_BUSCAR_CABECALHOS", session.user, {
+      erro: error.message,
+      inventario: nomeInventario,
+    });
+
     return NextResponse.json(
       { error: "Erro interno do servidor." },
       { status: 500 }

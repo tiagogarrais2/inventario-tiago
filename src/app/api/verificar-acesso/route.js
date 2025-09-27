@@ -2,9 +2,8 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
 import { hasPermission } from "../../lib/permissoes";
-import { logAuditoria, obterIP } from "../../lib/auditoria";
-import fs from "fs";
-import path from "path";
+import { AuditoriaService } from "../../../lib/services.js";
+import { obterIP } from "../../lib/auditoria";
 
 export async function GET(request) {
   const session = await getServerSession(authOptions);
@@ -27,32 +26,21 @@ export async function GET(request) {
   }
 
   try {
-    // Resolver nome da pasta (mesmo lógica das outras APIs)
-    const baseDir = path.join(process.cwd(), "public");
-    let nomePasta = inventarioNome;
+    console.log(
+      `[DEBUG] Verificando acesso para inventário: ${inventarioNome}`
+    );
+    console.log(`[DEBUG] Email do usuário: ${session.user.email}`);
 
-    // Se não encontrar diretamente, buscar pasta que termina com o nome
-    if (!fs.existsSync(path.join(baseDir, nomePasta))) {
-      const pastas = fs
-        .readdirSync(baseDir, { withFileTypes: true })
-        .filter((dirent) => dirent.isDirectory())
-        .map((dirent) => dirent.name)
-        .filter((pasta) => pasta.endsWith(`-${inventarioNome}`));
+    // Verificar permissões usando PostgreSQL
+    const permissionResult = await hasPermission(
+      inventarioNome,
+      session.user.email
+    );
 
-      if (pastas.length === 0) {
-        return NextResponse.json(
-          { error: "Inventário não encontrado." },
-          { status: 404 }
-        );
-      }
-
-      nomePasta = pastas[0];
-    }
-
-    const permissionResult = await hasPermission(nomePasta, session.user.email);
+    console.log(`[DEBUG] Resultado da verificação:`, permissionResult);
 
     // Log de auditoria para acesso (autorizado ou negado)
-    await logAuditoria(
+    await AuditoriaService.log(
       permissionResult.hasAccess
         ? "ACESSO_INVENTARIO_AUTORIZADO"
         : "ACESSO_INVENTARIO_NEGADO",
@@ -62,7 +50,9 @@ export async function GET(request) {
         inventario: inventarioNome,
         isOwner: permissionResult.isOwner,
         hasAccess: permissionResult.hasAccess,
-      }
+        userAgent: request.headers.get("user-agent") || "N/A",
+      },
+      inventarioNome
     );
 
     return NextResponse.json({
@@ -70,10 +60,13 @@ export async function GET(request) {
       isOwner: permissionResult.isOwner,
     });
   } catch (error) {
-    await logAuditoria("ERRO_VERIFICACAO_ACESSO", session.user, {
+    console.error("Erro ao verificar permissões:", error);
+
+    await AuditoriaService.log("ERRO_VERIFICACAO_ACESSO", session.user, {
       ip: obterIP(request),
       inventario: inventarioNome,
       erro: error.message,
+      userAgent: request.headers.get("user-agent") || "N/A",
     });
 
     return NextResponse.json(

@@ -1,8 +1,12 @@
-import { promises as fs } from "fs";
-import path from "path";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
 import { NextResponse } from "next/server";
+import {
+  InventarioService,
+  ItemInventarioService,
+  PermissaoService,
+  AuditoriaService,
+} from "../../../lib/services";
 
 export async function POST(request) {
   // Verificar autenticação
@@ -14,45 +18,109 @@ export async function POST(request) {
       { status: 401 }
     );
   }
-  const {
-    nome,
-    numero,
-    salaEncontrada,
-    dataInventario,
-    status,
-    inventariante,
-  } = await request.json();
-
-  const filePath = path.join(process.cwd(), "public", nome, "inventario.json");
 
   try {
-    const fileContents = await fs.readFile(filePath, "utf8");
-    const dados = JSON.parse(fileContents);
+    const {
+      nome,
+      numero,
+      salaEncontrada,
+      dataInventario,
+      status,
+      inventariante,
+    } = await request.json();
 
-    const itemIndex = dados.findIndex((item) => String(item.NUMERO) === numero);
-    if (itemIndex === -1) {
-      return new Response(JSON.stringify({ error: "Item não encontrado" }), {
-        status: 404,
-      });
+    console.log(`📝 Atualizando item ${numero} no inventário: ${nome}`);
+    console.log(`👤 Usuário: ${session.user.email}`);
+    console.log(`📋 Dados de atualização:`, {
+      salaEncontrada,
+      dataInventario,
+      status,
+      inventariante,
+    });
+
+    // Verificar se o inventário existe
+    const inventario = await InventarioService.findByName(nome);
+    if (!inventario) {
+      return NextResponse.json(
+        { error: "Inventário não encontrado." },
+        { status: 404 }
+      );
     }
 
-    // Adiciona as informações
-    dados[itemIndex].salaEncontrada = salaEncontrada;
-    dados[itemIndex].dataInventario = dataInventario;
-    dados[itemIndex].status = status;
-    dados[itemIndex].inventariante = inventariante;
-
-    await fs.writeFile(filePath, JSON.stringify(dados, null, 2));
-
-    // Log de auditoria
-    console.log(
-      `[UPDATE_ITEM] ${session.user?.name || session.user?.email} atualizou item ${numero} no inventário ${nome} - Status: ${status}`
+    // Verificar permissões de acesso
+    const hasAccess = await PermissaoService.canAccessInventario(
+      session.user.email,
+      nome
     );
 
-    return new Response(JSON.stringify({ success: true }), { status: 200 });
+    if (!hasAccess) {
+      return NextResponse.json(
+        {
+          error:
+            "Você não tem permissão para atualizar itens neste inventário.",
+        },
+        { status: 403 }
+      );
+    }
+
+    // Verificar se o item existe
+    const itemExistente = await ItemInventarioService.findByNumero(
+      nome,
+      numero
+    );
+    if (!itemExistente) {
+      return NextResponse.json(
+        { error: "Item não encontrado." },
+        { status: 404 }
+      );
+    }
+
+    // Preparar dados de atualização
+    const updateData = {
+      dataInventario: dataInventario || new Date().toISOString(),
+      salaEncontrada: salaEncontrada || null,
+      status: status || null,
+    };
+
+    console.log(`💾 Atualizando item no banco:`, updateData);
+
+    // Atualizar o item no banco
+    const itemAtualizado = await ItemInventarioService.update(
+      nome,
+      numero,
+      updateData,
+      session.user.email
+    );
+
+    console.log(`✅ Item atualizado com sucesso:`, itemAtualizado);
+
+    // Log de auditoria
+    await AuditoriaService.log(
+      "update_item",
+      session.user,
+      {
+        numero: numero,
+        status: status,
+        salaEncontrada: salaEncontrada,
+        dataInventario: dataInventario,
+      },
+      nome
+    );
+
+    console.log(`📋 Log de auditoria registrado para item ${numero}`);
+
+    return NextResponse.json(
+      {
+        success: true,
+        item: itemAtualizado,
+      },
+      { status: 200 }
+    );
   } catch (error) {
-    return new Response(JSON.stringify({ error: "Erro ao atualizar" }), {
-      status: 500,
-    });
+    console.error("❌ Erro ao atualizar item:", error);
+    return NextResponse.json(
+      { error: "Erro interno do servidor ao atualizar item." },
+      { status: 500 }
+    );
   }
 }

@@ -1,9 +1,12 @@
-import fs from "fs";
-import path from "path";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
 import { NextResponse } from "next/server";
-import { hasPermission } from "../../lib/permissoes";
+import {
+  InventarioService,
+  ItemInventarioService,
+  PermissaoService,
+  AuditoriaService,
+} from "../../../lib/services";
 
 export async function GET(request) {
   // Verificar autenticação
@@ -28,33 +31,23 @@ export async function GET(request) {
   }
 
   try {
-    const baseDir = path.join(process.cwd(), "public");
+    // Buscar inventário no banco de dados
+    const inventario = await InventarioService.findByName(nomeInventario);
 
-    // Verificar se a pasta existe diretamente
-    let nomePasta = nomeInventario;
-
-    // Se não encontrar diretamente, buscar pasta que termina com o nome
-    if (!fs.existsSync(path.join(baseDir, nomePasta))) {
-      const pastas = fs
-        .readdirSync(baseDir, { withFileTypes: true })
-        .filter((dirent) => dirent.isDirectory())
-        .map((dirent) => dirent.name)
-        .filter((pasta) => pasta.endsWith(`-${nomeInventario}`));
-
-      if (pastas.length === 0) {
-        return NextResponse.json(
-          { error: "Inventário não encontrado." },
-          { status: 404 }
-        );
-      }
-
-      nomePasta = pastas[0];
+    if (!inventario) {
+      return NextResponse.json(
+        { error: "Inventário não encontrado." },
+        { status: 404 }
+      );
     }
 
     // Verificar permissões de acesso ao inventário
-    const permissao = await hasPermission(nomePasta, session.user.email);
+    const hasAccess = await PermissaoService.canAccessInventario(
+      session.user.email,
+      inventario.nome
+    );
 
-    if (!permissao.hasAccess) {
+    if (!hasAccess) {
       return NextResponse.json(
         {
           error:
@@ -64,33 +57,52 @@ export async function GET(request) {
       );
     }
 
-    const inventarioPath = path.join(baseDir, nomePasta, "inventario.json");
-
-    if (!fs.existsSync(inventarioPath)) {
-      return NextResponse.json(
-        { error: "Arquivo de inventário não encontrado." },
-        { status: 404 }
-      );
-    }
-
-    const inventarioData = JSON.parse(fs.readFileSync(inventarioPath, "utf8"));
-
     // Se foi solicitado um tombo específico, buscar apenas esse item
     if (tombo) {
-      const item = inventarioData.find(
-        (item) => String(item["NUMERO"]) === String(tombo)
+      console.log(
+        `🔍 Buscando item com tombo: ${tombo} no inventário: ${nomeInventario}`
       );
+
+      const item = await ItemInventarioService.findByNumero(
+        nomeInventario,
+        tombo
+      );
+
       if (!item) {
+        console.log(
+          `❌ Item com tombo ${tombo} não encontrado no inventário ${nomeInventario}`
+        );
         return NextResponse.json(
           { error: "Item não encontrado." },
           { status: 404 }
         );
       }
+
+      console.log(`✅ Item encontrado:`, item);
+
+      // Registrar acesso ao item no log de auditoria
+      await AuditoriaService.log(
+        "search_item",
+        session.user,
+        { tombo: tombo },
+        inventario.nome
+      );
+
       return NextResponse.json(item);
     }
 
-    // Retornar todo o inventário
-    return NextResponse.json(inventarioData);
+    // Retornar todos os itens do inventário
+    const itens = await ItemInventarioService.listByInventario(inventario.nome);
+
+    // Registrar acesso ao inventário no log de auditoria
+    await AuditoriaService.log(
+      "view_inventory",
+      session.user,
+      { total_items: itens.length },
+      inventario.nome
+    );
+
+    return NextResponse.json(itens);
   } catch (error) {
     console.error("Erro ao buscar inventário:", error);
     return NextResponse.json(

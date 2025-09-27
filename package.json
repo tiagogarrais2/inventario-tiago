@@ -1,17 +1,21 @@
 {
   "name": "inventario-tiago",
   "version": "1.0.0",
+  "type": "module",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "dev": "next dev",
+    "build": "next build && npx prisma generate",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "postinstall": "npx prisma generate"
   },
   "dependencies": {
+    "@prisma/client": "^6.16.2",
     "csv-parser": "^3.2.0",
     "next": "15.5.3",
     "next-auth": "^4.24.11",
+    "pg": "^8.16.3",
     "react": "19.1.0",
     "react-dom": "19.1.0"
   },
@@ -21,6 +25,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.5.3",
     "prettier": "^3.6.2",
+    "prisma": "^6.16.2",
     "tailwindcss": "^4"
   }
 }

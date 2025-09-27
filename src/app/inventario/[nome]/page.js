@@ -147,7 +147,7 @@ export default function InventarioPage({ params }) {
   async function confirmarEncontrado() {
     if (!resultado || !inventariante) return;
 
-    const salaOriginal = resultado.SALA || "";
+    const salaOriginal = resultado.sala || "";
     const confirmarSala =
       salaSelecionada !== salaOriginal
         ? window.confirm(

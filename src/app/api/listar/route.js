@@ -1,9 +1,8 @@
-import fs from "fs";
-import path from "path";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
 import { NextResponse } from "next/server";
 import { logAuditoria, obterIP } from "../../lib/auditoria";
+import { InventarioService, AuditoriaService } from "../../../lib/services.js";
 
 export async function GET(request) {
   // Verificar autenticação
@@ -11,9 +10,10 @@ export async function GET(request) {
 
   if (!session) {
     // Log de tentativa de acesso não autorizado
-    await logAuditoria("ACESSO_NEGADO_LISTAGEM", null, {
+    await AuditoriaService.log("ACESSO_NEGADO_LISTAGEM", null, {
       ip: obterIP(request),
       motivo: "Usuario nao autenticado",
+      userAgent: request.headers.get("user-agent") || "N/A",
     });
 
     return NextResponse.json(
@@ -21,44 +21,38 @@ export async function GET(request) {
       { status: 401 }
     );
   }
-  const baseDir = path.join(process.cwd(), "public");
-  let pastasComArquivos = [];
 
   try {
-    const pastas = fs
-      .readdirSync(baseDir, { withFileTypes: true })
-      .filter((dirent) => dirent.isDirectory())
-      .map((dirent) => dirent.name);
+    // Busca inventários que o usuário tem acesso (proprietário ou com permissão)
+    const inventarios = await InventarioService.listUserInventarios(
+      session.user.email
+    );
 
-    for (const pasta of pastas) {
-      const cabecalhosPath = path.join(baseDir, pasta, "cabecalhos.json");
-      const salasPath = path.join(baseDir, pasta, "salas.json");
-      const inventarioPath = path.join(baseDir, pasta, "inventario.json");
-
-      if (
-        fs.existsSync(cabecalhosPath) &&
-        fs.existsSync(salasPath) &&
-        fs.existsSync(inventarioPath)
-      ) {
-        pastasComArquivos.push(pasta);
-      }
-    }
+    // Formata os dados para compatibilidade com a interface existente
+    const pastasComArquivos = inventarios.map((inv) => inv.nome);
 
     // Log de auditoria para acesso aos dados sensíveis
-    await logAuditoria("ACESSO_LISTAGEM_INVENTARIOS", session.user, {
+    await AuditoriaService.log("ACESSO_LISTAGEM_INVENTARIOS", session.user, {
       ip: obterIP(request),
-      totalInventarios: pastasComArquivos.length,
+      totalInventarios: inventarios.length,
       inventarios: pastasComArquivos,
       userAgent: request.headers.get("user-agent") || "N/A",
     });
 
     console.log(
-      `[ACESSO_DADOS] ${session.user?.name || session.user?.email} acessou a listagem de inventários - Total: ${pastasComArquivos.length} inventários`
+      `[ACESSO_DADOS] ${session.user?.name || session.user?.email} acessou a listagem de inventários - Total: ${inventarios.length} inventários`
     );
 
     return new Response(
       JSON.stringify({
         pastas: pastasComArquivos,
+        inventarios: inventarios.map((inv) => ({
+          nome: inv.nome,
+          nomeExibicao: inv.nomeExibicao,
+          proprietario: inv.proprietario.nome,
+          totalItens: inv._count.itens,
+          createdAt: inv.createdAt,
+        })),
       }),
       {
         status: 200,
@@ -67,11 +61,13 @@ export async function GET(request) {
     );
   } catch (error) {
     // Log de erro
-    await logAuditoria("ERRO_LISTAGEM_INVENTARIOS", session.user, {
+    await AuditoriaService.log("ERRO_LISTAGEM_INVENTARIOS", session.user, {
       ip: obterIP(request),
       erro: error.message,
+      userAgent: request.headers.get("user-agent") || "N/A",
     });
 
+    console.error("Erro ao listar inventários:", error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { "Content-Type": "application/json" },

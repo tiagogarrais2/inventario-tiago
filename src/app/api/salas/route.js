@@ -1,9 +1,8 @@
-import fs from "fs";
-import path from "path";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
 import { NextResponse } from "next/server";
 import { hasPermission } from "../../lib/permissoes";
+import { SalaService, AuditoriaService } from "../../../lib/services.js";
 
 export async function GET(request) {
   // Verificar autenticação
@@ -27,42 +26,8 @@ export async function GET(request) {
   }
 
   try {
-    const baseDir = path.join(process.cwd(), "public");
-
-    // Verificar se a pasta existe diretamente
-    let nomePasta = nomeInventario;
-    console.log(
-      "[DEBUG] Testando pasta direta:",
-      path.join(baseDir, nomePasta)
-    );
-
-    // Se não encontrar diretamente, buscar pasta que termina com o nome
-    if (!fs.existsSync(path.join(baseDir, nomePasta))) {
-      console.log(
-        "[DEBUG] Pasta não encontrada diretamente, buscando por sufixo..."
-      );
-      const pastas = fs
-        .readdirSync(baseDir, { withFileTypes: true })
-        .filter((dirent) => dirent.isDirectory())
-        .map((dirent) => dirent.name)
-        .filter((pasta) => pasta.endsWith(`-${nomeInventario}`));
-
-      console.log("[DEBUG] Pastas encontradas:", pastas);
-
-      if (pastas.length === 0) {
-        return NextResponse.json(
-          { error: "Inventário não encontrado." },
-          { status: 404 }
-        );
-      }
-
-      nomePasta = pastas[0];
-    }
-
-    console.log("[DEBUG] Pasta final selecionada:", nomePasta);
-
     // Verificar permissões de acesso ao inventário
-    const permissao = await hasPermission(nomePasta, session.user.email);
+    const permissao = await hasPermission(nomeInventario, session.user.email);
 
     if (!permissao.hasAccess) {
       return NextResponse.json(
@@ -74,20 +39,26 @@ export async function GET(request) {
       );
     }
 
-    const salasPath = path.join(baseDir, nomePasta, "salas.json");
+    // Buscar salas do inventário no banco de dados
+    const salas = await SalaService.listByInventario(nomeInventario);
 
-    if (!fs.existsSync(salasPath)) {
+    if (salas.length === 0) {
       return NextResponse.json(
-        { error: "Arquivo de salas não encontrado." },
+        { error: "Nenhuma sala encontrada para este inventário." },
         { status: 404 }
       );
     }
 
-    const salasData = JSON.parse(fs.readFileSync(salasPath, "utf8"));
-
-    return NextResponse.json(salasData);
+    return NextResponse.json(salas);
   } catch (error) {
     console.error("Erro ao buscar salas:", error);
+
+    // Log do erro para auditoria
+    await AuditoriaService.log("ERRO_BUSCAR_SALAS", session.user, {
+      erro: error.message,
+      inventario: nomeInventario,
+    });
+
     return NextResponse.json(
       { error: "Erro interno do servidor." },
       { status: 500 }

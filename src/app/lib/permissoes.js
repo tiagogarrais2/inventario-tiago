@@ -1,18 +1,11 @@
-import { promises as fs } from "fs";
-import path from "path";
+import { InventarioService } from "../../lib/services.js";
 
 // Verificar se usuário é proprietário do inventário
 export async function isOwner(inventarioNome, userEmail) {
   try {
-    const auditPath = path.join(
-      process.cwd(),
-      "public",
-      inventarioNome,
-      "auditoria.json"
-    );
-    const auditData = JSON.parse(await fs.readFile(auditPath, "utf8"));
-    return auditData.usuario.email === userEmail;
+    return await InventarioService.isOwner(inventarioNome, userEmail);
   } catch (error) {
+    console.error("Erro ao verificar proprietário:", error);
     return false;
   }
 }
@@ -20,26 +13,17 @@ export async function isOwner(inventarioNome, userEmail) {
 // Verificar se usuário tem permissão para acessar inventário
 export async function hasPermission(inventarioNome, userEmail) {
   try {
-    // Primeiro verifica se é o proprietário
-    if (await isOwner(inventarioNome, userEmail)) {
-      return { hasAccess: true, isOwner: true };
-    }
-
-    // Se não é proprietário, verifica permissões
-    const permissoesPath = path.join(
-      process.cwd(),
-      "public",
+    console.log(
+      `[DEBUG PERMISSION] Verificando: ${inventarioNome} para ${userEmail}`
+    );
+    const result = await InventarioService.checkPermissions(
       inventarioNome,
-      "permissoes.json"
+      userEmail
     );
-    const data = await fs.readFile(permissoesPath, "utf8");
-    const permissoes = JSON.parse(data);
-
-    const temPermissao = permissoes.some(
-      (p) => p.email === userEmail && p.ativa
-    );
-    return { hasAccess: temPermissao, isOwner: false };
+    console.log(`[DEBUG PERMISSION] Resultado:`, result);
+    return result;
   } catch (error) {
+    console.error("Erro ao verificar permissões:", error);
     return { hasAccess: false, isOwner: false };
   }
 }
@@ -47,19 +31,16 @@ export async function hasPermission(inventarioNome, userEmail) {
 // Obter informações do proprietário do inventário
 export async function getOwnerInfo(inventarioNome) {
   try {
-    const auditPath = path.join(
-      process.cwd(),
-      "public",
-      inventarioNome,
-      "auditoria.json"
-    );
-    const auditData = JSON.parse(await fs.readFile(auditPath, "utf8"));
+    const inventario = await InventarioService.findByName(inventarioNome);
+    if (!inventario) return null;
+
     return {
-      nome: auditData.usuario.nome,
-      email: auditData.usuario.email,
-      dataCriacao: auditData.processamento.timestamp,
+      nome: inventario.proprietario.nome,
+      email: inventario.proprietario.email,
+      dataUpload: inventario.createdAt.toISOString(),
     };
   } catch (error) {
+    console.error("Erro ao obter informações do proprietário:", error);
     return null;
   }
 }
@@ -67,17 +48,18 @@ export async function getOwnerInfo(inventarioNome) {
 // Listar usuários com permissão
 export async function getUsersWithPermission(inventarioNome) {
   try {
-    const permissoesPath = path.join(
-      process.cwd(),
-      "public",
-      inventarioNome,
-      "permissoes.json"
-    );
-    const data = await fs.readFile(permissoesPath, "utf8");
-    const permissoes = JSON.parse(data);
+    const { PermissaoService } = await import("../../lib/services.js");
+    const permissoes = await PermissaoService.listByInventario(inventarioNome);
 
-    return permissoes.filter((p) => p.ativa);
+    return permissoes
+      .filter((p) => p.ativa)
+      .map((p) => ({
+        nome: p.usuario.nome,
+        email: p.usuario.email,
+        ativa: p.ativa,
+      }));
   } catch (error) {
+    console.error("Erro ao listar usuários com permissão:", error);
     return [];
   }
 }

@@ -59,10 +59,10 @@ export default function RelatorioPage({ params }) {
         }
         const dados = await res.json();
 
-        // Agrupa por sala (prioriza salaEncontrada, senão SALA)
+        // Agrupa por sala (prioriza salaEncontrada, senão sala)
         const agrupado = {};
         dados.forEach((item) => {
-          const sala = item.salaEncontrada || item.SALA || "Sala não definida";
+          const sala = item.salaEncontrada || item.sala || "Sala não definida";
           if (!agrupado[sala]) agrupado[sala] = [];
           agrupado[sala].push(item);
         });
@@ -138,11 +138,12 @@ export default function RelatorioPage({ params }) {
                   color: item.dataInventario ? "#155724" : "#721c24",
                 }}
               >
-                <strong>Número:</strong> {item.NUMERO} <br />
-                <strong>Descrição:</strong> {item.DESCRICAO || "N/A"} <br />
-                <strong>Status:</strong> {item.status || "N/A"} <br />
-                <strong>Inventariante:</strong> {item.inventariante || "N/A"}{" "}
-                <br />
+                <strong>Número:</strong> {item.numero} <br />
+                <strong>Descrição:</strong> {item.descricao || "N/A"} <br />
+                <strong>Status:</strong>{" "}
+                {item.statusInventario || item.status || "N/A"} <br />
+                <strong>Inventariante:</strong>{" "}
+                {item.inventariante?.nome || item.inventariante || "N/A"} <br />
                 <strong>Data do Inventário:</strong>{" "}
                 {item.dataInventario
                   ? new Date(item.dataInventario).toLocaleDateString()

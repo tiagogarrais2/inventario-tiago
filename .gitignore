@@ -1,5 +1,7 @@
 .next
+.env
 .env.development
+.env.production
 .env.local
 node_modules
 public/*
@@ -9,3 +11,4 @@ public/*
 # Logs de auditoria (contêm dados sensíveis)
 logs/
 *.log
+/src/generated/prisma

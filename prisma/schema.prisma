@@ -1,0 +1,152 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  nome      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relacionamentos
+  inventariosProprietario Inventario[] @relation("InventarioProprietario")
+  permissoes              Permissao[]
+  auditorias              AuditLog[]
+  itensInventariados      ItemInventario[] @relation("InventarianteItem")
+
+  @@map("usuarios")
+}
+
+model Inventario {
+  id              String   @id @default(cuid())
+  nome            String   @unique // Ex: "inventario-1758232868005-tiago"
+  nomeExibicao    String   // Nome para exibir na interface
+  proprietarioId  String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relacionamentos
+  proprietario    Usuario           @relation("InventarioProprietario", fields: [proprietarioId], references: [id])
+  itens           ItemInventario[]
+  salas           Sala[]
+  cabecalhos      CabecalhoInventario[]
+  permissoes      Permissao[]
+  auditorias      AuditLog[]
+
+  @@map("inventarios")
+}
+
+model ItemInventario {
+  id                String   @id @default(cuid())
+  inventarioId      String
+  numero            String   // NUMERO do tombo
+  status            String?
+  ed                String?
+  contaContabil     String?  @map("conta_contabil")
+  descricao         String?
+  rotulos           String?
+  cargaAtual        String?  @map("carga_atual")
+  setorResponsavel  String?  @map("setor_responsavel")
+  campusCarga       String?  @map("campus_carga")
+  cargaContabil     String?  @map("carga_contabil")
+  valorAquisicao    String?  @map("valor_aquisicao")
+  valorDepreciado   String?  @map("valor_depreciado")
+  numeroNotaFiscal  String?  @map("numero_nota_fiscal")
+  numeroSerie       String?  @map("numero_serie")
+  dataEntrada       String?  @map("data_entrada")
+  dataCarga         String?  @map("data_carga")
+  fornecedor        String?
+  marca             String?
+  modelo            String?
+  sala              String?
+  setor             String?
+  estadoConservacao String?  @map("estado_conservacao")
+  
+  // Campos de inventário
+  dataInventario    DateTime?
+  inventarianteId   String?
+  salaEncontrada    String?  @map("sala_encontrada")
+  statusInventario  String?  @map("status_inventario")
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relacionamentos
+  inventario        Inventario @relation(fields: [inventarioId], references: [id])
+  inventariante     Usuario?   @relation("InventarianteItem", fields: [inventarianteId], references: [id])
+
+  @@unique([inventarioId, numero])
+  @@map("itens_inventario")
+}
+
+model Sala {
+  id           String @id @default(cuid())
+  inventarioId String
+  nome         String
+  createdAt    DateTime @default(now())
+
+  // Relacionamentos
+  inventario   Inventario @relation(fields: [inventarioId], references: [id])
+
+  @@unique([inventarioId, nome])
+  @@map("salas")
+}
+
+model CabecalhoInventario {
+  id           String @id @default(cuid())
+  inventarioId String
+  campo        String
+  ordem        Int
+  createdAt    DateTime @default(now())
+
+  // Relacionamentos
+  inventario   Inventario @relation(fields: [inventarioId], references: [id])
+
+  @@unique([inventarioId, campo])
+  @@map("cabecalhos_inventario")
+}
+
+model Permissao {
+  id           String  @id @default(cuid())
+  inventarioId String
+  usuarioId    String
+  ativa        Boolean @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relacionamentos
+  inventario   Inventario @relation(fields: [inventarioId], references: [id])
+  usuario      Usuario    @relation(fields: [usuarioId], references: [id])
+
+  @@unique([inventarioId, usuarioId])
+  @@map("permissoes")
+}
+
+model AuditLog {
+  id           String    @id @default(cuid())
+  timestamp    DateTime  @default(now())
+  acao         String
+  usuarioId    String?
+  inventarioId String?
+  detalhes     Json?
+  ip           String?
+  userAgent    String?
+
+  // Relacionamentos
+  usuario      Usuario?    @relation(fields: [usuarioId], references: [id])
+  inventario   Inventario? @relation(fields: [inventarioId], references: [id])
+
+  @@map("audit_logs")
+}
