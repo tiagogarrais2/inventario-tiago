@@ -1,4 +1,4 @@
-# 📋 Sistema de Inventário Colaborativo
+# 📋 Sistema de Inventário Tiago
 
 Sistema completo para gerenciamento de inventários com autenticação, controle de acesso e auditoria. Desenvolvido em Next.js 15 com NextAuth para autenticação segura via Google OAuth.
 
