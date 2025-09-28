@@ -251,7 +251,12 @@ class ItemInventarioService {
   }
 
   // Método específico para atualização de inventário por número
-  static async updateInventario(nomeInventario, numero, updateData, userEmail = null) {
+  static async updateInventario(
+    nomeInventario,
+    numero,
+    updateData,
+    userEmail = null
+  ) {
     const inventario = await InventarioService.findByName(nomeInventario);
     if (!inventario) throw new Error("Inventário não encontrado");
 
@@ -264,7 +269,9 @@ class ItemInventarioService {
     });
 
     if (!item) {
-      throw new Error(`Item ${numero} não encontrado no inventário ${nomeInventario}`);
+      throw new Error(
+        `Item ${numero} não encontrado no inventário ${nomeInventario}`
+      );
     }
 
     // Preparar dados para atualização

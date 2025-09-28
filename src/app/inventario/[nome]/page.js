@@ -6,7 +6,7 @@ import GerenciadorPermissoes from "../../components/GerenciadorPermissoes";
 
 export default function InventarioPage({ params }) {
   const [nome, setNome] = useState("");
-  
+
   useEffect(() => {
     if (params?.nome) {
       setNome(params.nome);
@@ -210,7 +210,12 @@ export default function InventarioPage({ params }) {
   }
 
   function handleCadastrar() {
-    router.push(`/cadastrar?nome=${nome}&numero=${valor}`);
+    const params = new URLSearchParams({
+      nome: nome,
+      numero: valor,
+      sala: salaSelecionada,
+    });
+    router.push(`/cadastrar?${params.toString()}`);
   }
 
   const handleSubmit = async (e) => {
@@ -383,6 +388,21 @@ export default function InventarioPage({ params }) {
 
       {resultado && (
         <div style={{ marginTop: 20 }}>
+          {resultado.cadastradoDuranteInventario && (
+            <div
+              style={{
+                backgroundColor: "#007bff",
+                color: "white",
+                padding: "8px 12px",
+                borderRadius: "5px",
+                marginBottom: "10px",
+                fontSize: "14px",
+                fontWeight: "bold",
+              }}
+            >
+              📝 Este item foi CADASTRADO durante o inventário
+            </div>
+          )}
           <pre
             style={{
               textAlign: "left",

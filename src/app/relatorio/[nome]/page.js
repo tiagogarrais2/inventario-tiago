@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 export default function RelatorioPage({ params }) {
   const [nome, setNome] = useState("");
-  
+
   useEffect(() => {
     if (params?.nome) {
       setNome(params.nome);
@@ -59,7 +59,7 @@ export default function RelatorioPage({ params }) {
         // Buscar todas as salas e todos os itens em paralelo
         const [salasRes, itensRes] = await Promise.all([
           fetch(`/api/salas?inventario=${encodeURIComponent(nome)}`),
-          fetch(`/api/inventario?inventario=${encodeURIComponent(nome)}`)
+          fetch(`/api/inventario?inventario=${encodeURIComponent(nome)}`),
         ]);
 
         if (!salasRes.ok) {
@@ -76,19 +76,19 @@ export default function RelatorioPage({ params }) {
 
         // Inicializar todas as salas com arrays vazios
         const agrupado = {};
-        salas.forEach(sala => {
+        salas.forEach((sala) => {
           agrupado[sala] = [];
         });
 
         // Agrupar itens por sala (prioriza salaEncontrada, senão sala)
         itens.forEach((item) => {
           const sala = item.salaEncontrada || item.sala || "Sala não definida";
-          
+
           // Se a sala do item não existe na lista de salas, criar uma entrada
           if (!agrupado[sala]) {
             agrupado[sala] = [];
           }
-          
+
           agrupado[sala].push(item);
         });
 
@@ -148,53 +148,86 @@ export default function RelatorioPage({ params }) {
     <div style={{ padding: "20px" }}>
       <h2>Relatório Geral</h2>
       <h2>{nome}</h2>
-      {Object.keys(itensPorSala).sort().map((sala) => (
-        <div key={sala} style={{ marginBottom: "30px" }}>
-          <h2>Sala: {sala}</h2>
-          {itensPorSala[sala].length === 0 ? (
-            <div
-              style={{
-                padding: "20px",
-                border: "1px solid #ddd",
-                backgroundColor: "#f8f9fa",
-                color: "#6c757d",
-                textAlign: "center",
-                fontStyle: "italic",
-                borderRadius: "5px"
-              }}
-            >
-              📦 Nenhum item encontrado nesta sala
-            </div>
-          ) : (
-            <ul>
-              {itensPorSala[sala].map((item, index) => (
-                <li
-                  key={index}
-                  style={{
-                    marginBottom: "10px",
-                    padding: "10px",
-                    border: "1px solid #ccc",
-                    backgroundColor: item.dataInventario ? "#d4edda" : "#f8d7da", // Verde para inventariado, vermelho para não
-                    color: item.dataInventario ? "#155724" : "#721c24",
-                    borderRadius: "5px"
-                  }}
-                >
-                  <strong>Número:</strong> {item.numero} <br />
-                  <strong>Descrição:</strong> {item.descricao || "N/A"} <br />
-                  <strong>Status:</strong>{" "}
-                  {item.statusInventario || item.status || "N/A"} <br />
-                  <strong>Inventariante:</strong>{" "}
-                  {item.inventariante?.nome || item.inventariante || "N/A"} <br />
-                  <strong>Data do Inventário:</strong>{" "}
-                  {item.dataInventario
-                    ? new Date(item.dataInventario).toLocaleDateString()
-                    : "Não inventariado"}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      ))}
+      {Object.keys(itensPorSala)
+        .sort()
+        .map((sala) => (
+          <div key={sala} style={{ marginBottom: "30px" }}>
+            <h2>Sala: {sala}</h2>
+            {itensPorSala[sala].length === 0 ? (
+              <div
+                style={{
+                  padding: "20px",
+                  border: "1px solid #ddd",
+                  backgroundColor: "#f8f9fa",
+                  color: "#6c757d",
+                  textAlign: "center",
+                  fontStyle: "italic",
+                  borderRadius: "5px",
+                }}
+              >
+                📦 Nenhum item encontrado nesta sala
+              </div>
+            ) : (
+              <ul>
+                {itensPorSala[sala].map((item, index) => (
+                  <li
+                    key={index}
+                    style={{
+                      marginBottom: "10px",
+                      padding: "10px",
+                      border: item.cadastradoDuranteInventario
+                        ? "2px solid #007bff"
+                        : "1px solid #ccc",
+                      backgroundColor: item.dataInventario
+                        ? "#d4edda"
+                        : "#f8d7da", // Verde para inventariado, vermelho para não
+                      color: item.dataInventario ? "#155724" : "#721c24",
+                      borderRadius: "5px",
+                      position: "relative",
+                    }}
+                  >
+                    {item.cadastradoDuranteInventario && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: "-8px",
+                          right: "10px",
+                          backgroundColor: "#007bff",
+                          color: "white",
+                          padding: "2px 8px",
+                          fontSize: "12px",
+                          borderRadius: "10px",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        📝 CADASTRADO
+                      </div>
+                    )}
+                    <strong>Número:</strong> {item.numero} <br />
+                    <strong>Descrição:</strong> {item.descricao || "N/A"} <br />
+                    <strong>Status:</strong>{" "}
+                    {item.statusInventario || item.status || "N/A"} <br />
+                    <strong>Inventariante:</strong>{" "}
+                    {item.inventariante?.nome || item.inventariante || "N/A"}{" "}
+                    <br />
+                    <strong>Data do Inventário:</strong>{" "}
+                    {item.dataInventario
+                      ? new Date(item.dataInventario).toLocaleDateString()
+                      : "Não inventariado"}
+                    {item.cadastradoDuranteInventario && (
+                      <>
+                        <br />
+                        <strong style={{ color: "#007bff" }}>
+                          🔖 Item cadastrado durante o inventário
+                        </strong>
+                      </>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ))}
     </div>
   );
 }

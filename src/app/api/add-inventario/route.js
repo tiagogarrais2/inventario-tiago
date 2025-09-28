@@ -104,6 +104,34 @@ export async function POST(request) {
 
     console.log(`✅ Item criado com sucesso:`, novoItem);
 
+    // Se o item foi cadastrado durante inventário (tem NUMERO pré-preenchido),
+    // marcar automaticamente como inventariado E como cadastrado durante inventário
+    if (itemData.NUMERO && itemData.SALA) {
+      console.log(
+        `📋 Item cadastrado durante inventário - marcando como inventariado e com flag especial`
+      );
+
+      const updateData = {
+        dataInventario: new Date().toISOString(),
+        salaEncontrada: itemData.SALA,
+        statusInventario: itemData.STATUS || "Em Uso",
+        inventarianteId: usuario.id,
+        cadastradoDuranteInventario: true,
+      };
+
+      const itemAtualizado = await ItemInventarioService.updateInventario(
+        nome,
+        itemData.NUMERO,
+        updateData,
+        session.user.email
+      );
+
+      console.log(
+        `✅ Item marcado como inventariado e cadastrado durante inventário:`,
+        itemAtualizado
+      );
+    }
+
     // Log de auditoria
     await AuditoriaService.log(
       "add_item",

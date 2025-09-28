@@ -40,6 +40,7 @@ export default function Cadastrar() {
     async function fetchFormFields() {
       const nome = searchParams.get("nome");
       const numero = searchParams.get("numero");
+      const sala = searchParams.get("sala");
 
       if (!nome) {
         setError("Parâmetro 'nome' ausente na URL.");
@@ -87,6 +88,11 @@ export default function Cadastrar() {
 
         if (numero) {
           initialData["NUMERO"] = numero;
+        }
+
+        // Preenche automaticamente a sala quando vem do inventário
+        if (sala) {
+          initialData["SALA"] = sala;
         }
 
         // Preenche automaticamente com o nome do usuário logado
