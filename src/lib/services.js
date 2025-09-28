@@ -112,12 +112,12 @@ class InventarioService {
       select: {
         id: true,
         nome: true,
-        criadoEm: true,
+        createdAt: true,
         _count: {
           select: { itens: true }
         }
       },
-      orderBy: { criadoEm: 'desc' }
+      orderBy: { createdAt: 'desc' }
     });
 
     // Buscar inventários onde o usuário tem permissão
@@ -131,7 +131,7 @@ class InventarioService {
           select: {
             id: true,
             nome: true,
-            criadoEm: true,
+            createdAt: true,
             _count: {
               select: { itens: true }
             }
@@ -236,7 +236,7 @@ class CabecalhoService {
     const inventario = await InventarioService.findByName(nomeInventario);
     if (!inventario) return [];
 
-    return await prisma.cabecalho.findMany({
+    return await prisma.cabecalhoInventario.findMany({
       where: { inventarioId: inventario.id },
       orderBy: { ordem: "asc" },
     });
@@ -246,7 +246,7 @@ class CabecalhoService {
     const inventario = await InventarioService.findByName(nomeInventario);
     if (!inventario) throw new Error("Inventário não encontrado");
 
-    return await prisma.cabecalho.create({
+    return await prisma.cabecalhoInventario.create({
       data: {
         inventarioId: inventario.id,
         ...dados,
@@ -255,16 +255,23 @@ class CabecalhoService {
   }
 
   static async createMany(nomeInventario, headers) {
+    console.log(`[CabecalhoService] Criando ${headers.length} cabeçalhos para ${nomeInventario}`);
+    
     const inventario = await InventarioService.findByName(nomeInventario);
-    if (!inventario) throw new Error("Inventário não encontrado");
+    if (!inventario) {
+      console.log(`[CabecalhoService] ERRO: Inventário ${nomeInventario} não encontrado`);
+      throw new Error("Inventário não encontrado");
+    }
 
     const cabecalhosData = headers.map((header, index) => ({
       inventarioId: inventario.id,
-      nome: header,
+      campo: header,
       ordem: index + 1,
     }));
 
-    return await prisma.cabecalho.createMany({
+    console.log(`[CabecalhoService] Dados preparados:`, cabecalhosData);
+
+    return await prisma.cabecalhoInventario.createMany({
       data: cabecalhosData,
     });
   }
