@@ -1,6 +1,7 @@
 "use client";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { Suspense } from "react";
 
 const errors = {
   Signin: "Tente fazer login com uma conta diferente.",
@@ -17,7 +18,7 @@ const errors = {
   default: "Não foi possível fazer login.",
 };
 
-export default function AuthError() {
+function ErrorContent() {
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
 
@@ -42,5 +43,13 @@ export default function AuthError() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AuthError() {
+  return (
+    <Suspense fallback={<div>Carregando...</div>}>
+      <ErrorContent />
+    </Suspense>
   );
 }
