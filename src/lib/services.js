@@ -298,11 +298,16 @@ class SalaService {
       });
       console.log(`[SalaService] Total de salas no banco para inventarioId ${inventario.id}: ${countSalas}`);
 
-      // Também vamos buscar todas as salas (sem filtro) para debug
-      const todasSalas = await prisma.sala.findMany({
-        select: { inventarioId: true, nome: true }
+      // Vamos buscar informações dos inventários que têm salas
+      const inventariosComSalas = await prisma.inventario.findMany({
+        where: {
+          id: {
+            in: ['cmg2zljj60005l504yvyoa7n5', 'cmg2zz1xt0005l804jekrjnlm']
+          }
+        },
+        select: { id: true, nome: true, nomeExibicao: true }
       });
-      console.log(`[SalaService] Todas as salas no banco (debug):`, todasSalas);
+      console.log(`[SalaService] Inventários que têm salas:`, inventariosComSalas);
 
       console.log(`[SalaService] Executando query: prisma.sala.findMany({ where: { inventarioId: "${inventario.id}" } })`);
       
