@@ -147,7 +147,25 @@ export default function RelatorioPage({ params }) {
   return (
     <div style={{ padding: "20px" }}>
       <h2>Relatório Geral</h2>
-      <h2>{nome}</h2>
+      <h2>
+        <a
+          href={`/inventario/${nome}`}
+          style={{
+            color: "#007bff",
+            textDecoration: "none",
+            cursor: "pointer",
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.textDecoration = "underline";
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.textDecoration = "none";
+          }}
+          title="Clique para ir ao inventário"
+        >
+          {nome}
+        </a>
+      </h2>
       {Object.keys(itensPorSala)
         .sort()
         .map((sala) => (
