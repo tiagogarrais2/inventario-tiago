@@ -112,7 +112,14 @@ class InventarioService {
       select: {
         id: true,
         nome: true,
+        nomeExibicao: true,
         createdAt: true,
+        proprietario: {
+          select: {
+            nome: true,
+            email: true
+          }
+        },
         _count: {
           select: { itens: true }
         }
@@ -131,7 +138,14 @@ class InventarioService {
           select: {
             id: true,
             nome: true,
+            nomeExibicao: true,
             createdAt: true,
+            proprietario: {
+              select: {
+                nome: true,
+                email: true
+              }
+            },
             _count: {
               select: { itens: true }
             }
