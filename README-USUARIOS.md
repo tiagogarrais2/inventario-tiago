@@ -4,7 +4,24 @@
 
 ---
 
-## 👋 Bem-vindo ao Sistema de Inventário!
+## � Como é o Sistema?
+
+<details>
+<summary><strong>🖼️ Clique aqui para ver as telas do sistema</strong></summary>
+
+**Não se preocupe! O sistema é bem simples e intuitivo. Veja como são as telas:**
+
+| Tela Principal | Fazendo Inventário | Vendo Relatórios |
+|:---:|:---:|:---:|
+| ![Interface](https://github.com/tiagogarrais/inventario-tiago/raw/master/public/Telas/01.jpg) | ![Inventário](https://github.com/tiagogarrais/inventario-tiago/raw/master/public/Telas/02.jpg) | ![Relatórios](https://github.com/tiagogarrais/inventario-tiago/raw/master/public/Telas/03.jpg) |
+
+*As telas são simples e fáceis de usar - você vai se acostumar rapidinho!*
+
+</details>
+
+---
+
+## �👋 Bem-vindo ao Sistema de Inventário!
 
 Este guia foi criado especialmente para **você que faz parte de uma comissão inventariante** e vai usar nosso sistema para realizar o inventário dos bens patrimoniais. Não se preocupe se você não é da área de informática - este guia explica tudo de forma simples e prática!
 
@@ -28,6 +45,18 @@ Este guia foi criado especialmente para **você que faz parte de uma comissão i
 4. Pronto! Você está dentro do sistema
 
 > 💡 **Dica**: Use sempre a mesma conta do Gmail para manter seu histórico
+
+### 🧪 **Quer Testar Primeiro?**
+
+Se você é responsável por criar o inventário, pode baixar um arquivo de exemplo:
+
+1. **Na página inicial** (antes de fazer login), procure por "Teste o Sistema"
+2. **Clique em "Baixar Exemplo JSON"** 
+3. **Faça login** no sistema
+4. **Use o arquivo baixado** para testar o upload
+5. **Explore** todas as funcionalidades com dados fictícios!
+
+> 📁 **O arquivo de exemplo** contém dados fictícios que simulam um inventário real
 
 ### 2️⃣ **Acessando um Inventário**
 

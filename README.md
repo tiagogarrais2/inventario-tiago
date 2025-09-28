@@ -4,7 +4,51 @@ Sistema completo para gerenciamento de inventários com banco de dados PostgreSQ
 
 ---
 
-## 📖 Documentação
+## �️ Demonstração Visual
+
+<details>
+<summary>📸 <strong>Ver Screenshots do Sistema</strong></summary>
+
+| Interface Principal | Página de Inventário | Relatórios |
+|:---:|:---:|:---:|
+| ![Tela 01](./public/Telas/01.jpg) | ![Tela 02](./public/Telas/02.jpg) | ![Tela 03](./public/Telas/03.jpg) |
+
+| Gerenciamento de Permissões | Cadastro de Itens | Dashboard |
+|:---:|:---:|:---:|
+| ![Tela 04](./public/Telas/04.jpg) | ![Tela 05](./public/Telas/05.jpg) | ![Tela 06](./public/Telas/06.jpg) |
+
+<details>
+<summary>🔍 <strong>Ver Mais Screenshots</strong></summary>
+
+| Tela 07 | Tela 08 | Tela 09 |
+|:---:|:---:|:---:|
+| ![Tela 07](./public/Telas/07.jpg) | ![Tela 08](./public/Telas/08.jpg) | ![Tela 09](./public/Telas/09.jpg) |
+
+| Tela 10 | Tela 11 | Tela 12 |
+|:---:|:---:|:---:|
+| ![Tela 10](./public/Telas/10.jpg) | ![Tela 11](./public/Telas/11.jpg) | ![Tela 12](./public/Telas/12.jpg) |
+
+| Tela 13 |
+|:---:|
+| ![Tela 13](./public/Telas/13.jpg) |
+
+</details>
+</details>
+
+---
+
+## 🧪 Teste o Sistema
+
+**Quer experimentar sem configurar nada?**
+
+1. **📥 [Baixar Arquivo de Exemplo](./public/exemplo-json/inventario.json)** 
+2. **🌐 Acesse o sistema** e faça login com Google
+3. **📤 Faça upload** do arquivo baixado
+4. **🎯 Explore todas as funcionalidades!**
+
+---
+
+## �📖 Documentação
 
 - **👨‍💻 Para Desenvolvedores**: Continue lendo este README
 - **👥 Para Usuários Finais**: [📋 Guia do Usuário - Comissões Inventariantes](./README-USUARIOS.md)
@@ -60,6 +104,14 @@ Sistema completo para gerenciamento de inventários com banco de dados PostgreSQ
 - **Marcação especial**: Badge para itens cadastrados durante inventário
 - **Navegação integrada**: Links diretos entre relatório e inventário
 - **Dados do inventariante**: Exibição correta do nome real dos usuários
+
+### 🧪 **Demonstração e Testes**
+
+- **Arquivo de exemplo**: JSON com dados fictícios realistas para teste
+- **Download direto**: Disponível na página inicial para usuários não logados  
+- **Screenshots completos**: 13 telas do sistema para visualização
+- **Teste sem instalação**: Possibilidade de testar antes de configurar
+- **Dados de demonstração**: Estrutura completa para entender o funcionamento
 
 ## 🏗️ Arquitetura do Sistema
 
@@ -315,6 +367,10 @@ src/app/
 ├── prisma/               # Schema e migrações
 │   ├── schema.prisma     # Modelo de dados
 │   └── migrations/       # Migrações do banco
+├── public/               # Arquivos públicos
+│   ├── Telas/           # Screenshots do sistema (01.jpg - 13.jpg)
+│   └── exemplo-json/    # Arquivo de exemplo para download
+│       └── inventario.json # Dados fictícios para teste
 └── layout.js             # Layout principal
 ```
 
@@ -420,6 +476,11 @@ npx prisma migrate deploy
 - 📊 **FIX**: Relatórios agora mostram salas vazias
 - 🔧 **FIX**: Correções em permissões e UX geral
 - 🚀 **NEW**: Deploy total no Vercel com banco PostgreSQL
+- 📸 **NEW**: 13 screenshots do sistema disponíveis no repositório
+- 🧪 **NEW**: Arquivo de exemplo para download e teste
+- 📁 **NEW**: Pasta public/ liberada para versionamento completo
+- 📖 **NEW**: Guia completo para usuários finais (comissões inventariantes)
+- 🎨 **NEW**: Página inicial redesenhada com seção de teste
 
 ### **v1.0.0** - Versão inicial
 
