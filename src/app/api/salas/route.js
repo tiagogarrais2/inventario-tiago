@@ -49,7 +49,9 @@ export async function GET(request) {
       );
     }
 
-    return NextResponse.json(salas);
+    // Retornar apenas os nomes das salas para compatibilidade com o front-end
+    const nomesSalas = salas.map(sala => sala.nome);
+    return NextResponse.json(nomesSalas);
   } catch (error) {
     console.error("Erro ao buscar salas:", error);
 
