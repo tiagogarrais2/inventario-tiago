@@ -2,6 +2,15 @@
 
 Sistema completo para gerenciamento de inventários com banco de dados PostgreSQL, autenticação, controle de acesso e auditoria. Desenvolvido em Next.js 15 com NextAuth para autenticação segura via Google OAuth e Prisma ORM para persistência de dados.
 
+---
+
+## 📖 Documentação
+
+- **👨‍💻 Para Desenvolvedores**: Continue lendo este README
+- **👥 Para Usuários Finais**: [📋 Guia do Usuário - Comissões Inventariantes](./README-USUARIOS.md)
+
+---
+
 ## ✨ Principais Funcionalidades
 
 ### �️ **Sistema de Banco de Dados Robusto**
