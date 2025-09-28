@@ -26,10 +26,14 @@ export async function GET(request) {
   }
 
   try {
+    console.log(`[API SALAS] Buscando salas para inventário: ${nomeInventario}`);
+    
     // Verificar permissões de acesso ao inventário
     const permissao = await hasPermission(nomeInventario, session.user.email);
+    console.log(`[API SALAS] Permissão verificada:`, permissao);
 
     if (!permissao.hasAccess) {
+      console.log(`[API SALAS] Acesso negado para ${session.user.email}`);
       return NextResponse.json(
         {
           error:
@@ -39,10 +43,15 @@ export async function GET(request) {
       );
     }
 
+    console.log(`[API SALAS] Chamando SalaService.listByInventario(${nomeInventario})`);
+    
     // Buscar salas do inventário no banco de dados
     const salas = await SalaService.listByInventario(nomeInventario);
+    
+    console.log(`[API SALAS] Resultado: ${salas.length} salas encontradas`);
 
     if (salas.length === 0) {
+      console.log(`[API SALAS] Nenhuma sala encontrada, retornando 404`);
       return NextResponse.json(
         { error: "Nenhuma sala encontrada para este inventário." },
         { status: 404 }
