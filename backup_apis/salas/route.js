@@ -1,8 +1,11 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
 import { NextResponse } from "next/server";
-import { hasPermission } from "../../lib/permissoes.js";
-import { SalaService, AuditoriaService } from "../../../lib/services.js";
+import { hasPermission } from "../../lib/permissoes";
+import {
+  SalaService,
+  AuditoriaService,
+} from "../../../lib/services.js";
 
 export async function GET(request) {
   // Verificar autenticação

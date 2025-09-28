@@ -2,7 +2,10 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
 import { hasPermission } from "../../lib/permissoes";
-import { PermissaoService, AuditoriaService } from "../../../lib/services.js";
+import {
+  PermissaoService,
+  AuditoriaService,
+} from "../../../lib/services.js";
 import { obterIP } from "../../lib/auditoria";
 
 export async function GET(request) {

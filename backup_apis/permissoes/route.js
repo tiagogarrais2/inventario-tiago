@@ -159,7 +159,7 @@ export async function POST(request) {
       usuarioId: usuarioAlvo.id,
       inventarioId: inventarioData.id,
       concedidoPorId: usuario.id,
-      tipo: "ACESSO",
+      tipo: "ACESSO"
     });
 
     await AuditoriaService.log(
@@ -176,8 +176,8 @@ export async function POST(request) {
         email: emailUsuario,
         concedidaPor: session.user.email,
         concedidaEm: novaPermissao.criadoEm,
-        ativa: true,
-      },
+        ativa: true
+      }
     });
   } catch (error) {
     console.error("Erro ao conceder permissão:", error);
@@ -272,7 +272,7 @@ export async function DELETE(request) {
     );
 
     return NextResponse.json({
-      message: "Permissão revogada com sucesso",
+      message: "Permissão revogada com sucesso"
     });
   } catch (error) {
     console.error("Erro ao revogar permissão:", error);

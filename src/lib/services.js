@@ -467,6 +467,43 @@ export class PermissaoService {
 
     return permissao?.ativa === true;
   }
+
+  /**
+   * Busca permissão por usuário e inventário
+   */
+  static async findByUserAndInventario(usuarioId, inventarioId) {
+    return await prisma.permissao.findUnique({
+      where: {
+        inventarioId_usuarioId: {
+          inventarioId,
+          usuarioId,
+        },
+      },
+    });
+  }
+
+  /**
+   * Cria nova permissão
+   */
+  static async create(data) {
+    return await prisma.permissao.create({
+      data: {
+        inventarioId: data.inventarioId,
+        usuarioId: data.usuarioId,
+        concedidoPorId: data.concedidoPorId,
+        ativa: true,
+      },
+    });
+  }
+
+  /**
+   * Remove permissão
+   */
+  static async delete(permissaoId) {
+    return await prisma.permissao.delete({
+      where: { id: permissaoId },
+    });
+  }
 }
 
 /**

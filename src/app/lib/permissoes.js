@@ -48,7 +48,7 @@ export async function getOwnerInfo(inventarioNome) {
 // Listar usuários com permissão
 export async function getUsersWithPermission(inventarioNome) {
   try {
-    const { PermissaoService } = await import("../../lib/services.js");
+    const { PermissaoService } = await import("../../lib/services");
     const permissoes = await PermissaoService.listByInventario(inventarioNome);
 
     return permissoes

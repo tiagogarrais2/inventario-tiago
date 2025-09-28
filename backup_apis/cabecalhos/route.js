@@ -1,8 +1,8 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
 import { NextResponse } from "next/server";
-import { hasPermission } from "../../lib/permissoes.js";
-import { SalaService, AuditoriaService } from "../../../lib/services.js";
+import { hasPermission } from "../../lib/permissoes";
+import { CabecalhoService, AuditoriaService } from "../../../lib/services.js";
 
 export async function GET(request) {
   // Verificar autenticação
@@ -39,22 +39,22 @@ export async function GET(request) {
       );
     }
 
-    // Buscar salas do inventário no banco de dados
-    const salas = await SalaService.listByInventario(nomeInventario);
+    // Buscar cabeçalhos do inventário no banco de dados
+    const cabecalhos = await CabecalhoService.listByInventario(nomeInventario);
 
-    if (salas.length === 0) {
+    if (cabecalhos.length === 0) {
       return NextResponse.json(
-        { error: "Nenhuma sala encontrada para este inventário." },
+        { error: "Nenhum cabeçalho encontrado para este inventário." },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(salas);
+    return NextResponse.json(cabecalhos);
   } catch (error) {
-    console.error("Erro ao buscar salas:", error);
+    console.error("Erro ao buscar cabeçalhos:", error);
 
     // Log do erro para auditoria
-    await AuditoriaService.log("ERRO_BUSCAR_SALAS", session.user, {
+    await AuditoriaService.log("ERRO_BUSCAR_CABECALHOS", session.user, {
       erro: error.message,
       inventario: nomeInventario,
     });
