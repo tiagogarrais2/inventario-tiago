@@ -140,12 +140,12 @@ class InventarioService {
       }
     });
 
-    const inventariosComPermissao = permissoes.map(p => p.inventario);
+    const inventariosComPermissao = permissoes.map(p => p.inventario).filter(inv => inv !== null);
 
     // Combinar e remover duplicatas
     const todosInventarios = [...inventariosProprietario, ...inventariosComPermissao];
     const inventariosUnicos = todosInventarios.filter((inventario, index, self) => 
-      index === self.findIndex(i => i.id === inventario.id)
+      inventario && index === self.findIndex(i => i && i.id === inventario.id)
     );
 
     return inventariosUnicos;
@@ -226,6 +226,36 @@ class SalaService {
         inventarioId: inventario.id,
         ...dados,
       },
+    });
+  }
+
+  static async createMany(nomeInventario, salas) {
+    console.log(`[SalaService] Criando ${salas.length} salas para ${nomeInventario}`);
+    
+    const inventario = await InventarioService.findByName(nomeInventario);
+    if (!inventario) {
+      console.log(`[SalaService] ERRO: Inventário ${nomeInventario} não encontrado`);
+      throw new Error("Inventário não encontrado");
+    }
+
+    // Remover duplicatas e criar dados únicos
+    const salasUnicas = [...new Set(salas.filter(sala => sala && sala.trim() !== ''))];
+    
+    const salasData = salasUnicas.map(nome => ({
+      inventarioId: inventario.id,
+      nome: nome.trim(),
+    }));
+
+    console.log(`[SalaService] Dados preparados para ${salasData.length} salas únicas`);
+
+    if (salasData.length === 0) {
+      console.log(`[SalaService] Nenhuma sala válida para criar`);
+      return [];
+    }
+
+    return await prisma.sala.createMany({
+      data: salasData,
+      skipDuplicates: true, // Ignora duplicatas no banco
     });
   }
 }
