@@ -49,7 +49,12 @@ export async function GET(request) {
       );
     }
 
-    return NextResponse.json(cabecalhos);
+    // Retornar apenas os nomes dos campos ordenados por ordem
+    const nomesCampos = cabecalhos
+      .sort((a, b) => a.ordem - b.ordem)
+      .map(cabecalho => cabecalho.campo);
+    
+    return NextResponse.json(nomesCampos);
   } catch (error) {
     console.error("Erro ao buscar cabeçalhos:", error);
 
