@@ -5,7 +5,13 @@ import { useSession } from "next-auth/react";
 import GerenciadorPermissoes from "../../components/GerenciadorPermissoes";
 
 export default function InventarioPage({ params }) {
-  const { nome } = React.use(params);
+  const [nome, setNome] = useState("");
+  
+  useEffect(() => {
+    if (params?.nome) {
+      setNome(params.nome);
+    }
+  }, [params]);
   const { data: session, status } = useSession();
   const [valor, setValor] = useState("");
   const [resultado, setResultado] = useState(null);

@@ -4,7 +4,13 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 export default function RelatorioPage({ params }) {
-  const { nome } = React.use(params); // Desembrulha params com React.use()
+  const [nome, setNome] = useState("");
+  
+  useEffect(() => {
+    if (params?.nome) {
+      setNome(params.nome);
+    }
+  }, [params]);
   const { data: session, status } = useSession();
   const router = useRouter();
   const [itensPorSala, setItensPorSala] = useState({});
