@@ -159,8 +159,6 @@ export async function POST(request) {
     const novaPermissao = await PermissaoService.create({
       usuarioId: usuarioAlvo.id,
       inventarioId: inventarioData.id,
-      concedidoPorId: usuario.id,
-      tipo: "ACESSO",
     });
 
     await AuditoriaService.log(
@@ -176,7 +174,7 @@ export async function POST(request) {
         id: novaPermissao.id,
         email: emailUsuario,
         concedidaPor: session.user.email,
-        concedidaEm: novaPermissao.criadoEm,
+        concedidaEm: novaPermissao.createdAt,
         ativa: true,
       },
     });

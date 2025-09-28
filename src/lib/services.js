@@ -497,7 +497,6 @@ class PermissaoService {
       data: {
         inventarioId: data.inventarioId,
         usuarioId: data.usuarioId,
-        concedidoPorId: data.concedidoPorId,
         ativa: true,
       },
     });
