@@ -25,12 +25,14 @@ export default function Home() {
   if (status === "unauthenticated") {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-6">
-        <h1 className="text-3xl font-bold text-gray-800">📋 Sistema de Inventário</h1>
+        <h1 className="text-3xl font-bold text-gray-800">
+          📋 Sistema de Inventário
+        </h1>
         <p className="text-gray-600 text-center max-w-md">
-          Sistema completo para gerenciamento de inventários com autenticação, 
+          Sistema completo para gerenciamento de inventários com autenticação,
           controle de acesso e relatórios em tempo real.
         </p>
-        
+
         {/* Seção de Teste */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 max-w-md">
           <h2 className="text-lg font-semibold text-blue-800 mb-3">
@@ -55,11 +57,10 @@ export default function Home() {
 
         {/* Seção de Login */}
         <div className="text-center">
-          <p className="text-gray-600 mb-2">
-            Pronto para começar?
-          </p>
+          <p className="text-gray-600 mb-2">Pronto para começar?</p>
           <p className="text-sm text-gray-500 mb-4">
-            Use o botão &quot;Entrar com Google&quot; no cabeçalho para fazer login.
+            Use o botão &quot;Entrar com Google&quot; no cabeçalho para fazer
+            login.
           </p>
         </div>
 

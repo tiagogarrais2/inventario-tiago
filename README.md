@@ -93,7 +93,7 @@ itens_inventario {
   inventarioId: String -> inventarios.id
   numero: String
   [... campos específicos do item ...]
-  
+
   -- Campos de inventário
   dataInventario: DateTime?
   inventarianteId: String? -> usuarios.id
@@ -370,28 +370,33 @@ npx prisma migrate deploy
 ## 🎉 Novidades da Versão 2.0.0
 
 ### **🗄️ Migração para PostgreSQL**
+
 - Substituição completa do sistema de arquivos JSON por banco PostgreSQL
 - Performance drasticamente melhorada
 - Integridade referencial e consistência de dados
 - Compatibilidade total com Vercel e outras plataformas
 
 ### **🏷️ Marcação de Itens Cadastrados**
+
 - Itens cadastrados durante inventário recebem marcação especial
 - Badge visual nos relatórios para identificação
 - Campo `cadastradoDuranteInventario` no banco para relatórios futuros
 
 ### **🔗 Navegação Aprimorada**
+
 - Nome do inventário no relatório é clicável (link para inventário)
 - Navegação fluida entre páginas
 - UX melhorada com pré-preenchimento automático
 
 ### **👤 Correções de UX**
+
 - Exibição correta do nome real dos inventariantes
 - Correção de datas nas permissões
 - Botão de revogar acesso funcionando corretamente
 - Criação automática de usuários ao conceder permissões
 
 ### **📊 Relatórios Melhorados**
+
 - Salas vazias aparecem nos relatórios
 - Identificação visual de itens cadastrados vs encontrados
 - Dados em tempo real do banco de dados
@@ -407,6 +412,7 @@ npx prisma migrate deploy
 ## 📈 Changelog
 
 ### **v2.0.0** - 28/09/2025
+
 - 🗄️ **BREAKING**: Migração completa para PostgreSQL com Prisma ORM
 - 🏷️ **NEW**: Marcação especial para itens cadastrados durante inventário
 - 🔗 **NEW**: Links navegáveis entre relatório e inventário
@@ -416,6 +422,7 @@ npx prisma migrate deploy
 - 🚀 **NEW**: Deploy total no Vercel com banco PostgreSQL
 
 ### **v1.0.0** - Versão inicial
+
 - Sistema baseado em arquivos JSON
 - Autenticação Google OAuth
 - Controle de permissões básico

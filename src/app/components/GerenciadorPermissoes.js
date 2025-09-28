@@ -191,7 +191,9 @@ export default function GerenciadorPermissoes({
               <div key={index} className="modal-list-item">
                 <div className="modal-list-item-content">
                   <div>
-                    <span className="modal-user-email">{permissao.usuario.email}</span>
+                    <span className="modal-user-email">
+                      {permissao.usuario.email}
+                    </span>
                     <div className="modal-user-date">
                       Concedido em:{" "}
                       {new Date(permissao.createdAt).toLocaleString("pt-BR")}
