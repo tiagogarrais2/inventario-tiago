@@ -250,6 +250,43 @@ class ItemInventarioService {
     });
   }
 
+  // Método específico para atualização de inventário por número
+  static async updateInventario(nomeInventario, numero, updateData, userEmail = null) {
+    const inventario = await InventarioService.findByName(nomeInventario);
+    if (!inventario) throw new Error("Inventário não encontrado");
+
+    // Buscar o item pelo número no inventário específico
+    const item = await prisma.itemInventario.findFirst({
+      where: {
+        inventarioId: inventario.id,
+        numero: numero.toString(),
+      },
+    });
+
+    if (!item) {
+      throw new Error(`Item ${numero} não encontrado no inventário ${nomeInventario}`);
+    }
+
+    // Preparar dados para atualização
+    const itemData = {
+      ...updateData,
+      updatedAt: new Date(),
+    };
+
+    // Se tem informações de inventariante, adicionar
+    if (userEmail) {
+      const usuario = await UsuarioService.findByEmail(userEmail);
+      if (usuario) {
+        itemData.inventarianteId = usuario.id;
+      }
+    }
+
+    return await prisma.itemInventario.update({
+      where: { id: item.id },
+      data: itemData,
+    });
+  }
+
   static async delete(id) {
     return await prisma.itemInventario.delete({
       where: { id },

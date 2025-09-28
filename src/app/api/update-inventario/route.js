@@ -85,7 +85,7 @@ export async function POST(request) {
     console.log(`💾 Atualizando item no banco:`, updateData);
 
     // Atualizar o item no banco
-    const itemAtualizado = await ItemInventarioService.update(
+    const itemAtualizado = await ItemInventarioService.updateInventario(
       nome,
       numero,
       updateData,
