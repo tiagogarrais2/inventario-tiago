@@ -184,6 +184,11 @@ class ItemInventarioService {
         inventarioId: inventario.id,
         numero: numero.toString(),
       },
+      include: {
+        inventariante: {
+          select: { nome: true, email: true },
+        },
+      },
     });
   }
 
@@ -306,6 +311,11 @@ class ItemInventarioService {
 
     return await prisma.itemInventario.findMany({
       where: { inventarioId: inventario.id },
+      include: {
+        inventariante: {
+          select: { nome: true, email: true },
+        },
+      },
       orderBy: { createdAt: "desc" },
     });
   }
