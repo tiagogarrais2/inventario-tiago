@@ -16,6 +16,14 @@ class UsuarioService {
           nome: sessionUser.name || email.split("@")[0],
         },
       });
+    } else {
+      // Atualizar o nome se temos um nome melhor do NextAuth
+      if (sessionUser.name && sessionUser.name !== usuario.nome && sessionUser.name !== email.split("@")[0]) {
+        usuario = await prisma.usuario.update({
+          where: { email },
+          data: { nome: sessionUser.name },
+        });
+      }
     }
 
     return usuario;
