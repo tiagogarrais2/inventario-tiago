@@ -161,10 +161,7 @@ class ItemInventarioService {
     return await prisma.itemInventario.findFirst({
       where: {
         inventarioId: inventario.id,
-        dados: {
-          path: ["NUMERO"],
-          equals: numero.toString(),
-        },
+        numero: numero.toString(),
       },
     });
   }
@@ -173,18 +170,62 @@ class ItemInventarioService {
     const inventario = await InventarioService.findByName(nomeInventario);
     if (!inventario) throw new Error("Inventário não encontrado");
 
+    // Mapear os campos do Excel para os campos do Prisma
+    const itemData = {
+      inventarioId: inventario.id,
+      numero: dados.NUMERO?.toString() || '',
+      status: dados.STATUS || '',
+      ed: dados.ED || '',
+      contaContabil: dados['CONTA CONTABIL'] || '',
+      descricao: dados.DESCRICAO || '',
+      rotulos: dados.RÓTULOS || '',
+      cargaAtual: dados['CARGA ATUAL'] || '',
+      setorResponsavel: dados['SETOR DO RESPONSÁVEL'] || '',
+      campusCarga: dados['CAMPUS DA CARGA'] || '',
+      cargaContabil: dados['CARGA CONTÁBIL'] || '',
+      valorAquisicao: dados['VALOR AQUISIÇÃO'] || '',
+      valorDepreciado: dados['VALOR DEPRECIADO'] || '',
+      numeroNotaFiscal: dados['NUMERO NOTA FISCAL'] || '',
+      numeroSerie: dados['NÚMERO DE SÉRIE'] || '',
+      dataEntrada: dados['DATA DA ENTRADA'] || '',
+      dataCarga: dados['DATA DA CARGA'] || '',
+      fornecedor: dados.FORNECEDOR || '',
+      sala: dados.SALA || '',
+      estadoConservacao: dados['ESTADO DE CONSERVAÇÃO'] || '',
+    };
+
     return await prisma.itemInventario.create({
-      data: {
-        inventarioId: inventario.id,
-        dados,
-      },
+      data: itemData,
     });
   }
 
   static async update(id, dados) {
+    // Mapear os campos do Excel para os campos do Prisma
+    const itemData = {
+      numero: dados.NUMERO?.toString() || '',
+      status: dados.STATUS || '',
+      ed: dados.ED || '',
+      contaContabil: dados['CONTA CONTABIL'] || '',
+      descricao: dados.DESCRICAO || '',
+      rotulos: dados.RÓTULOS || '',
+      cargaAtual: dados['CARGA ATUAL'] || '',
+      setorResponsavel: dados['SETOR DO RESPONSÁVEL'] || '',
+      campusCarga: dados['CAMPUS DA CARGA'] || '',
+      cargaContabil: dados['CARGA CONTÁBIL'] || '',
+      valorAquisicao: dados['VALOR AQUISIÇÃO'] || '',
+      valorDepreciado: dados['VALOR DEPRECIADO'] || '',
+      numeroNotaFiscal: dados['NUMERO NOTA FISCAL'] || '',
+      numeroSerie: dados['NÚMERO DE SÉRIE'] || '',
+      dataEntrada: dados['DATA DA ENTRADA'] || '',
+      dataCarga: dados['DATA DA CARGA'] || '',
+      fornecedor: dados.FORNECEDOR || '',
+      sala: dados.SALA || '',
+      estadoConservacao: dados['ESTADO DE CONSERVAÇÃO'] || '',
+    };
+
     return await prisma.itemInventario.update({
       where: { id },
-      data: { dados },
+      data: itemData,
     });
   }
 
@@ -200,8 +241,13 @@ class ItemInventarioService {
 
     return await prisma.itemInventario.findMany({
       where: { inventarioId: inventario.id },
-      orderBy: { criadoEm: "desc" },
+      orderBy: { createdAt: "desc" },
     });
+  }
+
+  // Alias para compatibilidade com API routes
+  static async listByInventario(nomeInventario) {
+    return await this.findByInventario(nomeInventario);
   }
 }
 
@@ -258,6 +304,11 @@ class SalaService {
       skipDuplicates: true, // Ignora duplicatas no banco
     });
   }
+
+  // Alias para compatibilidade com API routes
+  static async listByInventario(nomeInventario) {
+    return await this.findByInventario(nomeInventario);
+  }
 }
 
 // Service para gerenciar cabeçalhos
@@ -304,6 +355,11 @@ class CabecalhoService {
     return await prisma.cabecalhoInventario.createMany({
       data: cabecalhosData,
     });
+  }
+
+  // Alias para compatibilidade com API routes
+  static async listByInventario(nomeInventario) {
+    return await this.findByInventario(nomeInventario);
   }
 }
 
