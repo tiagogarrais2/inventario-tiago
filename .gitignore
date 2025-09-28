@@ -7,6 +7,9 @@ node_modules
 public/*
 # Permite o rastreamento da pasta public em si
 !public/.gitkeep
+# Permite arquivo de exemplo para download
+!public/exemplo-json/
+!public/exemplo-json/inventario.json
 
 # Logs de auditoria (contêm dados sensíveis)
 logs/
