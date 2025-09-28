@@ -4,7 +4,7 @@ import prisma from "./db.js";
 class UsuarioService {
   static async findOrCreateFromSession(sessionUser) {
     const email = sessionUser.email;
-    
+
     let usuario = await prisma.usuario.findUnique({
       where: { email },
     });
@@ -31,7 +31,9 @@ class UsuarioService {
 // Service para gerenciar inventários
 class InventarioService {
   static async findByName(nome) {
-    return await prisma.inventario.findUnique({
+    console.log(`[InventarioService] Buscando inventário: ${nome}`);
+    
+    const inventario = await prisma.inventario.findUnique({
       where: { nome },
       include: {
         proprietario: {
@@ -39,15 +41,19 @@ class InventarioService {
         },
       },
     });
+
+    console.log(`[InventarioService] Inventário encontrado:`, inventario ? `ID: ${inventario.id}` : 'null');
+    
+    return inventario;
   }
 
   static async create(nome, nomeExibicao = null, userEmail = null) {
     let proprietarioId = null;
-    
+
     if (userEmail) {
       const proprietario = await UsuarioService.findOrCreateFromSession({
         email: userEmail,
-        name: userEmail.split('@')[0]
+        name: userEmail.split("@")[0],
       });
       proprietarioId = proprietario.id;
     }
@@ -117,21 +123,21 @@ class InventarioService {
         proprietario: {
           select: {
             nome: true,
-            email: true
-          }
+            email: true,
+          },
         },
         _count: {
-          select: { itens: true }
-        }
+          select: { itens: true },
+        },
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: "desc" },
     });
 
     // Buscar inventários onde o usuário tem permissão
     const permissoes = await prisma.permissao.findMany({
-      where: { 
+      where: {
         usuarioId: usuario.id,
-        ativa: true 
+        ativa: true,
       },
       include: {
         inventario: {
@@ -143,23 +149,30 @@ class InventarioService {
             proprietario: {
               select: {
                 nome: true,
-                email: true
-              }
+                email: true,
+              },
             },
             _count: {
-              select: { itens: true }
-            }
-          }
-        }
-      }
+              select: { itens: true },
+            },
+          },
+        },
+      },
     });
 
-    const inventariosComPermissao = permissoes.map(p => p.inventario).filter(inv => inv !== null);
+    const inventariosComPermissao = permissoes
+      .map((p) => p.inventario)
+      .filter((inv) => inv !== null);
 
     // Combinar e remover duplicatas
-    const todosInventarios = [...inventariosProprietario, ...inventariosComPermissao];
-    const inventariosUnicos = todosInventarios.filter((inventario, index, self) => 
-      inventario && index === self.findIndex(i => i && i.id === inventario.id)
+    const todosInventarios = [
+      ...inventariosProprietario,
+      ...inventariosComPermissao,
+    ];
+    const inventariosUnicos = todosInventarios.filter(
+      (inventario, index, self) =>
+        inventario &&
+        index === self.findIndex((i) => i && i.id === inventario.id)
     );
 
     return inventariosUnicos;
@@ -187,25 +200,25 @@ class ItemInventarioService {
     // Mapear os campos do Excel para os campos do Prisma
     const itemData = {
       inventarioId: inventario.id,
-      numero: dados.NUMERO?.toString() || '',
-      status: dados.STATUS || '',
-      ed: dados.ED || '',
-      contaContabil: dados['CONTA CONTABIL'] || '',
-      descricao: dados.DESCRICAO || '',
-      rotulos: dados.RÓTULOS || '',
-      cargaAtual: dados['CARGA ATUAL'] || '',
-      setorResponsavel: dados['SETOR DO RESPONSÁVEL'] || '',
-      campusCarga: dados['CAMPUS DA CARGA'] || '',
-      cargaContabil: dados['CARGA CONTÁBIL'] || '',
-      valorAquisicao: dados['VALOR AQUISIÇÃO'] || '',
-      valorDepreciado: dados['VALOR DEPRECIADO'] || '',
-      numeroNotaFiscal: dados['NUMERO NOTA FISCAL'] || '',
-      numeroSerie: dados['NÚMERO DE SÉRIE'] || '',
-      dataEntrada: dados['DATA DA ENTRADA'] || '',
-      dataCarga: dados['DATA DA CARGA'] || '',
-      fornecedor: dados.FORNECEDOR || '',
-      sala: dados.SALA || '',
-      estadoConservacao: dados['ESTADO DE CONSERVAÇÃO'] || '',
+      numero: dados.NUMERO?.toString() || "",
+      status: dados.STATUS || "",
+      ed: dados.ED || "",
+      contaContabil: dados["CONTA CONTABIL"] || "",
+      descricao: dados.DESCRICAO || "",
+      rotulos: dados.RÓTULOS || "",
+      cargaAtual: dados["CARGA ATUAL"] || "",
+      setorResponsavel: dados["SETOR DO RESPONSÁVEL"] || "",
+      campusCarga: dados["CAMPUS DA CARGA"] || "",
+      cargaContabil: dados["CARGA CONTÁBIL"] || "",
+      valorAquisicao: dados["VALOR AQUISIÇÃO"] || "",
+      valorDepreciado: dados["VALOR DEPRECIADO"] || "",
+      numeroNotaFiscal: dados["NUMERO NOTA FISCAL"] || "",
+      numeroSerie: dados["NÚMERO DE SÉRIE"] || "",
+      dataEntrada: dados["DATA DA ENTRADA"] || "",
+      dataCarga: dados["DATA DA CARGA"] || "",
+      fornecedor: dados.FORNECEDOR || "",
+      sala: dados.SALA || "",
+      estadoConservacao: dados["ESTADO DE CONSERVAÇÃO"] || "",
     };
 
     return await prisma.itemInventario.create({
@@ -216,25 +229,25 @@ class ItemInventarioService {
   static async update(id, dados) {
     // Mapear os campos do Excel para os campos do Prisma
     const itemData = {
-      numero: dados.NUMERO?.toString() || '',
-      status: dados.STATUS || '',
-      ed: dados.ED || '',
-      contaContabil: dados['CONTA CONTABIL'] || '',
-      descricao: dados.DESCRICAO || '',
-      rotulos: dados.RÓTULOS || '',
-      cargaAtual: dados['CARGA ATUAL'] || '',
-      setorResponsavel: dados['SETOR DO RESPONSÁVEL'] || '',
-      campusCarga: dados['CAMPUS DA CARGA'] || '',
-      cargaContabil: dados['CARGA CONTÁBIL'] || '',
-      valorAquisicao: dados['VALOR AQUISIÇÃO'] || '',
-      valorDepreciado: dados['VALOR DEPRECIADO'] || '',
-      numeroNotaFiscal: dados['NUMERO NOTA FISCAL'] || '',
-      numeroSerie: dados['NÚMERO DE SÉRIE'] || '',
-      dataEntrada: dados['DATA DA ENTRADA'] || '',
-      dataCarga: dados['DATA DA CARGA'] || '',
-      fornecedor: dados.FORNECEDOR || '',
-      sala: dados.SALA || '',
-      estadoConservacao: dados['ESTADO DE CONSERVAÇÃO'] || '',
+      numero: dados.NUMERO?.toString() || "",
+      status: dados.STATUS || "",
+      ed: dados.ED || "",
+      contaContabil: dados["CONTA CONTABIL"] || "",
+      descricao: dados.DESCRICAO || "",
+      rotulos: dados.RÓTULOS || "",
+      cargaAtual: dados["CARGA ATUAL"] || "",
+      setorResponsavel: dados["SETOR DO RESPONSÁVEL"] || "",
+      campusCarga: dados["CAMPUS DA CARGA"] || "",
+      cargaContabil: dados["CARGA CONTÁBIL"] || "",
+      valorAquisicao: dados["VALOR AQUISIÇÃO"] || "",
+      valorDepreciado: dados["VALOR DEPRECIADO"] || "",
+      numeroNotaFiscal: dados["NUMERO NOTA FISCAL"] || "",
+      numeroSerie: dados["NÚMERO DE SÉRIE"] || "",
+      dataEntrada: dados["DATA DA ENTRADA"] || "",
+      dataCarga: dados["DATA DA CARGA"] || "",
+      fornecedor: dados.FORNECEDOR || "",
+      sala: dados.SALA || "",
+      estadoConservacao: dados["ESTADO DE CONSERVAÇÃO"] || "",
     };
 
     return await prisma.itemInventario.update({
@@ -268,13 +281,24 @@ class ItemInventarioService {
 // Service para gerenciar salas
 class SalaService {
   static async findByInventario(nomeInventario) {
+    console.log(`[SalaService] Buscando salas para inventário: ${nomeInventario}`);
+    
     const inventario = await InventarioService.findByName(nomeInventario);
-    if (!inventario) return [];
+    if (!inventario) {
+      console.log(`[SalaService] Inventário ${nomeInventario} não encontrado`);
+      return [];
+    }
 
-    return await prisma.sala.findMany({
+    console.log(`[SalaService] Inventário encontrado, ID: ${inventario.id}`);
+
+    const salas = await prisma.sala.findMany({
       where: { inventarioId: inventario.id },
       orderBy: { nome: "asc" },
     });
+
+    console.log(`[SalaService] Encontradas ${salas.length} salas para inventário ${nomeInventario}`);
+    
+    return salas;
   }
 
   static async create(nomeInventario, dados) {
@@ -290,23 +314,31 @@ class SalaService {
   }
 
   static async createMany(nomeInventario, salas) {
-    console.log(`[SalaService] Criando ${salas.length} salas para ${nomeInventario}`);
-    
+    console.log(
+      `[SalaService] Criando ${salas.length} salas para ${nomeInventario}`
+    );
+
     const inventario = await InventarioService.findByName(nomeInventario);
     if (!inventario) {
-      console.log(`[SalaService] ERRO: Inventário ${nomeInventario} não encontrado`);
+      console.log(
+        `[SalaService] ERRO: Inventário ${nomeInventario} não encontrado`
+      );
       throw new Error("Inventário não encontrado");
     }
 
     // Remover duplicatas e criar dados únicos
-    const salasUnicas = [...new Set(salas.filter(sala => sala && sala.trim() !== ''))];
-    
-    const salasData = salasUnicas.map(nome => ({
+    const salasUnicas = [
+      ...new Set(salas.filter((sala) => sala && sala.trim() !== "")),
+    ];
+
+    const salasData = salasUnicas.map((nome) => ({
       inventarioId: inventario.id,
       nome: nome.trim(),
     }));
 
-    console.log(`[SalaService] Dados preparados para ${salasData.length} salas únicas`);
+    console.log(
+      `[SalaService] Dados preparados para ${salasData.length} salas únicas`
+    );
 
     if (salasData.length === 0) {
       console.log(`[SalaService] Nenhuma sala válida para criar`);
@@ -350,11 +382,15 @@ class CabecalhoService {
   }
 
   static async createMany(nomeInventario, headers) {
-    console.log(`[CabecalhoService] Criando ${headers.length} cabeçalhos para ${nomeInventario}`);
-    
+    console.log(
+      `[CabecalhoService] Criando ${headers.length} cabeçalhos para ${nomeInventario}`
+    );
+
     const inventario = await InventarioService.findByName(nomeInventario);
     if (!inventario) {
-      console.log(`[CabecalhoService] ERRO: Inventário ${nomeInventario} não encontrado`);
+      console.log(
+        `[CabecalhoService] ERRO: Inventário ${nomeInventario} não encontrado`
+      );
       throw new Error("Inventário não encontrado");
     }
 
@@ -481,5 +517,5 @@ export {
   SalaService,
   CabecalhoService,
   PermissaoService,
-  AuditoriaService
+  AuditoriaService,
 };
