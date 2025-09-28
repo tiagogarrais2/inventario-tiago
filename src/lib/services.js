@@ -31,9 +31,7 @@ class UsuarioService {
 // Service para gerenciar inventários
 class InventarioService {
   static async findByName(nome) {
-    console.log(`[InventarioService] Buscando inventário: ${nome}`);
-    
-    const inventario = await prisma.inventario.findUnique({
+    return await prisma.inventario.findUnique({
       where: { nome },
       include: {
         proprietario: {
@@ -41,10 +39,6 @@ class InventarioService {
         },
       },
     });
-
-    console.log(`[InventarioService] Inventário encontrado:`, inventario ? `ID: ${inventario.id}` : 'null');
-    
-    return inventario;
   }
 
   static async create(nome, nomeExibicao = null, userEmail = null) {
@@ -281,49 +275,13 @@ class ItemInventarioService {
 // Service para gerenciar salas
 class SalaService {
   static async findByInventario(nomeInventario) {
-    console.log(`[SalaService] Buscando salas para inventário: ${nomeInventario}`);
-    
     const inventario = await InventarioService.findByName(nomeInventario);
-    if (!inventario) {
-      console.log(`[SalaService] Inventário ${nomeInventario} não encontrado`);
-      return [];
-    }
+    if (!inventario) return [];
 
-    console.log(`[SalaService] Inventário encontrado, ID: ${inventario.id}`);
-
-    try {
-      // Primeiro, vamos contar quantas salas existem para este inventário
-      const countSalas = await prisma.sala.count({
-        where: { inventarioId: inventario.id }
-      });
-      console.log(`[SalaService] Total de salas no banco para inventarioId ${inventario.id}: ${countSalas}`);
-
-      // Vamos buscar informações dos inventários que têm salas
-      const inventariosComSalas = await prisma.inventario.findMany({
-        where: {
-          id: {
-            in: ['cmg2zljj60005l504yvyoa7n5', 'cmg2zz1xt0005l804jekrjnlm']
-          }
-        },
-        select: { id: true, nome: true, nomeExibicao: true }
-      });
-      console.log(`[SalaService] Inventários que têm salas:`, inventariosComSalas);
-
-      console.log(`[SalaService] Executando query: prisma.sala.findMany({ where: { inventarioId: "${inventario.id}" } })`);
-      
-      const salas = await prisma.sala.findMany({
-        where: { inventarioId: inventario.id },
-        orderBy: { nome: "asc" },
-      });
-
-      console.log(`[SalaService] Query executada com sucesso. Resultado:`, salas);
-      console.log(`[SalaService] Encontradas ${salas.length} salas para inventário ${nomeInventario}`);
-      
-      return salas;
-    } catch (error) {
-      console.error(`[SalaService] Erro na query do banco:`, error);
-      throw error;
-    }
+    return await prisma.sala.findMany({
+      where: { inventarioId: inventario.id },
+      orderBy: { nome: "asc" },
+    });
   }
 
   static async create(nomeInventario, dados) {
