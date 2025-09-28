@@ -41,9 +41,23 @@ class InventarioService {
     });
   }
 
-  static async create(data) {
+  static async create(nome, nomeExibicao = null, userEmail = null) {
+    let proprietarioId = null;
+    
+    if (userEmail) {
+      const proprietario = await UsuarioService.findOrCreateFromSession({
+        email: userEmail,
+        name: userEmail.split('@')[0]
+      });
+      proprietarioId = proprietario.id;
+    }
+
     return await prisma.inventario.create({
-      data,
+      data: {
+        nome,
+        nomeExibicao: nomeExibicao || nome,
+        proprietarioId,
+      },
     });
   }
 
@@ -86,6 +100,55 @@ class InventarioService {
       hasAccess: permissao?.ativa === true,
       isOwner: false,
     };
+  }
+
+  static async listUserInventarios(userEmail) {
+    const usuario = await UsuarioService.findByEmail(userEmail);
+    if (!usuario) return [];
+
+    // Buscar inventários onde o usuário é proprietário
+    const inventariosProprietario = await prisma.inventario.findMany({
+      where: { proprietarioId: usuario.id },
+      select: {
+        id: true,
+        nome: true,
+        criadoEm: true,
+        _count: {
+          select: { itens: true }
+        }
+      },
+      orderBy: { criadoEm: 'desc' }
+    });
+
+    // Buscar inventários onde o usuário tem permissão
+    const permissoes = await prisma.permissao.findMany({
+      where: { 
+        usuarioId: usuario.id,
+        ativa: true 
+      },
+      include: {
+        inventario: {
+          select: {
+            id: true,
+            nome: true,
+            criadoEm: true,
+            _count: {
+              select: { itens: true }
+            }
+          }
+        }
+      }
+    });
+
+    const inventariosComPermissao = permissoes.map(p => p.inventario);
+
+    // Combinar e remover duplicatas
+    const todosInventarios = [...inventariosProprietario, ...inventariosComPermissao];
+    const inventariosUnicos = todosInventarios.filter((inventario, index, self) => 
+      index === self.findIndex(i => i.id === inventario.id)
+    );
+
+    return inventariosUnicos;
   }
 }
 
@@ -190,6 +253,21 @@ class CabecalhoService {
       },
     });
   }
+
+  static async createMany(nomeInventario, headers) {
+    const inventario = await InventarioService.findByName(nomeInventario);
+    if (!inventario) throw new Error("Inventário não encontrado");
+
+    const cabecalhosData = headers.map((header, index) => ({
+      inventarioId: inventario.id,
+      nome: header,
+      ordem: index + 1,
+    }));
+
+    return await prisma.cabecalho.createMany({
+      data: cabecalhosData,
+    });
+  }
 }
 
 // Service para gerenciar permissões
@@ -268,11 +346,18 @@ class AuditoriaService {
     try {
       const usuario = await UsuarioService.findOrCreateFromSession(sessionUser);
 
-      return await prisma.auditoria.create({
+      // Buscar o inventário se fornecido como string
+      let inventarioId = null;
+      if (inventario) {
+        const inventarioObj = await InventarioService.findByName(inventario);
+        inventarioId = inventarioObj?.id || null;
+      }
+
+      return await prisma.auditLog.create({
         data: {
           acao,
           usuarioId: usuario.id,
-          inventario,
+          inventarioId,
           detalhes,
         },
       });

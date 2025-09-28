@@ -40,9 +40,10 @@ export default function MigratePage() {
           <h1 className="text-2xl font-bold text-gray-900 mb-6">
             Migração do Banco de Dados
           </h1>
-          
+
           <p className="text-gray-600 mb-6">
-            Execute as migrações do Prisma para criar as tabelas necessárias no banco de dados.
+            Execute as migrações do Prisma para criar as tabelas necessárias no
+            banco de dados.
           </p>
 
           <button
