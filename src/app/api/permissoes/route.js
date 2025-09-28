@@ -132,13 +132,14 @@ export async function POST(request) {
       );
     }
 
-    // Verificar se o usuário alvo existe
-    const usuarioAlvo = await UsuarioService.findByEmail(emailUsuario);
+    // Buscar ou criar o usuário alvo
+    let usuarioAlvo = await UsuarioService.findByEmail(emailUsuario);
     if (!usuarioAlvo) {
-      return NextResponse.json(
-        { error: "Usuário não encontrado" },
-        { status: 404 }
-      );
+      // Criar usuário automaticamente se não existir
+      usuarioAlvo = await UsuarioService.findOrCreateFromSession({
+        email: emailUsuario,
+        name: emailUsuario.split("@")[0], // Use a parte antes do @ como nome padrão
+      });
     }
 
     // Verificar se já tem permissão
