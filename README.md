@@ -1,76 +1,134 @@
-# 📋 Sistema de Inventário Tiago
+# 📋 Sistema de Inventário Tiago v2.0.0
 
-Sistema completo para gerenciamento de inventários com autenticação, controle de acesso e auditoria. Desenvolvido em Next.js 15 com NextAuth para autenticação segura via Google OAuth.
+Sistema completo para gerenciamento de inventários com banco de dados PostgreSQL, autenticação, controle de acesso e auditoria. Desenvolvido em Next.js 15 com NextAuth para autenticação segura via Google OAuth e Prisma ORM para persistência de dados.
 
 ## ✨ Principais Funcionalidades
 
-### 🔐 **Autenticação e Segurança**
+### �️ **Sistema de Banco de Dados Robusto**
+
+- **PostgreSQL**: Banco de dados relacional para alta performance e confiabilidade
+- **Prisma ORM**: Mapeamento objeto-relacional com type safety
+- **Migrações automáticas**: Versionamento e evolução do schema
+- **Relacionamentos**: Estrutura normalizada com integridade referencial
+
+### �🔐 **Autenticação e Segurança**
 
 - **Login via Google OAuth**: Autenticação segura usando NextAuth
 - **Controle de sessões**: Proteção automática de todas as páginas e APIs
-- **Auditoria completa**: Logs detalhados de todas as ações do sistema
+- **Auditoria completa**: Logs detalhados armazenados no banco de dados
 - **Proteção de dados sensíveis**: Conformidade com LGPD
 
 ### 👥 **Sistema de Permissões Granular**
 
 - **Proprietário único**: Quem envia o inventário é o proprietário
 - **Compartilhamento controlado**: Proprietário pode conceder acesso via email
+- **Criação automática de usuários**: Sistema cria usuários automaticamente ao conceder acesso
 - **Revogação instantânea**: Remoção de acessos a qualquer momento
 - **Interface visual**: Gerenciamento fácil de usuários autorizados
 
 ### 📂 **Processamento de Inventários**
 
 - **Upload inteligente**: Suporte para arquivos .json e .csv
+- **Migração automática**: Conversão de dados legados para PostgreSQL
 - **Captura automática**: Nome do responsável obtido da sessão autenticada
-- **Organização automática**: Criação de estruturas de dados organizadas
-- **Rastreabilidade**: Informações completas de auditoria salvas
+- **Organização automática**: Estrutura relacional otimizada
+- **Rastreabilidade**: Informações completas de auditoria no banco
 
-### 📊 **Execução de Inventário**
+### 📊 **Execução de Inventário Avançada**
 
-- **Busca por tombos**: Sistema de pesquisa rápida de itens
-- **Cadastro dinâmico**: Adição de novos itens não encontrados
+- **Busca por tombos**: Sistema de pesquisa rápida com cache de banco
+- **Cadastro dinâmico**: Adição de novos itens com marcação especial
 - **Controle de status**: Atualização do estado de conservação
 - **Validação de salas**: Alertas para mudanças de localização
-- **Interface otimizada**: Foco automático para agilizar o processo
+- **Interface otimizada**: Foco automático e UX aprimorada
+- **Marcação especial**: Itens cadastrados durante inventário são identificados
 
-### 📈 **Relatórios e Visualização**
+### 📈 **Relatórios e Visualização Aprimorados**
 
-- **Relatórios por sala**: Organização visual dos dados coletados
-- **Status visual**: Indicação clara de itens inventariados
-- **Acesso protegido**: Relatórios disponíveis apenas para usuários autorizados
+- **Relatórios dinâmicos**: Dados em tempo real do PostgreSQL
+- **Organização por sala**: Visualização completa incluindo salas vazias
+- **Status visual**: Indicação clara de itens inventariados vs não inventariados
+- **Marcação especial**: Badge para itens cadastrados durante inventário
+- **Navegação integrada**: Links diretos entre relatório e inventário
+- **Dados do inventariante**: Exibição correta do nome real dos usuários
 
 ## 🏗️ Arquitetura do Sistema
 
-### **Estrutura de Dados Gerada**
+### **Modelo de Dados PostgreSQL**
 
-Cada inventário enviado cria automaticamente:
+Sistema com banco de dados relacional robusto:
 
+```sql
+-- Usuários do sistema
+usuarios {
+  id: String (CUID)
+  email: String (unique)
+  nome: String
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+-- Inventários
+inventarios {
+  id: String (CUID)
+  nome: String (unique)
+  nomeExibicao: String
+  proprietarioId: String -> usuarios.id
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+-- Itens do inventário
+itens_inventario {
+  id: String (CUID)
+  inventarioId: String -> inventarios.id
+  numero: String
+  [... campos específicos do item ...]
+  
+  -- Campos de inventário
+  dataInventario: DateTime?
+  inventarianteId: String? -> usuarios.id
+  salaEncontrada: String?
+  statusInventario: String?
+  cadastradoDuranteInventario: Boolean
+}
+
+-- Permissões de acesso
+permissoes {
+  id: String (CUID)
+  inventarioId: String -> inventarios.id
+  usuarioId: String -> usuarios.id
+  ativa: Boolean
+  createdAt: DateTime
+}
+
+-- Logs de auditoria
+audit_logs {
+  id: String (CUID)
+  timestamp: DateTime
+  acao: String
+  usuarioId: String? -> usuarios.id
+  inventarioId: String? -> inventarios.id
+  detalhes: Json?
+  ip: String?
+  userAgent: String?
+}
 ```
-public/inventario-[timestamp]-[responsavel]/
-├── inventario.json      # Dados principais do inventário
-├── cabecalhos.json      # Lista de campos/colunas
-├── salas.json          # Salas únicas encontradas
-├── setores.json        # Setores únicos encontrados
-├── permissoes.json     # Usuários com acesso (se houver)
-└── auditoria.json      # Informações de criação e proprietário
-```
 
-### **Logs de Auditoria**
+### **Sistema de Auditoria**
 
-Sistema robusto de auditoria com logs diários:
-
-```
-logs/auditoria-YYYY-MM-DD.log
-```
+Auditoria completa no banco de dados PostgreSQL:
 
 **Eventos rastreados:**
 
-- `UPLOAD_INVENTARIO` - Criação de novos inventários
-- `ACESSO_INVENTARIO_AUTORIZADO` - Acessos bem-sucedidos
-- `ACESSO_INVENTARIO_NEGADO` - Tentativas não autorizadas
+- `upload_inventory` - Criação de novos inventários
+- `view_inventory` - Visualização de inventários
+- `search_item` - Busca por itens específicos
+- `add_item` - Adição de novos itens
+- `update_item` - Atualização de itens existentes
 - `PERMISSAO_CONCEDIDA` - Concessão de acessos
 - `PERMISSAO_REVOGADA` - Revogação de acessos
-- `ACESSO_LISTAGEM_INVENTARIOS` - Visualização de listas
+- `ACESSO_NEGADO` - Tentativas não autorizadas
 
 ## 🛡️ Segurança e Controle de Acesso
 
@@ -122,6 +180,7 @@ logs/auditoria-YYYY-MM-DD.log
 ### **Pré-requisitos**
 
 - Node.js 18+ instalado
+- PostgreSQL 13+ instalado e rodando
 - Conta Google para OAuth (Google Cloud Console)
 
 ### **1. Clone e Instalação**
@@ -132,7 +191,15 @@ cd inventario-tiago
 npm install
 ```
 
-### **2. Configuração do Google OAuth**
+### **2. Configuração do Banco de Dados**
+
+1. Instale PostgreSQL em sua máquina
+2. Crie um banco de dados:
+   ```sql
+   CREATE DATABASE inventario_tiago;
+   ```
+
+### **3. Configuração do Google OAuth**
 
 1. Acesse [Google Cloud Console](https://console.cloud.google.com/)
 2. Crie um novo projeto ou use existente
@@ -143,11 +210,14 @@ npm install
    http://localhost:3000/api/auth/callback/google
    ```
 
-### **3. Variáveis de Ambiente**
+### **4. Variáveis de Ambiente**
 
 Copie `.env.example` para `.env.local` e configure:
 
 ```bash
+# Database
+DATABASE_URL="postgresql://username:password@localhost:5432/inventario_tiago"
+
 # NextAuth
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=your-nextauth-secret-here
@@ -163,7 +233,17 @@ GOOGLE_CLIENT_SECRET=your-google-client-secret
 openssl rand -base64 32
 ```
 
-### **4. Execução**
+### **5. Configuração do Prisma**
+
+```bash
+# Executar migrações do banco
+npx prisma migrate dev
+
+# Gerar cliente Prisma
+npx prisma generate
+```
+
+### **6. Execução**
 
 **Desenvolvimento local:**
 
@@ -190,9 +270,11 @@ npm run build && npm run start
 - **Frontend**: Next.js 15, React 19, Tailwind CSS
 - **Autenticação**: NextAuth.js com Google OAuth
 - **Backend**: Next.js API Routes
-- **Armazenamento**: Sistema de arquivos local (JSON)
-- **Auditoria**: Logs estruturados em JSON
+- **Banco de Dados**: PostgreSQL 13+
+- **ORM**: Prisma ORM com TypeScript
+- **Auditoria**: Logs estruturados no PostgreSQL
 - **Processamento**: CSV Parser para arquivos .csv
+- **Deploy**: Vercel com PostgreSQL (Neon/Supabase)
 
 ## 📁 Estrutura do Projeto
 
@@ -205,39 +287,105 @@ src/app/
 │   ├── verificar-acesso/  # Verificação de permissões
 │   ├── listar/            # Listagem de inventários
 │   ├── add-inventario/    # Adição de itens
-│   └── update-inventario/ # Atualização de itens
+│   ├── update-inventario/ # Atualização de itens
+│   ├── cabecalhos/        # API de cabeçalhos
+│   └── salas/             # API de salas
 ├── components/            # Componentes React
 │   ├── Cabecalho.js      # Header com auth
 │   ├── Criar.js          # Upload de arquivos
 │   ├── Listar.js         # Lista de inventários
+│   ├── Cadastrar.js      # Cadastro de itens
 │   └── GerenciadorPermissoes.js # Gerenciar usuários
 ├── inventario/[nome]/     # Páginas dinâmicas de inventário
 ├── relatorio/[nome]/      # Páginas de relatórios
-├── lib/                   # Utilitários
-│   ├── auditoria.js      # Sistema de logs
-│   └── permissoes.js     # Controle de acesso
+├── cadastrar/             # Página de cadastro
+├── debug/                 # Página de debug
+├── lib/                   # Utilitários e serviços
+│   ├── db.js             # Configuração Prisma
+│   └── services.js       # Services para banco de dados
+├── prisma/               # Schema e migrações
+│   ├── schema.prisma     # Modelo de dados
+│   └── migrations/       # Migrações do banco
 └── layout.js             # Layout principal
 ```
 
 ## 🚀 Deploy e Produção
 
-### **Limitações Atuais**
+### **Deploy no Vercel**
 
-- **Sistema de arquivos local**: Funciona perfeitamente em ambiente local
-- **Vercel (Hobby)**: Sistema de arquivos read-only impede escrita de JSONs
+Sistema totalmente compatível com Vercel usando PostgreSQL:
 
-### **Deploy Recomendado**
+1. **Configure o banco PostgreSQL** (Neon, Supabase, ou outro)
+2. **Configure as variáveis de ambiente** no Vercel
+3. **Deploy automático** via Git
 
 ```bash
 # Build otimizado
 npm run build
 
-# Produção
+# Produção local
 npm run start
 
 # Com acesso na rede
 npm run start -- -H 0.0.0.0
 ```
+
+### **Variáveis de Ambiente para Produção**
+
+```bash
+# Database (exemplo Neon)
+DATABASE_URL="postgresql://username:password@host.neon.tech/database?sslmode=require"
+
+# NextAuth
+NEXTAUTH_URL=https://seu-dominio.vercel.app
+NEXTAUTH_SECRET=your-production-secret
+
+# Google OAuth
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+```
+
+### **Comandos Úteis**
+
+```bash
+# Visualizar banco de dados
+npx prisma studio
+
+# Reset do banco (cuidado em produção!)
+npx prisma migrate reset
+
+# Deploy de nova migração
+npx prisma migrate deploy
+```
+
+## 🎉 Novidades da Versão 2.0.0
+
+### **🗄️ Migração para PostgreSQL**
+- Substituição completa do sistema de arquivos JSON por banco PostgreSQL
+- Performance drasticamente melhorada
+- Integridade referencial e consistência de dados
+- Compatibilidade total com Vercel e outras plataformas
+
+### **🏷️ Marcação de Itens Cadastrados**
+- Itens cadastrados durante inventário recebem marcação especial
+- Badge visual nos relatórios para identificação
+- Campo `cadastradoDuranteInventario` no banco para relatórios futuros
+
+### **🔗 Navegação Aprimorada**
+- Nome do inventário no relatório é clicável (link para inventário)
+- Navegação fluida entre páginas
+- UX melhorada com pré-preenchimento automático
+
+### **👤 Correções de UX**
+- Exibição correta do nome real dos inventariantes
+- Correção de datas nas permissões
+- Botão de revogar acesso funcionando corretamente
+- Criação automática de usuários ao conceder permissões
+
+### **📊 Relatórios Melhorados**
+- Salas vazias aparecem nos relatórios
+- Identificação visual de itens cadastrados vs encontrados
+- Dados em tempo real do banco de dados
 
 ## 👨‍💻 Autor
 
@@ -247,4 +395,22 @@ npm run start -- -H 0.0.0.0
 
 ---
 
-**Sistema em constante evolução - Novas funcionalidades sendo adicionadas regularmente!**
+## 📈 Changelog
+
+### **v2.0.0** - 28/09/2025
+- 🗄️ **BREAKING**: Migração completa para PostgreSQL com Prisma ORM
+- 🏷️ **NEW**: Marcação especial para itens cadastrados durante inventário
+- 🔗 **NEW**: Links navegáveis entre relatório e inventário
+- 👤 **FIX**: Correção na exibição de nomes de inventariantes
+- 📊 **FIX**: Relatórios agora mostram salas vazias
+- 🔧 **FIX**: Correções em permissões e UX geral
+- 🚀 **NEW**: Deploy total no Vercel com banco PostgreSQL
+
+### **v1.0.0** - Versão inicial
+- Sistema baseado em arquivos JSON
+- Autenticação Google OAuth
+- Controle de permissões básico
+
+---
+
+**🎯 Sistema de Inventário v2.0.0 - Robusto, Escalável e Pronto para Produção!**
