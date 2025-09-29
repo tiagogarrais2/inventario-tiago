@@ -4,7 +4,11 @@ Sistema completo para gerenciamento de inventários com banco de dados PostgreSQ
 
 ---
 
-## �️ Demonstração Visual
+## Demonstração Visual
+
+| Relatório geral|
+|:---:|
+| ![Tela 13](./public/Telas/13.jpg) |
 
 <details>
 <summary>📸 <strong>Ver Screenshots do Sistema</strong></summary>
@@ -48,7 +52,7 @@ Sistema completo para gerenciamento de inventários com banco de dados PostgreSQ
 
 ---
 
-## �📖 Documentação
+## 📖 Documentação
 
 - **👨‍💻 Para Desenvolvedores**: Continue lendo este README
 - **👥 Para Usuários Finais**: [📋 Guia do Usuário - Comissões Inventariantes](./README-USUARIOS.md)
@@ -57,14 +61,14 @@ Sistema completo para gerenciamento de inventários com banco de dados PostgreSQ
 
 ## ✨ Principais Funcionalidades
 
-### �️ **Sistema de Banco de Dados Robusto**
+### **Sistema de Banco de Dados Robusto**
 
 - **PostgreSQL**: Banco de dados relacional para alta performance e confiabilidade
 - **Prisma ORM**: Mapeamento objeto-relacional com type safety
 - **Migrações automáticas**: Versionamento e evolução do schema
 - **Relacionamentos**: Estrutura normalizada com integridade referencial
 
-### �🔐 **Autenticação e Segurança**
+### 🔐 **Autenticação e Segurança**
 
 - **Login via Google OAuth**: Autenticação segura usando NextAuth
 - **Controle de sessões**: Proteção automática de todas as páginas e APIs
