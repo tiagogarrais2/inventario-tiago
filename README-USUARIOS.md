@@ -1,10 +1,10 @@
 # 📋 Guia do Usuário - Sistema de Inventário
 
-**Versão 2.0.0 | Para Membros de Comissões Inventariantes**
+**Versão 2.0 | Para Membros de Comissões Inventariantes**
 
 ---
 
-## � Como é o Sistema?
+## Como é o Sistema?
 
 <details>
 <summary><strong>🖼️ Clique aqui para ver as telas do sistema</strong></summary>
@@ -21,7 +21,7 @@
 
 ---
 
-## �👋 Bem-vindo ao Sistema de Inventário!
+## 👋 Bem-vindo ao Sistema de Inventário!
 
 Este guia foi criado especialmente para **você que faz parte de uma comissão inventariante** e vai usar nosso sistema para realizar o inventário dos bens patrimoniais. Não se preocupe se você não é da área de informática - este guia explica tudo de forma simples e prática!
 
@@ -39,9 +39,9 @@ Este guia foi criado especialmente para **você que faz parte de uma comissão i
 
 ### 1️⃣ **Fazendo Login**
 
-1. Acesse o link do sistema que foi enviado para você
+1. Acesse o link https://inventario-tiago.vercel.app
 2. Clique em **"Entrar com Google"**
-3. Use sua conta do Gmail institucional
+3. Use sua conta do Gmail
 4. Pronto! Você está dentro do sistema
 
 > 💡 **Dica**: Use sempre a mesma conta do Gmail para manter seu histórico
@@ -103,17 +103,6 @@ O sistema mostra as informações do item. Agora você precisa:
 
 ### ❌ **Quando o Item NÃO FOI ENCONTRADO**
 
-Aparece a mensagem "Item não encontrado" e um botão **"Cadastrar item"**.
-
-**Duas opções:**
-
-**Opção A - Item realmente não existe:**
-
-- Anote o número do tombo
-- Continue para o próximo item
-- Informe depois ao responsável
-
-**Opção B - Item existe mas não está no sistema:**
 
 - Clique em **"Cadastrar item"**
 - Preencha as informações (explicado abaixo)
