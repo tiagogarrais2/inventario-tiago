@@ -6,34 +6,34 @@ Sistema completo para gerenciamento de inventários com banco de dados PostgreSQ
 
 ## Demonstração Visual
 
-| Relatório geral|
-|:---:|
+|          Relatório geral          |
+| :-------------------------------: |
 | ![Tela 13](./public/Telas/13.jpg) |
 
 <details>
 <summary>📸 <strong>Ver Screenshots do Sistema</strong></summary>
 
-| Tela inicial | Inventários disponíveis| Criação de inventários|
-|:---:|:---:|:---:|
+|           Tela inicial            |      Inventários disponíveis      |      Criação de inventários       |
+| :-------------------------------: | :-------------------------------: | :-------------------------------: |
 | ![Tela 01](./public/Telas/01.jpg) | ![Tela 02](./public/Telas/02.jpg) | ![Tela 03](./public/Telas/03.jpg) |
 
-| Realizar inventário | Nome do inventário | Cadastro da equipe |
-|:---:|:---:|:---:|
+|        Realizar inventário        |        Nome do inventário         |        Cadastro da equipe         |
+| :-------------------------------: | :-------------------------------: | :-------------------------------: |
 | ![Tela 04](./public/Telas/04.jpg) | ![Tela 05](./public/Telas/05.jpg) | ![Tela 06](./public/Telas/06.jpg) |
 
 <details>
 <summary>🔍 <strong>Ver Mais Screenshots</strong></summary>
 
-| Gerenciar permissões | Realizar inventário | Item inventariado |
-|:---:|:---:|:---:|
+|       Gerenciar permissões        |        Realizar inventário        |         Item inventariado         |
+| :-------------------------------: | :-------------------------------: | :-------------------------------: |
 | ![Tela 07](./public/Telas/07.jpg) | ![Tela 08](./public/Telas/08.jpg) | ![Tela 09](./public/Telas/09.jpg) |
 
-| Item não encontrado| Cadastro de item | Cadastro de item 2 |
-|:---:|:---:|:---:|
+|        Item não encontrado        |         Cadastro de item          |        Cadastro de item 2         |
+| :-------------------------------: | :-------------------------------: | :-------------------------------: |
 | ![Tela 10](./public/Telas/10.jpg) | ![Tela 11](./public/Telas/11.jpg) | ![Tela 12](./public/Telas/12.jpg) |
 
-| Relatório geral|
-|:---:|
+|          Relatório geral          |
+| :-------------------------------: |
 | ![Tela 13](./public/Telas/13.jpg) |
 
 </details>
