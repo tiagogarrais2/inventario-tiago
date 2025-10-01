@@ -11,11 +11,11 @@
 
 **Não se preocupe! O sistema é bem simples e intuitivo. Veja como são as telas:**
 
-| Tela Principal | Fazendo Inventário | Vendo Relatórios |
+| Tela Inicial | Lista de inventários | Criar novo inventário |
 |:---:|:---:|:---:|
 | ![Interface](https://github.com/tiagogarrais/inventario-tiago/raw/master/public/Telas/01.jpg) | ![Inventário](https://github.com/tiagogarrais/inventario-tiago/raw/master/public/Telas/02.jpg) | ![Relatórios](https://github.com/tiagogarrais/inventario-tiago/raw/master/public/Telas/03.jpg) |
 
-*As telas são simples e fáceis de usar - você vai se acostumar rapidinho!*
+*As telas são simples e fáceis de usar!*
 
 </details>
 
