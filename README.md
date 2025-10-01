@@ -9,27 +9,27 @@ Sistema completo para gerenciamento de inventários com banco de dados PostgreSQ
 <details>
 <summary>📸 <strong>Ver Screenshots do Sistema</strong></summary>
 
-| Interface Principal | Página de Inventário | Relatórios |
-|:---:|:---:|:---:|
+|        Interface Principal        |       Página de Inventário        |            Relatórios             |
+| :-------------------------------: | :-------------------------------: | :-------------------------------: |
 | ![Tela 01](./public/Telas/01.jpg) | ![Tela 02](./public/Telas/02.jpg) | ![Tela 03](./public/Telas/03.jpg) |
 
-| Gerenciamento de Permissões | Cadastro de Itens | Dashboard |
-|:---:|:---:|:---:|
+|    Gerenciamento de Permissões    |         Cadastro de Itens         |             Dashboard             |
+| :-------------------------------: | :-------------------------------: | :-------------------------------: |
 | ![Tela 04](./public/Telas/04.jpg) | ![Tela 05](./public/Telas/05.jpg) | ![Tela 06](./public/Telas/06.jpg) |
 
 <details>
 <summary>🔍 <strong>Ver Mais Screenshots</strong></summary>
 
-| Tela 07 | Tela 08 | Tela 09 |
-|:---:|:---:|:---:|
+|              Tela 07              |              Tela 08              |              Tela 09              |
+| :-------------------------------: | :-------------------------------: | :-------------------------------: |
 | ![Tela 07](./public/Telas/07.jpg) | ![Tela 08](./public/Telas/08.jpg) | ![Tela 09](./public/Telas/09.jpg) |
 
-| Tela 10 | Tela 11 | Tela 12 |
-|:---:|:---:|:---:|
+|              Tela 10              |              Tela 11              |              Tela 12              |
+| :-------------------------------: | :-------------------------------: | :-------------------------------: |
 | ![Tela 10](./public/Telas/10.jpg) | ![Tela 11](./public/Telas/11.jpg) | ![Tela 12](./public/Telas/12.jpg) |
 
-| Tela 13 |
-|:---:|
+|              Tela 13              |
+| :-------------------------------: |
 | ![Tela 13](./public/Telas/13.jpg) |
 
 </details>
@@ -41,7 +41,7 @@ Sistema completo para gerenciamento de inventários com banco de dados PostgreSQ
 
 **Quer experimentar sem configurar nada?**
 
-1. **📥 [Baixar Arquivo de Exemplo](./public/exemplo-json/inventario.json)** 
+1. **📥 [Baixar Arquivo de Exemplo](./public/exemplo-json/inventario.json)**
 2. **🌐 Acesse o sistema** e faça login com Google
 3. **📤 Faça upload** do arquivo baixado
 4. **🎯 Explore todas as funcionalidades!**
@@ -108,7 +108,7 @@ Sistema completo para gerenciamento de inventários com banco de dados PostgreSQ
 ### 🧪 **Demonstração e Testes**
 
 - **Arquivo de exemplo**: JSON com dados fictícios realistas para teste
-- **Download direto**: Disponível na página inicial para usuários não logados  
+- **Download direto**: Disponível na página inicial para usuários não logados
 - **Screenshots completos**: 13 telas do sistema para visualização
 - **Teste sem instalação**: Possibilidade de testar antes de configurar
 - **Dados de demonstração**: Estrutura completa para entender o funcionamento

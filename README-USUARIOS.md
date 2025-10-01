@@ -11,11 +11,11 @@
 
 **Não se preocupe! O sistema é bem simples e intuitivo. Veja como são as telas:**
 
-| Tela Principal | Fazendo Inventário | Vendo Relatórios |
-|:---:|:---:|:---:|
+|                                        Tela Principal                                         |                                       Fazendo Inventário                                       |                                        Vendo Relatórios                                        |
+| :-------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------: |
 | ![Interface](https://github.com/tiagogarrais/inventario-tiago/raw/master/public/Telas/01.jpg) | ![Inventário](https://github.com/tiagogarrais/inventario-tiago/raw/master/public/Telas/02.jpg) | ![Relatórios](https://github.com/tiagogarrais/inventario-tiago/raw/master/public/Telas/03.jpg) |
 
-*As telas são simples e fáceis de usar - você vai se acostumar rapidinho!*
+_As telas são simples e fáceis de usar - você vai se acostumar rapidinho!_
 
 </details>
 
@@ -51,7 +51,7 @@ Este guia foi criado especialmente para **você que faz parte de uma comissão i
 Se você é responsável por criar o inventário, pode baixar um arquivo de exemplo:
 
 1. **Na página inicial** (antes de fazer login), procure por "Teste o Sistema"
-2. **Clique em "Baixar Exemplo JSON"** 
+2. **Clique em "Baixar Exemplo JSON"**
 3. **Faça login** no sistema
 4. **Use o arquivo baixado** para testar o upload
 5. **Explore** todas as funcionalidades com dados fictícios!
