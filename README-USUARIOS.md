@@ -1,6 +1,6 @@
 # 📋 Guia do Usuário - Sistema de Inventário
 
-**Versão 2.0 | Para Membros de Comissões Inventariantes**
+**Versão 2.1.0 | Para Membros de Comissões Inventariantes**
 
 ---
 
@@ -32,7 +32,9 @@ Este guia foi criado especialmente para **você que faz parte de uma comissão i
 - ✅ **Conferir** se os bens estão onde deveriam estar
 - ✅ **Registrar** novos bens encontrados
 - ✅ **Atualizar** informações dos bens (estado, localização)
-- ✅ **Gerar relatórios** organizados por sala
+- ✅ **Corrigir** dados de bens já inventariados (NOVO v2.1.0!)
+- ✅ **Visualizar histórico** de todas as correções realizadas
+- ✅ **Gerar relatórios** organizados por sala com indicadores visuais
 - ✅ **Trabalhar em equipe** com outros membros da comissão
 
 ## 🚀 Como Começar
@@ -175,10 +177,74 @@ O relatório mostra **todas as salas** organizadamente:
 - Item foi cadastrado durante o inventário
 - Tem uma marcação especial "📝 CADASTRADO"
 
-**📦 Salas Vazias:**
+**� Itens Corrigidos (badge laranja):**
+
+- Item teve informações corrigidas após o inventário
+- Mostra badge "📋 CORRIGIDO" 
+- Clique no número do tombo para ver histórico de correções
+
+**�📦 Salas Vazias:**
 
 - Salas que não têm nenhum item
 - Aparecem com mensagem "Nenhum item encontrado"
+
+### 🎨 **Entendendo os Badges Coloridos**
+
+Os itens podem ter diferentes badges que indicam seu status:
+
+- 🟢 **INVENTARIADO** - Item foi confirmado durante o inventário
+- 🟠 **CORRIGIDO** - Item teve dados corrigidos posteriormente  
+- 🔵 **CADASTRADO** - Item foi adicionado durante o inventário
+
+**💡 Dica**: Um item pode ter múltiplos badges se foi cadastrado E corrigido, por exemplo!
+
+## 🔧 Corrigindo Dados de Itens (NOVO v2.1.0!)
+
+### 📝 **Quando Usar Correções**
+
+Às vezes você percebe que um item já inventariado tem informações incorretas ou incompletas. Agora você pode corrigir!
+
+**Exemplos de quando corrigir:**
+- Descrição está incompleta ou errada
+- Estado de conservação mudou
+- Sala foi preenchida incorretamente
+- Marca/modelo estava errado
+- Qualquer outro dado que precisa ser atualizado
+
+### ✏️ **Como Fazer uma Correção**
+
+1. **Encontre o item** no inventário (digite o número do tombo)
+2. **O sistema mostra** as informações atuais do item
+3. **Modifique os campos** que estão incorretos
+4. **Adicione uma observação** explicando o motivo da correção
+5. **Clique em "Salvar Correção"**
+
+**✅ Pronto!** O item agora terá:
+- As informações atualizadas
+- Um badge laranja "📋 CORRIGIDO" 
+- Histórico completo das mudanças
+
+### 📚 **Visualizando Histórico de Correções**
+
+**No Inventário:**
+- Itens corrigidos aparecem com badge laranja
+- Clique no número do tombo para ver detalhes
+
+**No Relatório:**
+- Badge "📋 CORRIGIDO" aparece nos itens
+- Clique no número para ver histórico completo
+- Mostra TODAS as correções em ordem cronológica
+
+### 🕰️ **O que Fica Registrado**
+
+Cada correção salva:
+- **Quem fez** a correção (seu nome)
+- **Quando** foi feita (data e hora)
+- **O que mudou** (quais campos foram alterados)
+- **Observações** que você escreveu
+- **Valores anteriores e novos** de cada campo
+
+**🔒 Importante**: As correções NÃO apagam o histórico anterior - tudo fica registrado!
 
 ## 🤝 Trabalhando em Equipe
 
@@ -209,6 +275,25 @@ O relatório mostra **todas as salas** organizadamente:
 - Verifique se digitou o número correto
 - Tente sem espaços ou caracteres especiais
 - Se tem certeza que existe, cadastre como novo item
+
+### ❓ **"Como faço para corrigir um item já inventariado?"**
+
+- Digite o tombo do item no campo de busca
+- Modifique os campos que estão errados
+- Adicione uma observação explicando a correção
+- Clique em "Salvar Correção"
+
+### ❓ **"Onde vejo o histórico de correções?"**
+
+- No inventário: clique no número do tombo de itens com badge laranja
+- No relatório: clique no número do item corrigido
+- Abre uma página com todas as correções em ordem cronológica
+
+### ❓ **"Posso corrigir itens que outras pessoas inventariaram?"**
+
+- Sim! Qualquer membro da equipe pode fazer correções
+- O sistema registra quem fez cada correção
+- Ideal para trabalho colaborativo
 
 ### ❓ **"Não consigo acessar o inventário"**
 
@@ -250,11 +335,13 @@ Se tiver qualquer dúvida ou problema:
 4. **Digitar tombo** → Número no campo de busca
 5. **Se encontrou** → Confirmar informações → "Confirmar Item Encontrado"
 6. **Se não encontrou** → "Cadastrar item" → Preencher dados → "Enviar"
-7. **Trocar de sala** → Selecionar nova sala no menu
-8. **Ver progresso** → Acessar relatório do inventário
+7. **Para corrigir** → Digitar tombo → Modificar dados → "Salvar Correção"
+8. **Trocar de sala** → Selecionar nova sala no menu
+9. **Ver progresso** → Acessar relatório do inventário
+10. **Ver correções** → Clicar nos badges laranjas ou números dos itens
 
 ---
 
 **🎯 Pronto! Agora você está preparado para fazer um inventário eficiente e organizado!**
 
-_Sistema de Inventário v2.0.0 - Criado para facilitar o trabalho das comissões inventariantes_ 📋✨
+_Sistema de Inventário v2.1.0 - Criado para facilitar o trabalho das comissões inventariantes_ 📋✨
