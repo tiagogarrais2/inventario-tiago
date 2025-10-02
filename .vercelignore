@@ -1,0 +1,23 @@
+# Arquivos de desenvolvimento
+*.map
+*.map.js
+.env.local
+.env.development
+
+# Source maps
+**/*.map
+
+# Node modules (já ignorado por padrão, mas sendo explícito)
+node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Arquivos temporários
+.DS_Store
+Thumbs.db
+
+# Prisma
+prisma/migrations/

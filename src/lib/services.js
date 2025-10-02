@@ -44,8 +44,7 @@ class UsuarioService {
 class InventarioService {
   static async findByName(nome) {
     try {
-      console.log(`🔍 [INVENTARIO_SERVICE] Buscando inventário por nome: ${nome}`);
-      const result = await prisma.inventario.findUnique({
+      return await prisma.inventario.findUnique({
         where: { nome },
         include: {
           proprietario: {
@@ -53,10 +52,8 @@ class InventarioService {
           },
         },
       });
-      console.log(`🔍 [INVENTARIO_SERVICE] Resultado:`, result ? `ENCONTRADO (ID: ${result.id})` : "NÃO ENCONTRADO");
-      return result;
     } catch (error) {
-      console.error(`🚨 [INVENTARIO_SERVICE] Erro em findByName:`, error);
+      console.error(`Erro em findByName:`, error);
       throw error;
     }
   }
@@ -197,18 +194,13 @@ class InventarioService {
 class ItemInventarioService {
   static async findByNumero(nomeInventario, numero) {
     try {
-      console.log(`🔍 [SERVICE] Buscando inventário: ${nomeInventario}`);
       const inventario = await InventarioService.findByName(nomeInventario);
       
       if (!inventario) {
-        console.log(`❌ [SERVICE] Inventário não encontrado: ${nomeInventario}`);
         return null;
       }
 
-      console.log(`✅ [SERVICE] Inventário encontrado ID: ${inventario.id}`);
-      console.log(`🔍 [SERVICE] Buscando item número: ${numero}`);
-
-      const result = await prisma.itemInventario.findFirst({
+      return await prisma.itemInventario.findFirst({
         where: {
           inventarioId: inventario.id,
           numero: numero.toString(),
@@ -219,12 +211,8 @@ class ItemInventarioService {
           },
         },
       });
-
-      console.log(`🔍 [SERVICE] Resultado da busca:`, result ? "ENCONTRADO" : "NÃO ENCONTRADO");
-      return result;
     } catch (error) {
-      console.error(`🚨 [SERVICE] Erro em findByNumero:`, error);
-      console.error(`🚨 [SERVICE] Stack trace:`, error.stack);
+      console.error(`Erro em findByNumero:`, error);
       throw error;
     }
   }

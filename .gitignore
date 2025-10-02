@@ -9,3 +9,12 @@ node_modules
 logs/
 *.log
 /src/generated/prisma
+
+# Source maps
+*.map
+*.map.js
+**/*.map
+
+# Arquivos temporários
+.DS_Store
+Thumbs.db

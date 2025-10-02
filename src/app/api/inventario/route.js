@@ -60,12 +60,6 @@ export async function GET(request) {
 
     // Se foi solicitado um tombo específico, buscar apenas esse item
     if (tombo) {
-      console.log(
-        `🔍 [VERCEL] Buscando item com tombo: ${tombo} no inventário: ${nomeInventario}`
-      );
-      console.log(`🔍 [VERCEL] Environment: ${process.env.NODE_ENV}`);
-      console.log(`🔍 [VERCEL] Database URL exists: ${!!process.env.DATABASE_URL}`);
-
       let item;
       try {
         item = await ItemInventarioService.findByNumero(
@@ -74,19 +68,13 @@ export async function GET(request) {
         );
 
         if (!item) {
-          console.log(
-            `❌ [VERCEL] Item com tombo ${tombo} não encontrado no inventário ${nomeInventario}`
-          );
           return NextResponse.json(
             { error: "Item não encontrado." },
             { status: 404 }
           );
         }
-
-        console.log(`✅ [VERCEL] Item encontrado:`, JSON.stringify(item, null, 2));
       } catch (error) {
-        console.error(`🚨 [VERCEL] Erro ao buscar item:`, error);
-        console.error(`🚨 [VERCEL] Stack trace:`, error.stack);
+        console.error(`Erro ao buscar item:`, error);
         return NextResponse.json(
           { error: `Erro interno: ${error.message}` },
           { status: 500 }
