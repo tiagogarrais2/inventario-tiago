@@ -251,6 +251,23 @@ export async function POST(request) {
 
     console.log(`✅ Correção salva com sucesso:`, correcao.id);
 
+    // Marcar o item original como inventariado (já que foi corrigido/conferido)
+    console.log(`📋 Marcando item original como inventariado...`);
+    const itemAtualizado = await prisma.itemInventario.update({
+      where: { id: itemOriginal.id },
+      data: {
+        dataInventario: new Date(),
+        inventarianteId: usuario.id,
+        salaEncontrada: getValorFinal(itemData.SALA, itemOriginal.sala),
+        statusInventario: getValorFinal(
+          itemData["ESTADO DE CONSERVAÇÃO"],
+          itemOriginal.estadoConservacao
+        ),
+      },
+    });
+
+    console.log(`✅ Item original marcado como inventariado:`, itemAtualizado.id);
+
     // Log de auditoria
     await AuditoriaService.log(
       "item_correction",
@@ -259,6 +276,7 @@ export async function POST(request) {
         numeroOriginal: numeroOriginal,
         numeroCorrigido: itemData.NUMERO,
         correcaoId: correcao.id,
+        itemMarcadoComoInventariado: true,
       },
       nome
     );
@@ -275,6 +293,13 @@ export async function POST(request) {
           inventariante: correcao.inventariante?.nome,
           dataCorrecao: correcao.dataCorrecao,
         },
+        itemInventariado: {
+          id: itemAtualizado.id,
+          dataInventario: itemAtualizado.dataInventario,
+          inventariante: usuario.nome,
+          marcadoComoInventariado: true,
+        },
+        message: "Correção salva e item marcado como inventariado com sucesso",
       },
       { status: 201 }
     );
