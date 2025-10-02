@@ -43,14 +43,22 @@ class UsuarioService {
 // Service para gerenciar inventários
 class InventarioService {
   static async findByName(nome) {
-    return await prisma.inventario.findUnique({
-      where: { nome },
-      include: {
-        proprietario: {
-          select: { email: true, nome: true },
+    try {
+      console.log(`🔍 [INVENTARIO_SERVICE] Buscando inventário por nome: ${nome}`);
+      const result = await prisma.inventario.findUnique({
+        where: { nome },
+        include: {
+          proprietario: {
+            select: { email: true, nome: true },
+          },
         },
-      },
-    });
+      });
+      console.log(`🔍 [INVENTARIO_SERVICE] Resultado:`, result ? `ENCONTRADO (ID: ${result.id})` : "NÃO ENCONTRADO");
+      return result;
+    } catch (error) {
+      console.error(`🚨 [INVENTARIO_SERVICE] Erro em findByName:`, error);
+      throw error;
+    }
   }
 
   static async create(nome, nomeExibicao = null, userEmail = null) {
@@ -188,20 +196,37 @@ class InventarioService {
 // Service para gerenciar itens de inventário
 class ItemInventarioService {
   static async findByNumero(nomeInventario, numero) {
-    const inventario = await InventarioService.findByName(nomeInventario);
-    if (!inventario) return null;
+    try {
+      console.log(`🔍 [SERVICE] Buscando inventário: ${nomeInventario}`);
+      const inventario = await InventarioService.findByName(nomeInventario);
+      
+      if (!inventario) {
+        console.log(`❌ [SERVICE] Inventário não encontrado: ${nomeInventario}`);
+        return null;
+      }
 
-    return await prisma.itemInventario.findFirst({
-      where: {
-        inventarioId: inventario.id,
-        numero: numero.toString(),
-      },
-      include: {
-        inventariante: {
-          select: { nome: true, email: true },
+      console.log(`✅ [SERVICE] Inventário encontrado ID: ${inventario.id}`);
+      console.log(`🔍 [SERVICE] Buscando item número: ${numero}`);
+
+      const result = await prisma.itemInventario.findFirst({
+        where: {
+          inventarioId: inventario.id,
+          numero: numero.toString(),
         },
-      },
-    });
+        include: {
+          inventariante: {
+            select: { nome: true, email: true },
+          },
+        },
+      });
+
+      console.log(`🔍 [SERVICE] Resultado da busca:`, result ? "ENCONTRADO" : "NÃO ENCONTRADO");
+      return result;
+    } catch (error) {
+      console.error(`🚨 [SERVICE] Erro em findByNumero:`, error);
+      console.error(`🚨 [SERVICE] Stack trace:`, error.stack);
+      throw error;
+    }
   }
 
   static async create(nomeInventario, dados) {

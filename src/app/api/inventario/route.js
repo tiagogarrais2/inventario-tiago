@@ -61,21 +61,34 @@ export async function GET(request) {
     // Se foi solicitado um tombo específico, buscar apenas esse item
     if (tombo) {
       console.log(
-        `🔍 Buscando item com tombo: ${tombo} no inventário: ${nomeInventario}`
+        `🔍 [VERCEL] Buscando item com tombo: ${tombo} no inventário: ${nomeInventario}`
       );
+      console.log(`🔍 [VERCEL] Environment: ${process.env.NODE_ENV}`);
+      console.log(`🔍 [VERCEL] Database URL exists: ${!!process.env.DATABASE_URL}`);
 
-      const item = await ItemInventarioService.findByNumero(
-        nomeInventario,
-        tombo
-      );
-
-      if (!item) {
-        console.log(
-          `❌ Item com tombo ${tombo} não encontrado no inventário ${nomeInventario}`
+      try {
+        const item = await ItemInventarioService.findByNumero(
+          nomeInventario,
+          tombo
         );
+
+        if (!item) {
+          console.log(
+            `❌ [VERCEL] Item com tombo ${tombo} não encontrado no inventário ${nomeInventario}`
+          );
+          return NextResponse.json(
+            { error: "Item não encontrado." },
+            { status: 404 }
+          );
+        }
+
+        console.log(`✅ [VERCEL] Item encontrado:`, JSON.stringify(item, null, 2));
+      } catch (error) {
+        console.error(`🚨 [VERCEL] Erro ao buscar item:`, error);
+        console.error(`🚨 [VERCEL] Stack trace:`, error.stack);
         return NextResponse.json(
-          { error: "Item não encontrado." },
-          { status: 404 }
+          { error: `Erro interno: ${error.message}` },
+          { status: 500 }
         );
       }
 
