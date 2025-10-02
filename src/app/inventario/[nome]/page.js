@@ -218,6 +218,41 @@ export default function InventarioPage({ params }) {
     router.push(`/cadastrar?${params.toString()}`);
   }
 
+  function handleDadosIncorretos() {
+    if (!resultado) return;
+    
+    // Criar parâmetros com todos os dados do item original para pré-preenchimento
+    const params = new URLSearchParams({
+      nome: nome,
+      isCorrecao: 'true',
+      numeroOriginal: resultado.numero,
+      numero: resultado.numero,
+      sala: salaSelecionada,
+      status: resultado.status || '',
+      ed: resultado.ed || '',
+      contaContabil: resultado.contaContabil || '',
+      descricao: resultado.descricao || '',
+      rotulos: resultado.rotulos || '',
+      cargaAtual: resultado.cargaAtual || '',
+      setorResponsavel: resultado.setorResponsavel || '',
+      campusCarga: resultado.campusCarga || '',
+      cargaContabil: resultado.cargaContabil || '',
+      valorAquisicao: resultado.valorAquisicao || '',
+      valorDepreciado: resultado.valorDepreciado || '',
+      numeroNotaFiscal: resultado.numeroNotaFiscal || '',
+      numeroSerie: resultado.numeroSerie || '',
+      dataEntrada: resultado.dataEntrada || '',
+      dataCarga: resultado.dataCarga || '',
+      fornecedor: resultado.fornecedor || '',
+      marca: resultado.marca || '',
+      modelo: resultado.modelo || '',
+      setor: resultado.setor || '',
+      estadoConservacao: resultado.estadoConservacao || ''
+    });
+    
+    router.push(`/cadastrar?${params.toString()}`);
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const nome = searchParams.get("nome");
@@ -403,6 +438,42 @@ export default function InventarioPage({ params }) {
               📝 Este item foi CADASTRADO durante o inventário
             </div>
           )}
+          {resultado.temCorrecoes && (
+            <div
+              style={{
+                backgroundColor: "#ff9800",
+                color: "white", 
+                padding: "8px 12px",
+                borderRadius: "5px",
+                marginBottom: "10px",
+                fontSize: "14px",
+                fontWeight: "bold",
+              }}
+            >
+              ⚠️ Este item possui {resultado.totalCorrecoes} correção(ões) de dados registrada(s)
+              {resultado.ultimaCorrecao && (
+                <div style={{ fontSize: "12px", marginTop: "4px" }}>
+                  Última correção: {new Date(resultado.ultimaCorrecao).toLocaleString()}
+                </div>
+              )}
+              <div style={{ marginTop: "8px" }}>
+                <button
+                  onClick={() => window.open(`/api/correcoes/${nome}/${resultado.numero}`, '_blank')}
+                  style={{
+                    backgroundColor: "#fff",
+                    color: "#ff9800",
+                    border: "1px solid #fff",
+                    padding: "4px 8px",
+                    borderRadius: "3px",
+                    fontSize: "12px",
+                    cursor: "pointer"
+                  }}
+                >
+                  📋 Ver Histórico Completo
+                </button>
+              </div>
+            </div>
+          )}
           <pre
             style={{
               textAlign: "left",
@@ -429,8 +500,23 @@ export default function InventarioPage({ params }) {
             <option value="Em Manutenção">Em Manutenção</option>
           </select>
           <br />
-          <button onClick={confirmarEncontrado} style={{ marginTop: 10 }}>
+          <button onClick={confirmarEncontrado} style={{ marginTop: 10, marginRight: 10 }}>
             Confirmar Item Encontrado
+          </button>
+          <button 
+            onClick={handleDadosIncorretos} 
+            style={{ 
+              marginTop: 10, 
+              backgroundColor: '#ffc107', 
+              color: '#000',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+            title="Clique se os dados exibidos estão incorretos"
+          >
+            📝 Dados Incorretos
           </button>
         </div>
       )}

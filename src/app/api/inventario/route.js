@@ -6,6 +6,7 @@ import {
   ItemInventarioService,
   PermissaoService,
   AuditoriaService,
+  CorrecaoService,
 } from "../../../lib/services.js";
 
 export async function GET(request) {
@@ -80,6 +81,18 @@ export async function GET(request) {
 
       console.log(`✅ Item encontrado:`, item);
 
+      // Verificar se o item tem correções
+      const temCorrecoes = await CorrecaoService.hasCorrections(inventario.nome, tombo);
+      const totalCorrecoes = temCorrecoes ? await CorrecaoService.findByNumeroOriginal(inventario.nome, tombo) : [];
+
+      // Adicionar informações de correção ao item
+      const itemComCorrecoes = {
+        ...item,
+        temCorrecoes,
+        totalCorrecoes: totalCorrecoes.length,
+        ultimaCorrecao: totalCorrecoes.length > 0 ? totalCorrecoes[0].dataCorrecao : null
+      };
+
       // Registrar acesso ao item no log de auditoria
       await AuditoriaService.log(
         "search_item",
@@ -88,11 +101,26 @@ export async function GET(request) {
         inventario.nome
       );
 
-      return NextResponse.json(item);
+      return NextResponse.json(itemComCorrecoes);
     }
 
     // Retornar todos os itens do inventário
     const itens = await ItemInventarioService.listByInventario(inventario.nome);
+
+    // Adicionar informações de correção para cada item
+    const itensComCorrecoes = await Promise.all(
+      itens.map(async (item) => {
+        const temCorrecoes = await CorrecaoService.hasCorrections(inventario.nome, item.numero);
+        const totalCorrecoes = temCorrecoes ? await CorrecaoService.findByNumeroOriginal(inventario.nome, item.numero) : [];
+        
+        return {
+          ...item,
+          temCorrecoes,
+          totalCorrecoes: totalCorrecoes.length,
+          ultimaCorrecao: totalCorrecoes.length > 0 ? totalCorrecoes[totalCorrecoes.length - 1].dataCorrecao : null
+        };
+      })
+    );
 
     // Registrar acesso ao inventário no log de auditoria
     await AuditoriaService.log(
@@ -102,7 +130,7 @@ export async function GET(request) {
       inventario.nome
     );
 
-    return NextResponse.json(itens);
+    return NextResponse.json(itensComCorrecoes);
   } catch (error) {
     console.error("Erro ao buscar inventário:", error);
     return NextResponse.json(

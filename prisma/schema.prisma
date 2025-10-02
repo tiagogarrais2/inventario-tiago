@@ -25,6 +25,7 @@ model Usuario {
   permissoes              Permissao[]
   auditorias              AuditLog[]
   itensInventariados      ItemInventario[] @relation("InventarianteItem")
+  correcoesFeitas         CorrecaoItem[] @relation("CorrecaoInventariante")
 
   @@map("usuarios")
 }
@@ -44,6 +45,7 @@ model Inventario {
   cabecalhos      CabecalhoInventario[]
   permissoes      Permissao[]
   auditorias      AuditLog[]
+  correcoes       CorrecaoItem[]
 
   @@map("inventarios")
 }
@@ -150,4 +152,48 @@ model AuditLog {
   inventario   Inventario? @relation(fields: [inventarioId], references: [id])
 
   @@map("audit_logs")
+}
+
+model CorrecaoItem {
+  id                String   @id @default(cuid())
+  inventarioId      String
+  numeroItemOriginal String  // Número do item original que teve dados incorretos
+  
+  // Dados corrigidos (mesma estrutura do ItemInventario)
+  numero            String   // NUMERO do tombo corrigido
+  status            String?
+  ed                String?
+  contaContabil     String?  @map("conta_contabil")
+  descricao         String?
+  rotulos           String?
+  cargaAtual        String?  @map("carga_atual")
+  setorResponsavel  String?  @map("setor_responsavel")
+  campusCarga       String?  @map("campus_carga")
+  cargaContabil     String?  @map("carga_contabil")
+  valorAquisicao    String?  @map("valor_aquisicao")
+  valorDepreciado   String?  @map("valor_depreciado")
+  numeroNotaFiscal  String?  @map("numero_nota_fiscal")
+  numeroSerie       String?  @map("numero_serie")
+  dataEntrada       String?  @map("data_entrada")
+  dataCarga         String?  @map("data_carga")
+  fornecedor        String?
+  marca             String?
+  modelo            String?
+  sala              String?
+  setor             String?
+  estadoConservacao String?  @map("estado_conservacao")
+  
+  // Metadados da correção
+  inventarianteId   String
+  dataCorrecao      DateTime @default(now())
+  observacoes       String?  // Campo para observações sobre a correção
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relacionamentos
+  inventario        Inventario @relation(fields: [inventarioId], references: [id])
+  inventariante     Usuario    @relation("CorrecaoInventariante", fields: [inventarianteId], references: [id])
+
+  @@map("correcoes_item")
 }

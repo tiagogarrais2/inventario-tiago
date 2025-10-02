@@ -74,23 +74,39 @@ export default function RelatorioPage({ params }) {
         const salas = await salasRes.json();
         const itens = await itensRes.json();
 
-        // Inicializar todas as salas com arrays vazios
+        // Buscar correções para cada item e adicionar ao agrupamento
         const agrupado = {};
         salas.forEach((sala) => {
           agrupado[sala] = [];
         });
 
-        // Agrupar itens por sala (prioriza salaEncontrada, senão sala)
-        itens.forEach((item) => {
+        // Agrupar itens por sala e incluir correções
+        for (const item of itens) {
           const sala = item.salaEncontrada || item.sala || "Sala não definida";
 
-          // Se a sala do item não existe na lista de salas, criar uma entrada
           if (!agrupado[sala]) {
             agrupado[sala] = [];
           }
 
-          agrupado[sala].push(item);
-        });
+          // Se o item tem correções, buscar o histórico completo
+          let correcoes = [];
+          if (item.temCorrecoes) {
+            try {
+              const correcoesRes = await fetch(`/api/correcoes-json/${nome}/${item.numero}`);
+              if (correcoesRes.ok) {
+                const correcoesData = await correcoesRes.json();
+                correcoes = correcoesData.correcoes || [];
+              }
+            } catch (error) {
+              console.error('Erro ao buscar correções:', error);
+            }
+          }
+
+          agrupado[sala].push({
+            ...item,
+            historicoCorrecoes: correcoes
+          });
+        }
 
         setItensPorSala(agrupado);
       } catch (e) {
@@ -195,6 +211,10 @@ export default function RelatorioPage({ params }) {
                       padding: "10px",
                       border: item.cadastradoDuranteInventario
                         ? "2px solid #007bff"
+                        : item.dataInventario
+                        ? "2px solid #28a745"
+                        : item.temCorrecoes
+                        ? "2px solid #ff9800"
                         : "1px solid #ccc",
                       backgroundColor: item.dataInventario
                         ? "#d4edda"
@@ -204,12 +224,53 @@ export default function RelatorioPage({ params }) {
                       position: "relative",
                     }}
                   >
-                    {item.cadastradoDuranteInventario && (
+                    {/* Badge INVENTARIADO - sempre à direita quando presente */}
+                    {item.dataInventario && (
                       <div
                         style={{
                           position: "absolute",
                           top: "-8px",
                           right: "10px",
+                          backgroundColor: "#28a745",
+                          color: "white",
+                          padding: "2px 8px",
+                          fontSize: "12px",
+                          borderRadius: "10px",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        ✅ INVENTARIADO
+                      </div>
+                    )}
+                    
+                    {/* Badge CORRIGIDO - posição depende se tem INVENTARIADO */}
+                    {item.temCorrecoes && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: "-8px",
+                          right: item.dataInventario ? "130px" : "10px",
+                          backgroundColor: "#ff9800",
+                          color: "white",
+                          padding: "2px 8px",
+                          fontSize: "12px",
+                          borderRadius: "10px",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        📋 CORRIGIDO
+                      </div>
+                    )}
+                    
+                    {/* Badge CADASTRADO - sempre à esquerda quando presente */}
+                    {item.cadastradoDuranteInventario && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: "-8px",
+                          right: item.dataInventario && item.temCorrecoes ? "250px" 
+                               : item.dataInventario || item.temCorrecoes ? "130px" 
+                               : "10px",
                           backgroundColor: "#007bff",
                           color: "white",
                           padding: "2px 8px",
@@ -238,6 +299,88 @@ export default function RelatorioPage({ params }) {
                         <strong style={{ color: "#007bff" }}>
                           🔖 Item cadastrado durante o inventário
                         </strong>
+                      </>
+                    )}
+                    {item.temCorrecoes && (
+                      <>
+                        <br />
+                        <strong style={{ color: "#ff9800" }}>
+                          📋 Este item possui {item.totalCorrecoes} correção(ões) de dados
+                        </strong>
+                        {item.ultimaCorrecao && (
+                          <div style={{ fontSize: "12px", color: "#ff9800", marginTop: "4px" }}>
+                            Última correção: {new Date(item.ultimaCorrecao).toLocaleString()}
+                          </div>
+                        )}
+                        
+                        {/* Histórico completo de correções para impressão */}
+                        {item.historicoCorrecoes && item.historicoCorrecoes.length > 0 && (
+                          <div style={{
+                            marginTop: "15px",
+                            padding: "10px",
+                            backgroundColor: "#fff3cd",
+                            border: "1px solid #ffeaa7",
+                            borderRadius: "5px",
+                            fontSize: "13px"
+                          }}>
+                            <strong style={{ color: "#856404" }}>HISTÓRICO DE CORREÇÕES:</strong>
+                            {item.historicoCorrecoes.map((correcao, idx) => {
+                              const dataCorrecao = new Date(correcao.createdAt).toLocaleString('pt-BR');
+                              
+                              // Extrair diferenças das observações
+                              let dadosCorrigidos = {};
+                              let observacoesLimpas = correcao.observacoes || '';
+                              
+                              const regexCampos = /Campos alterados: (.+)/;
+                              const match = observacoesLimpas.match(regexCampos);
+                              
+                              if (match) {
+                                observacoesLimpas = observacoesLimpas.replace(/\n\nCampos alterados:.+/, '').trim();
+                                const camposTexto = match[1];
+                                const campos = camposTexto.split(' | ');
+                                
+                                campos.forEach(campo => {
+                                  const [nome, valores] = campo.split(': ');
+                                  if (valores) {
+                                    const [original, novo] = valores.split(' → ');
+                                    dadosCorrigidos[nome] = {
+                                      original: original?.replace(/"/g, '') || '',
+                                      novo: novo?.replace(/"/g, '') || ''
+                                    };
+                                  }
+                                });
+                              }
+                              
+                              return (
+                                <div key={idx} style={{ 
+                                  marginTop: "10px", 
+                                  paddingTop: "10px", 
+                                  borderTop: idx > 0 ? "1px solid #ddd" : "none" 
+                                }}>
+                                  <div style={{ fontWeight: "bold", color: "#856404" }}>
+                                    Correção #{idx + 1} • {dataCorrecao} • Por: {correcao.inventariante?.nome || correcao.inventariante?.email || 'Usuário não identificado'}
+                                  </div>
+                                  
+                                  {Object.keys(dadosCorrigidos).length > 0 && Object.entries(dadosCorrigidos).map(([campo, valor]) => (
+                                    <div key={campo} style={{ marginTop: "5px" }}>
+                                      <div style={{ fontWeight: "bold", fontSize: "12px" }}>{campo}</div>
+                                      <div style={{ fontSize: "12px" }}>
+                                        Valor original: "{valor?.original || 'Não informado'}" → Novo valor: "{valor?.novo || 'Não informado'}"
+                                      </div>
+                                    </div>
+                                  ))}
+                                  
+                                  {observacoesLimpas && (
+                                    <div style={{ marginTop: "8px" }}>
+                                      <div style={{ fontWeight: "bold", fontSize: "12px" }}>📝 Observações</div>
+                                      <div style={{ fontSize: "12px", fontStyle: "italic" }}>{observacoesLimpas}</div>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                       </>
                     )}
                   </li>

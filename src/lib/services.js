@@ -558,6 +558,130 @@ class AuditoriaService {
   }
 }
 
+// Service para gerenciar correções de itens
+class CorrecaoService {
+  /**
+   * Lista todas as correções de um inventário
+   */
+  static async listByInventario(nomeInventario) {
+    const inventario = await InventarioService.findByName(nomeInventario);
+    if (!inventario) return [];
+
+    return await prisma.correcaoItem.findMany({
+      where: {
+        inventarioId: inventario.id,
+      },
+      include: {
+        inventariante: {
+          select: { nome: true, email: true },
+        },
+      },
+      orderBy: {
+        dataCorrecao: 'desc',
+      },
+    });
+  }
+
+  /**
+   * Busca correções de um item específico
+   */
+  static async findByNumeroOriginal(nomeInventario, numeroOriginal) {
+    const inventario = await InventarioService.findByName(nomeInventario);
+    if (!inventario) return [];
+
+    return await prisma.correcaoItem.findMany({
+      where: {
+        inventarioId: inventario.id,
+        numeroItemOriginal: numeroOriginal.toString(),
+      },
+      include: {
+        inventariante: {
+          select: { nome: true, email: true },
+        },
+      },
+      orderBy: {
+        dataCorrecao: 'asc',
+      },
+    });
+  }
+
+  /**
+   * Busca uma correção específica por ID
+   */
+  static async findById(correcaoId) {
+    return await prisma.correcaoItem.findUnique({
+      where: {
+        id: correcaoId,
+      },
+      include: {
+        inventariante: {
+          select: { nome: true, email: true },
+        },
+        inventario: {
+          select: { nome: true, nomeExibicao: true },
+        },
+      },
+    });
+  }
+
+  /**
+   * Conta o número de correções por inventário
+   */
+  static async countByInventario(nomeInventario) {
+    const inventario = await InventarioService.findByName(nomeInventario);
+    if (!inventario) return 0;
+
+    return await prisma.correcaoItem.count({
+      where: {
+        inventarioId: inventario.id,
+      },
+    });
+  }
+
+  /**
+   * Verifica se um item específico tem correções
+   */
+  static async hasCorrections(nomeInventario, numeroItem) {
+    const inventario = await InventarioService.findByName(nomeInventario);
+    if (!inventario) return false;
+
+    const count = await prisma.correcaoItem.count({
+      where: {
+        inventarioId: inventario.id,
+        numeroItemOriginal: numeroItem.toString(),
+      },
+    });
+
+    return count > 0;
+  }
+
+  /**
+   * Obter estatísticas de correções para um inventário
+   */
+  static async getInventoryStats(nomeInventario) {
+    const inventario = await InventarioService.findByName(nomeInventario);
+    if (!inventario) return { totalCorrecoes: 0, itensComCorrecao: 0 };
+
+    const totalCorrecoes = await prisma.correcaoItem.count({
+      where: {
+        inventarioId: inventario.id,
+      },
+    });
+
+    const itensComCorrecao = await prisma.correcaoItem.groupBy({
+      by: ['numeroItemOriginal'],
+      where: {
+        inventarioId: inventario.id,
+      },
+    });
+
+    return {
+      totalCorrecoes,
+      itensComCorrecao: itensComCorrecao.length,
+    };
+  }
+}
+
 export {
   UsuarioService,
   InventarioService,
@@ -566,4 +690,5 @@ export {
   CabecalhoService,
   PermissaoService,
   AuditoriaService,
+  CorrecaoService,
 };
