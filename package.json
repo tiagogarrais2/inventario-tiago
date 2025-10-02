@@ -7,8 +7,9 @@
     "build": "npx prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "npx prisma generate && npx prisma migrate deploy",
-    "migrate": "npx prisma migrate deploy"
+    "postinstall": "npx prisma generate && npx prisma db push --accept-data-loss && node scripts/ensure-database.mjs",
+    "migrate": "npx prisma migrate deploy",
+    "ensure-db": "node scripts/ensure-database.mjs"
   },
   "dependencies": {
     "@prisma/client": "^6.16.2",
