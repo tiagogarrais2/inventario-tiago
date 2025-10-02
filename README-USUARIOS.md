@@ -1,6 +1,6 @@
 # 📋 Guia do Usuário - Sistema de Inventário
 
-**Versão 2.1.1 | Para Membros de Comissões Inventariantes**
+**Versão 2.1.2 | Para Membros de Comissões Inventariantes**
 
 ---
 
@@ -349,4 +349,4 @@ Se tiver qualquer dúvida ou problema:
 
 **🎯 Pronto! Agora você está preparado para fazer um inventário eficiente e organizado!**
 
-_Sistema de Inventário v2.1.1 - Criado para facilitar o trabalho das comissões inventariantes_ 📋✨
+_Sistema de Inventário v2.1.2 - Criado para facilitar o trabalho das comissões inventariantes_ 📋✨

@@ -1,4 +1,4 @@
-# 📋 Sistema de Inventário Tiago v2.1.1
+# 📋 Sistema de Inventário Tiago v2.1.2
 
 Sistema completo para gerenciamento de inventários com banco de dados PostgreSQL, autenticação, controle de acesso, auditoria e **sistema de correções avançado**. Desenvolvido em Next.js 15 com NextAuth para autenticação segura via Google OAuth e Prisma ORM para persistência de dados.
 
@@ -482,7 +482,25 @@ npx prisma migrate deploy
 - **APIs Especializadas**: Endpoints JSON e HTML para máxima flexibilidade
 - **Navegação Integrada**: Links contextuais em todo o sistema
 
-## 🎉 Versão 2.1.1 (Correções de Deploy)
+## 🎉 Versão 2.1.2 (Correções de Deploy e Migração)
+
+### **🛠️ Solução Definitiva para Deploy na Vercel**
+
+- **Prisma db push**: Substituição de migrações problemáticas por sincronização direta
+- **Script de Verificação**: `ensure-database.mjs` para criação automática de tabelas
+- **Postinstall Robusto**: Triple safety com generate + db push + verificação
+- **Zero Dependências**: Sistema funciona independente de histórico de migrações
+- **À Prova de Falhas**: Cria tabelas manualmente se necessário
+- **Deploy Limpo**: Resolve definitivamente erros P3015 e P2021
+
+### **🔧 Melhorias Técnicas**
+
+- **Source Maps**: Desabilitados em produção para performance
+- **Logs Otimizados**: Removido debug verboso após resolução
+- **API de Fallback**: Endpoint manual para criação de tabelas
+- **Verificação Automática**: Testa estrutura do banco a cada deploy
+
+## 🎉 Versão 2.1.1 (Correções de Deploy - Anteriormente)
 
 ### **🚀 Correções de Build e Deploy**
 
