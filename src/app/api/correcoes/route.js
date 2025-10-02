@@ -1,16 +1,17 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
-import { InventarioService, CorrecaoService, PermissaoService } from "@/lib/services";
+import {
+  InventarioService,
+  CorrecaoService,
+  PermissaoService,
+} from "@/lib/services";
 
 export async function GET(request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
-      return NextResponse.json(
-        { error: "Não autorizado" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -50,7 +51,10 @@ export async function GET(request) {
 
     if (numeroOriginal) {
       // Buscar correções de um item específico
-      correcoes = await CorrecaoService.findByNumeroOriginal(inventario, numeroOriginal);
+      correcoes = await CorrecaoService.findByNumeroOriginal(
+        inventario,
+        numeroOriginal
+      );
     } else {
       // Buscar todas as correções do inventário
       correcoes = await CorrecaoService.listByInventario(inventario);
@@ -65,7 +69,6 @@ export async function GET(request) {
       inventario: inventario,
       filtroNumeroOriginal: numeroOriginal || null,
     });
-
   } catch (error) {
     console.error("❌ Erro ao buscar correções:", error);
     return NextResponse.json(

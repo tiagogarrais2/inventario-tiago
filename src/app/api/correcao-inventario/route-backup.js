@@ -1,17 +1,19 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
-import { InventarioService, UsuarioService, AuditoriaService, PermissaoService } from "@/lib/services";
+import {
+  InventarioService,
+  UsuarioService,
+  AuditoriaService,
+  PermissaoService,
+} from "@/lib/services";
 import prisma from "@/lib/db.js";
 
 export async function POST(request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
-      return NextResponse.json(
-        { error: "Não autorizado" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
     const { nome, numeroOriginal, ...itemData } = await request.json();
@@ -25,7 +27,9 @@ export async function POST(request) {
       );
     }
 
-    console.log(`📝 Registrando correção para item ${numeroOriginal} no inventário ${nome}`);
+    console.log(
+      `📝 Registrando correção para item ${numeroOriginal} no inventário ${nome}`
+    );
 
     // Verificar se o inventário existe e o usuário tem permissão
     const inventario = await InventarioService.findByName(nome);
@@ -102,11 +106,11 @@ export async function POST(request) {
       setor: itemData.SETOR || null,
       estadoConservacao: itemData["ESTADO DE CONSERVAÇÃO"] || null,
       inventarianteId: usuario.id,
-      observacoes: `Correção registrada em ${new Date().toLocaleString()}`
+      observacoes: `Correção registrada em ${new Date().toLocaleString()}`,
     };
 
     // Converter strings vazias para null
-    Object.keys(dadosCorrecao).forEach(key => {
+    Object.keys(dadosCorrecao).forEach((key) => {
       if (dadosCorrecao[key] === "") {
         dadosCorrecao[key] = null;
       }

@@ -1,16 +1,17 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../../auth/[...nextauth]/route";
-import { InventarioService, CorrecaoService, PermissaoService } from "@/lib/services";
+import {
+  InventarioService,
+  CorrecaoService,
+  PermissaoService,
+} from "@/lib/services";
 
 export async function GET(request, { params }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
-      return NextResponse.json(
-        { error: "Não autorizado" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
     // Await params in Next.js 15
@@ -46,7 +47,10 @@ export async function GET(request, { params }) {
     }
 
     // Buscar histórico de correções do item
-    const correcoes = await CorrecaoService.findByNumeroOriginal(inventario, numero);
+    const correcoes = await CorrecaoService.findByNumeroOriginal(
+      inventario,
+      numero
+    );
 
     // Criar HTML formatado para o usuário
     const html = `
@@ -192,75 +196,94 @@ export async function GET(request, { params }) {
             <p>${correcoes.length} correção(ões) registrada(s)</p>
           </div>
 
-          ${correcoes.length === 0 ? `
+          ${
+            correcoes.length === 0
+              ? `
             <div class="sem-correcoes">
               <p>Nenhuma correção foi registrada para este item.</p>
             </div>
-          ` : correcoes.map((correcao, index) => {
-            const dataCorrecao = new Date(correcao.createdAt).toLocaleString('pt-BR');
-            
-            // Extrair diferenças das observações
-            let dadosCorrigidos = {};
-            let observacoesLimpas = correcao.observacoes || '';
-            
-            // Verificar se há campos alterados nas observações
-            const regexCampos = /Campos alterados: (.+)/;
-            const match = observacoesLimpas.match(regexCampos);
-            
-            if (match) {
-              // Remover a parte dos campos alterados das observações para exibição limpa
-              observacoesLimpas = observacoesLimpas.replace(/\n\nCampos alterados:.+/, '').trim();
-              
-              // Parse dos campos alterados
-              const camposTexto = match[1];
-              const campos = camposTexto.split(' | ');
-              
-              campos.forEach(campo => {
-                const [nome, valores] = campo.split(': ');
-                if (valores) {
-                  const [original, novo] = valores.split(' → ');
-                  dadosCorrigidos[nome] = {
-                    original: original?.replace(/"/g, '') || '',
-                    novo: novo?.replace(/"/g, '') || ''
-                  };
-                }
-              });
-            }
-            
-            return `
+          `
+              : correcoes
+                  .map((correcao, index) => {
+                    const dataCorrecao = new Date(
+                      correcao.createdAt
+                    ).toLocaleString("pt-BR");
+
+                    // Extrair diferenças das observações
+                    let dadosCorrigidos = {};
+                    let observacoesLimpas = correcao.observacoes || "";
+
+                    // Verificar se há campos alterados nas observações
+                    const regexCampos = /Campos alterados: (.+)/;
+                    const match = observacoesLimpas.match(regexCampos);
+
+                    if (match) {
+                      // Remover a parte dos campos alterados das observações para exibição limpa
+                      observacoesLimpas = observacoesLimpas
+                        .replace(/\n\nCampos alterados:.+/, "")
+                        .trim();
+
+                      // Parse dos campos alterados
+                      const camposTexto = match[1];
+                      const campos = camposTexto.split(" | ");
+
+                      campos.forEach((campo) => {
+                        const [nome, valores] = campo.split(": ");
+                        if (valores) {
+                          const [original, novo] = valores.split(" → ");
+                          dadosCorrigidos[nome] = {
+                            original: original?.replace(/"/g, "") || "",
+                            novo: novo?.replace(/"/g, "") || "",
+                          };
+                        }
+                      });
+                    }
+
+                    return `
               <div class="correcao">
                 <div class="correcao-header">
                   <div class="meta">
                     <strong>Correção #${index + 1}</strong> • 
                     ${dataCorrecao} • 
-                    <strong>Por:</strong> ${correcao.inventariante?.nome || correcao.inventariante?.email || 'Usuário não identificado'}
+                    <strong>Por:</strong> ${correcao.inventariante?.nome || correcao.inventariante?.email || "Usuário não identificado"}
                   </div>
                 </div>
                 <div class="correcao-content">
-                  ${Object.keys(dadosCorrigidos).length > 0 ? 
-                    Object.entries(dadosCorrigidos).map(([campo, valor]) => `
+                  ${
+                    Object.keys(dadosCorrigidos).length > 0
+                      ? Object.entries(dadosCorrigidos)
+                          .map(
+                            ([campo, valor]) => `
                       <div class="campo-alterado">
                         <div class="campo-nome">${campo}</div>
                         <div>
-                          <span class="valor-original">Valor original:</span> "${valor?.original || 'Não informado'}"
+                          <span class="valor-original">Valor original:</span> "${valor?.original || "Não informado"}"
                           <span class="arrow">→</span>
-                          <span class="valor-novo">Novo valor:</span> "${valor?.novo || 'Não informado'}"
+                          <span class="valor-novo">Novo valor:</span> "${valor?.novo || "Não informado"}"
                         </div>
                       </div>
-                    `).join('') : 
-                    '<div class="campo-alterado"><p><em>Nenhum campo específico foi registrado nesta correção.</em></p></div>'
+                    `
+                          )
+                          .join("")
+                      : '<div class="campo-alterado"><p><em>Nenhum campo específico foi registrado nesta correção.</em></p></div>'
                   }
                   
-                  ${observacoesLimpas ? `
+                  ${
+                    observacoesLimpas
+                      ? `
                     <div class="observacoes">
                       <h4>📝 Observações</h4>
                       <p>${observacoesLimpas}</p>
                     </div>
-                  ` : ''}
+                  `
+                      : ""
+                  }
                 </div>
               </div>
             `;
-          }).join('')}
+                  })
+                  .join("")
+          }
         </div>
       </body>
       </html>
@@ -268,10 +291,9 @@ export async function GET(request, { params }) {
 
     return new Response(html, {
       headers: {
-        'Content-Type': 'text/html; charset=utf-8',
+        "Content-Type": "text/html; charset=utf-8",
       },
     });
-
   } catch (error) {
     console.error("❌ Erro ao buscar histórico de correções:", error);
     return NextResponse.json(

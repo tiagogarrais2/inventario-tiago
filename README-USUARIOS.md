@@ -180,7 +180,7 @@ O relatório mostra **todas as salas** organizadamente:
 **� Itens Corrigidos (badge laranja):**
 
 - Item teve informações corrigidas após o inventário
-- Mostra badge "📋 CORRIGIDO" 
+- Mostra badge "📋 CORRIGIDO"
 - Clique no número do tombo para ver histórico de correções
 
 **�📦 Salas Vazias:**
@@ -193,7 +193,7 @@ O relatório mostra **todas as salas** organizadamente:
 Os itens podem ter diferentes badges que indicam seu status:
 
 - 🟢 **INVENTARIADO** - Item foi confirmado durante o inventário
-- 🟠 **CORRIGIDO** - Item teve dados corrigidos posteriormente  
+- 🟠 **CORRIGIDO** - Item teve dados corrigidos posteriormente
 - 🔵 **CADASTRADO** - Item foi adicionado durante o inventário
 
 **💡 Dica**: Um item pode ter múltiplos badges se foi cadastrado E corrigido, por exemplo!
@@ -205,6 +205,7 @@ Os itens podem ter diferentes badges que indicam seu status:
 Às vezes você percebe que um item já inventariado tem informações incorretas ou incompletas. Agora você pode corrigir!
 
 **Exemplos de quando corrigir:**
+
 - Descrição está incompleta ou errada
 - Estado de conservação mudou
 - Sala foi preenchida incorretamente
@@ -220,17 +221,20 @@ Os itens podem ter diferentes badges que indicam seu status:
 5. **Clique em "Salvar Correção"**
 
 **✅ Pronto!** O item agora terá:
+
 - As informações atualizadas
-- Um badge laranja "📋 CORRIGIDO" 
+- Um badge laranja "📋 CORRIGIDO"
 - Histórico completo das mudanças
 
 ### 📚 **Visualizando Histórico de Correções**
 
 **No Inventário:**
+
 - Itens corrigidos aparecem com badge laranja
 - Clique no número do tombo para ver detalhes
 
 **No Relatório:**
+
 - Badge "📋 CORRIGIDO" aparece nos itens
 - Clique no número para ver histórico completo
 - Mostra TODAS as correções em ordem cronológica
@@ -238,6 +242,7 @@ Os itens podem ter diferentes badges que indicam seu status:
 ### 🕰️ **O que Fica Registrado**
 
 Cada correção salva:
+
 - **Quem fez** a correção (seu nome)
 - **Quando** foi feita (data e hora)
 - **O que mudou** (quais campos foram alterados)

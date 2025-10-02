@@ -82,15 +82,21 @@ export async function GET(request) {
       console.log(`✅ Item encontrado:`, item);
 
       // Verificar se o item tem correções
-      const temCorrecoes = await CorrecaoService.hasCorrections(inventario.nome, tombo);
-      const totalCorrecoes = temCorrecoes ? await CorrecaoService.findByNumeroOriginal(inventario.nome, tombo) : [];
+      const temCorrecoes = await CorrecaoService.hasCorrections(
+        inventario.nome,
+        tombo
+      );
+      const totalCorrecoes = temCorrecoes
+        ? await CorrecaoService.findByNumeroOriginal(inventario.nome, tombo)
+        : [];
 
       // Adicionar informações de correção ao item
       const itemComCorrecoes = {
         ...item,
         temCorrecoes,
         totalCorrecoes: totalCorrecoes.length,
-        ultimaCorrecao: totalCorrecoes.length > 0 ? totalCorrecoes[0].dataCorrecao : null
+        ultimaCorrecao:
+          totalCorrecoes.length > 0 ? totalCorrecoes[0].dataCorrecao : null,
       };
 
       // Registrar acesso ao item no log de auditoria
@@ -110,14 +116,25 @@ export async function GET(request) {
     // Adicionar informações de correção para cada item
     const itensComCorrecoes = await Promise.all(
       itens.map(async (item) => {
-        const temCorrecoes = await CorrecaoService.hasCorrections(inventario.nome, item.numero);
-        const totalCorrecoes = temCorrecoes ? await CorrecaoService.findByNumeroOriginal(inventario.nome, item.numero) : [];
-        
+        const temCorrecoes = await CorrecaoService.hasCorrections(
+          inventario.nome,
+          item.numero
+        );
+        const totalCorrecoes = temCorrecoes
+          ? await CorrecaoService.findByNumeroOriginal(
+              inventario.nome,
+              item.numero
+            )
+          : [];
+
         return {
           ...item,
           temCorrecoes,
           totalCorrecoes: totalCorrecoes.length,
-          ultimaCorrecao: totalCorrecoes.length > 0 ? totalCorrecoes[totalCorrecoes.length - 1].dataCorrecao : null
+          ultimaCorrecao:
+            totalCorrecoes.length > 0
+              ? totalCorrecoes[totalCorrecoes.length - 1].dataCorrecao
+              : null,
         };
       })
     );

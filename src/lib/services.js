@@ -577,7 +577,7 @@ class CorrecaoService {
         },
       },
       orderBy: {
-        dataCorrecao: 'desc',
+        dataCorrecao: "desc",
       },
     });
   }
@@ -600,7 +600,7 @@ class CorrecaoService {
         },
       },
       orderBy: {
-        dataCorrecao: 'asc',
+        dataCorrecao: "asc",
       },
     });
   }
@@ -669,7 +669,7 @@ class CorrecaoService {
     });
 
     const itensComCorrecao = await prisma.correcaoItem.groupBy({
-      by: ['numeroItemOriginal'],
+      by: ["numeroItemOriginal"],
       where: {
         inventarioId: inventario.id,
       },

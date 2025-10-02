@@ -43,7 +43,7 @@ export default function Cadastrar() {
       const nome = searchParams.get("nome");
       const numero = searchParams.get("numero");
       const sala = searchParams.get("sala");
-      const correcao = searchParams.get("isCorrecao") === 'true';
+      const correcao = searchParams.get("isCorrecao") === "true";
       const numeroOrig = searchParams.get("numeroOriginal");
 
       setIsCorrecao(correcao);
@@ -110,26 +110,26 @@ export default function Cadastrar() {
         // Se é correção, preenche todos os campos com os dados originais
         if (correcao) {
           const camposMapeamento = {
-            'status': 'STATUS',
-            'ed': 'ED',
-            'contaContabil': 'CONTA CONTABIL',
-            'descricao': 'DESCRICAO',
-            'rotulos': 'RÓTULOS',
-            'cargaAtual': 'CARGA ATUAL',
-            'setorResponsavel': 'SETOR DO RESPONSÁVEL',
-            'campusCarga': 'CAMPUS DA CARGA',
-            'cargaContabil': 'CARGA CONTÁBIL',
-            'valorAquisicao': 'VALOR AQUISIÇÃO',
-            'valorDepreciado': 'VALOR DEPRECIADO',
-            'numeroNotaFiscal': 'NUMERO NOTA FISCAL',
-            'numeroSerie': 'NUMERO SERIE',
-            'dataEntrada': 'DATA ENTRADA',
-            'dataCarga': 'DATA CARGA',
-            'fornecedor': 'FORNECEDOR',
-            'marca': 'MARCA',
-            'modelo': 'MODELO',
-            'setor': 'SETOR',
-            'estadoConservacao': 'ESTADO DE CONSERVAÇÃO'
+            status: "STATUS",
+            ed: "ED",
+            contaContabil: "CONTA CONTABIL",
+            descricao: "DESCRICAO",
+            rotulos: "RÓTULOS",
+            cargaAtual: "CARGA ATUAL",
+            setorResponsavel: "SETOR DO RESPONSÁVEL",
+            campusCarga: "CAMPUS DA CARGA",
+            cargaContabil: "CARGA CONTÁBIL",
+            valorAquisicao: "VALOR AQUISIÇÃO",
+            valorDepreciado: "VALOR DEPRECIADO",
+            numeroNotaFiscal: "NUMERO NOTA FISCAL",
+            numeroSerie: "NUMERO SERIE",
+            dataEntrada: "DATA ENTRADA",
+            dataCarga: "DATA CARGA",
+            fornecedor: "FORNECEDOR",
+            marca: "MARCA",
+            modelo: "MODELO",
+            setor: "SETOR",
+            estadoConservacao: "ESTADO DE CONSERVAÇÃO",
           };
 
           Object.entries(camposMapeamento).forEach(([param, campo]) => {
@@ -168,8 +168,10 @@ export default function Cadastrar() {
 
     try {
       // Se é correção, usa endpoint específico para correções
-      const endpoint = isCorrecao ? "/api/correcao-inventario" : "/api/add-inventario";
-      const payload = isCorrecao 
+      const endpoint = isCorrecao
+        ? "/api/correcao-inventario"
+        : "/api/add-inventario";
+      const payload = isCorrecao
         ? { nome, numeroOriginal, ...formData }
         : { nome, ...formData };
 
@@ -180,10 +182,10 @@ export default function Cadastrar() {
       });
 
       if (res.ok) {
-        const mensagem = isCorrecao 
+        const mensagem = isCorrecao
           ? `Correção do tombo n° ${numeroOriginal} registrada com sucesso!`
           : `Tombo n° ${formData["NUMERO"]} cadastrado com sucesso!`;
-          
+
         localStorage.setItem("notificacao", mensagem);
         router.push(`/inventario/${nome}`); // Redireciona de volta
       } else {
@@ -232,20 +234,30 @@ export default function Cadastrar() {
   return (
     <div style={{ padding: "20px" }}>
       {isCorrecao && (
-        <div style={{
-          backgroundColor: '#fff3cd',
-          border: '1px solid #ffeeba',
-          color: '#856404',
-          padding: '10px',
-          borderRadius: '5px',
-          marginBottom: '20px'
-        }}>
-          📝 <strong>Correção de Dados</strong> - Você está corrigindo os dados do item <strong>{numeroOriginal}</strong>
+        <div
+          style={{
+            backgroundColor: "#fff3cd",
+            border: "1px solid #ffeeba",
+            color: "#856404",
+            padding: "10px",
+            borderRadius: "5px",
+            marginBottom: "20px",
+          }}
+        >
+          📝 <strong>Correção de Dados</strong> - Você está corrigindo os dados
+          do item <strong>{numeroOriginal}</strong>
           <br />
-          <small>Os dados originais serão preservados. As correções serão salvas separadamente.</small>
+          <small>
+            Os dados originais serão preservados. As correções serão salvas
+            separadamente.
+          </small>
         </div>
       )}
-      <h1>{isCorrecao ? '📝 Corrigir Dados do Item' : 'Cadastrar Item de Inventário'}</h1>
+      <h1>
+        {isCorrecao
+          ? "📝 Corrigir Dados do Item"
+          : "Cadastrar Item de Inventário"}
+      </h1>
       <form onSubmit={handleSubmit}>
         {cabecalho?.map((fieldName) => {
           if (fieldName === "#") {
@@ -353,8 +365,20 @@ export default function Cadastrar() {
           );
         })}
         {isCorrecao && (
-          <div style={{ marginBottom: "15px", marginTop: "20px", padding: "15px", backgroundColor: "#f8f9fa", border: "1px solid #dee2e6", borderRadius: "5px" }}>
-            <label htmlFor="observacoes" style={{ fontWeight: "bold", color: "#495057" }}>
+          <div
+            style={{
+              marginBottom: "15px",
+              marginTop: "20px",
+              padding: "15px",
+              backgroundColor: "#f8f9fa",
+              border: "1px solid #dee2e6",
+              borderRadius: "5px",
+            }}
+          >
+            <label
+              htmlFor="observacoes"
+              style={{ fontWeight: "bold", color: "#495057" }}
+            >
               Observações sobre a correção:
             </label>
             <textarea
@@ -364,13 +388,13 @@ export default function Cadastrar() {
               onChange={handleChange}
               placeholder="Descreva o motivo da correção ou observações relevantes..."
               rows={3}
-              style={{ 
-                width: "100%", 
-                marginTop: "5px", 
-                padding: "8px", 
+              style={{
+                width: "100%",
+                marginTop: "5px",
+                padding: "8px",
                 border: "1px solid #ced4da",
                 borderRadius: "4px",
-                fontSize: "14px"
+                fontSize: "14px",
               }}
             />
             <small style={{ color: "#6c757d", fontSize: "12px" }}>
@@ -379,7 +403,7 @@ export default function Cadastrar() {
           </div>
         )}
         <button type="submit" style={{ padding: "10px 20px" }}>
-          {isCorrecao ? 'Salvar Correção' : 'Salvar Cadastro'}
+          {isCorrecao ? "Salvar Correção" : "Salvar Cadastro"}
         </button>
       </form>
     </div>
