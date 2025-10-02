@@ -1,6 +1,6 @@
-# 📋 Sistema de Inventário Tiago v2.0
+# 📋 Sistema de Inventário Tiago v2.1.0
 
-Sistema completo para gerenciamento de inventários com banco de dados PostgreSQL, autenticação, controle de acesso e auditoria. Desenvolvido em Next.js 15 com NextAuth para autenticação segura via Google OAuth e Prisma ORM para persistência de dados.
+Sistema completo para gerenciamento de inventários com banco de dados PostgreSQL, autenticação, controle de acesso, auditoria e **sistema de correções avançado**. Desenvolvido em Next.js 15 com NextAuth para autenticação segura via Google OAuth e Prisma ORM para persistência de dados.
 
 ---
 
@@ -100,14 +100,31 @@ Sistema completo para gerenciamento de inventários com banco de dados PostgreSQ
 - **Interface otimizada**: Foco automático e UX aprimorada
 - **Marcação especial**: Itens cadastrados durante inventário são identificados
 
+### 🔧 **Sistema de Correções v2.1.0 (NOVO!)**
+
+- **Correção de dados**: Permite corrigir informações de itens já inventariados
+- **Histórico completo**: Rastreamento cronológico de todas as mudanças realizadas
+- **Comparação inteligente**: Sistema só salva campos que realmente mudaram
+- **Interface dedicada**: Página estilizada para visualizar histórico de correções
+- **Navegação integrada**: Links diretos entre inventário, relatórios e correções
+- **Preservação de dados**: Mantém valores originais quando campos não são alterados
+- **API robusta**: Endpoints especializados para correções e consultas de histórico
+- **Marcação especial**: Itens cadastrados durante inventário são identificados
+
 ### 📈 **Relatórios e Visualização Aprimorados**
 
 - **Relatórios dinâmicos**: Dados em tempo real do PostgreSQL
 - **Organização por sala**: Visualização completa incluindo salas vazias
 - **Status visual**: Indicação clara de itens inventariados vs não inventariados
-- **Marcação especial**: Badge para itens cadastrados durante inventário
-- **Navegação integrada**: Links diretos entre relatório e inventário
+- **Sistema de badges**: Indicadores visuais para diferentes status dos itens:
+  - 🟢 **Badge INVENTARIADO** - Para itens confirmados durante inventário
+  - 🟠 **Badge CORRIGIDO** - Para itens que sofreram correções
+  - 🔵 **Badge CADASTRADO** - Para itens adicionados durante o inventário
+- **Bordas coloridas**: Sistema de prioridade visual por status
+- **Posicionamento inteligente**: Badges sem sobreposições para impressão
+- **Navegação integrada**: Links diretos entre relatório, inventário e correções
 - **Dados do inventariante**: Exibição correta do nome real dos usuários
+- **Histórico inline**: Informações de correções diretamente no relatório
 
 ### 🧪 **Demonstração e Testes**
 
@@ -156,6 +173,17 @@ itens_inventario {
   salaEncontrada: String?
   statusInventario: String?
   cadastradoDuranteInventario: Boolean
+}
+
+-- Correções de itens (NOVO v2.1.0)
+correcao_itens {
+  id: String (CUID)
+  inventarioId: String -> inventarios.id
+  numeroOriginal: String
+  camposAlterados: Json
+  observacoes: String?
+  usuarioId: String -> usuarios.id
+  timestamp: DateTime
 }
 
 -- Permissões de acesso
@@ -353,6 +381,9 @@ src/app/
 │   ├── listar/            # Listagem de inventários
 │   ├── add-inventario/    # Adição de itens
 │   ├── update-inventario/ # Atualização de itens
+│   ├── correcao-inventario/ # API de correções v2.1.0
+│   ├── correcoes/         # Histórico de correções v2.1.0
+│   ├── correcoes-json/    # API JSON de correções v2.1.0
 │   ├── cabecalhos/        # API de cabeçalhos
 │   └── salas/             # API de salas
 ├── components/            # Componentes React
@@ -367,9 +398,9 @@ src/app/
 ├── debug/                 # Página de debug
 ├── lib/                   # Utilitários e serviços
 │   ├── db.js             # Configuração Prisma
-│   └── services.js       # Services para banco de dados
+│   └── services.js       # Services + CorrecaoService v2.1.0
 ├── prisma/               # Schema e migrações
-│   ├── schema.prisma     # Modelo de dados
+│   ├── schema.prisma     # Modelo de dados + correções v2.1.0
 │   └── migrations/       # Migrações do banco
 ├── public/               # Arquivos públicos
 │   ├── Telas/           # Screenshots do sistema (01.jpg - 13.jpg)
@@ -427,7 +458,31 @@ npx prisma migrate reset
 npx prisma migrate deploy
 ```
 
-## 🎉 Novidades da Versão 2.0.0
+## 🎉 Novidades da Versão 2.1.0
+
+### **🔧 Sistema de Correções Completo**
+
+- **API de Correção**: Endpoint robusto para salvar correções com comparação inteligente de campos
+- **Histórico Detalhado**: Página HTML estilizada mostrando todas as correções cronologicamente
+- **Integração Visual**: Sistema de badges e bordas coloridas nos relatórios para identificar status
+- **Links Diretos**: Navegação entre inventário, relatórios e histórico de correções
+
+### **🎨 Indicadores Visuais Avançados**
+
+- 🟢 **Badge INVENTARIADO**: Para itens confirmados durante inventário
+- 🟠 **Badge CORRIGIDO**: Para itens que sofreram correções
+- 🔵 **Badge CADASTRADO**: Para itens adicionados durante o inventário
+- **Bordas Coloridas**: Sistema de prioridade visual por status
+- **Posicionamento Inteligente**: Badges sem sobreposições para impressão perfeita
+
+### **🧠 Lógica Inteligente**
+
+- **Comparação de Campos**: Sistema só salva mudanças reais, preserva valores originais
+- **CorrecaoService**: Serviço especializado para gerenciar correções
+- **APIs Especializadas**: Endpoints JSON e HTML para máxima flexibilidade
+- **Navegação Integrada**: Links contextuais em todo o sistema
+
+## 🎉 Versão 2.0.0 (Anteriormente)
 
 ### **🗄️ Migração para PostgreSQL**
 
