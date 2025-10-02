@@ -1,5 +1,5 @@
--- CreateTable
-CREATE TABLE "public"."correcoes_item" (
+-- Criar tabela de correções se não existir
+CREATE TABLE IF NOT EXISTS "public"."correcoes_item" (
     "id" TEXT NOT NULL,
     "inventarioId" TEXT NOT NULL,
     "numeroItemOriginal" TEXT NOT NULL,
@@ -34,8 +34,17 @@ CREATE TABLE "public"."correcoes_item" (
     CONSTRAINT "correcoes_item_pkey" PRIMARY KEY ("id")
 );
 
--- AddForeignKey
-ALTER TABLE "public"."correcoes_item" ADD CONSTRAINT "correcoes_item_inventarioId_fkey" FOREIGN KEY ("inventarioId") REFERENCES "public"."inventarios"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+-- Adicionar foreign keys se não existirem
+DO $$ BEGIN
+    ALTER TABLE "public"."correcoes_item" ADD CONSTRAINT "correcoes_item_inventarioId_fkey" 
+    FOREIGN KEY ("inventarioId") REFERENCES "public"."inventarios"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- AddForeignKey
-ALTER TABLE "public"."correcoes_item" ADD CONSTRAINT "correcoes_item_inventarianteId_fkey" FOREIGN KEY ("inventarianteId") REFERENCES "public"."usuarios"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+DO $$ BEGIN
+    ALTER TABLE "public"."correcoes_item" ADD CONSTRAINT "correcoes_item_inventarianteId_fkey" 
+    FOREIGN KEY ("inventarianteId") REFERENCES "public"."usuarios"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
