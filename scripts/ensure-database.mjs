@@ -1,12 +1,12 @@
 #!/usr/bin/env node
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 async function ensureDatabase() {
   try {
-    console.log('🔍 Verificando estrutura do banco de dados...');
-    
+    console.log("🔍 Verificando estrutura do banco de dados...");
+
     // Verificar se a tabela correcoes_item existe
     const tableExists = await prisma.$queryRaw`
       SELECT EXISTS (
@@ -17,8 +17,8 @@ async function ensureDatabase() {
     `;
 
     if (!tableExists[0]?.exists) {
-      console.log('❌ Tabela correcoes_item não encontrada. Criando...');
-      
+      console.log("❌ Tabela correcoes_item não encontrada. Criando...");
+
       // Criar a tabela manualmente
       await prisma.$executeRaw`
         CREATE TABLE IF NOT EXISTS "public"."correcoes_item" (
@@ -79,17 +79,16 @@ async function ensureDatabase() {
         // Constraint já existe
       }
 
-      console.log('✅ Tabela correcoes_item criada com sucesso!');
+      console.log("✅ Tabela correcoes_item criada com sucesso!");
     } else {
-      console.log('✅ Tabela correcoes_item já existe.');
+      console.log("✅ Tabela correcoes_item já existe.");
     }
 
     // Testar se consegue fazer uma query
     const count = await prisma.correcaoItem.count();
     console.log(`✅ Banco de dados OK. Correções encontradas: ${count}`);
-
   } catch (error) {
-    console.error('❌ Erro ao verificar banco:', error);
+    console.error("❌ Erro ao verificar banco:", error);
     process.exit(1);
   } finally {
     await prisma.$disconnect();

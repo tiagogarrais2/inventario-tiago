@@ -62,10 +62,7 @@ export async function GET(request) {
     if (tombo) {
       let item;
       try {
-        item = await ItemInventarioService.findByNumero(
-          nomeInventario,
-          tombo
-        );
+        item = await ItemInventarioService.findByNumero(nomeInventario, tombo);
 
         if (!item) {
           return NextResponse.json(

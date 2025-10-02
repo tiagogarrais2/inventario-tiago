@@ -36,10 +36,13 @@ export async function GET() {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    return NextResponse.json({
-      error: error.message,
-      database_status: "error",
-      timestamp: new Date().toISOString(),
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: error.message,
+        database_status: "error",
+        timestamp: new Date().toISOString(),
+      },
+      { status: 500 }
+    );
   }
 }

@@ -266,7 +266,10 @@ export async function POST(request) {
       },
     });
 
-    console.log(`✅ Item original marcado como inventariado:`, itemAtualizado.id);
+    console.log(
+      `✅ Item original marcado como inventariado:`,
+      itemAtualizado.id
+    );
 
     // Log de auditoria
     await AuditoriaService.log(

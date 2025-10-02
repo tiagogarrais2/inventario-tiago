@@ -368,8 +368,10 @@ export default function RelatorioPage({ params }) {
                                         valores.split(" → ");
                                       dadosCorrigidos[nome] = {
                                         original:
-                                          original?.replace(/&quot;/g, "") || "",
-                                        novo: novo?.replace(/&quot;/g, "") || "",
+                                          original?.replace(/&quot;/g, "") ||
+                                          "",
+                                        novo:
+                                          novo?.replace(/&quot;/g, "") || "",
                                       };
                                     }
                                   });
@@ -418,7 +420,8 @@ export default function RelatorioPage({ params }) {
                                               {valor?.original ||
                                                 "Não informado"}
                                               &quot; → Novo valor: &quot;
-                                              {valor?.novo || "Não informado"}&quot;
+                                              {valor?.novo || "Não informado"}
+                                              &quot;
                                             </div>
                                           </div>
                                         )

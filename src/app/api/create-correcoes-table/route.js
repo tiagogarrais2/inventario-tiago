@@ -6,7 +6,7 @@ import { authOptions } from "../auth/[...nextauth]/route";
 export async function POST() {
   // Verificar autenticação - só admin
   const session = await getServerSession(authOptions);
-  if (!session || session.user?.email !== 'tiagoarraisholanda@gmail.com') {
+  if (!session || session.user?.email !== "tiagoarraisholanda@gmail.com") {
     return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
   }
 
@@ -23,7 +23,7 @@ export async function POST() {
     if (tableExists[0]?.exists) {
       return NextResponse.json({
         message: "Tabela correcoes_item já existe",
-        status: "already_exists"
+        status: "already_exists",
       });
     }
 
@@ -81,14 +81,16 @@ export async function POST() {
 
     return NextResponse.json({
       message: "Tabela correcoes_item criada com sucesso",
-      status: "created"
+      status: "created",
     });
-
   } catch (error) {
     console.error("Erro ao criar tabela:", error);
-    return NextResponse.json({
-      error: error.message,
-      status: "error"
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: error.message,
+        status: "error",
+      },
+      { status: 500 }
+    );
   }
 }

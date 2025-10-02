@@ -195,7 +195,7 @@ class ItemInventarioService {
   static async findByNumero(nomeInventario, numero) {
     try {
       const inventario = await InventarioService.findByName(nomeInventario);
-      
+
       if (!inventario) {
         return null;
       }
