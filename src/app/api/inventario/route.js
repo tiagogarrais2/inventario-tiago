@@ -66,8 +66,9 @@ export async function GET(request) {
       console.log(`🔍 [VERCEL] Environment: ${process.env.NODE_ENV}`);
       console.log(`🔍 [VERCEL] Database URL exists: ${!!process.env.DATABASE_URL}`);
 
+      let item;
       try {
-        const item = await ItemInventarioService.findByNumero(
+        item = await ItemInventarioService.findByNumero(
           nomeInventario,
           tombo
         );
@@ -91,8 +92,6 @@ export async function GET(request) {
           { status: 500 }
         );
       }
-
-      console.log(`✅ Item encontrado:`, item);
 
       // Verificar se o item tem correções
       const temCorrecoes = await CorrecaoService.hasCorrections(
