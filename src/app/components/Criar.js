@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { useSession } from "next-auth/react";
+import Button from "./Button";
 
 export default function Criar({ onUploadConcluido }) {
   const { data: session } = useSession();
@@ -33,8 +34,18 @@ export default function Criar({ onUploadConcluido }) {
     });
 
     if (res.ok) {
+      const result = await res.json();
+      const nomeInventario = result.inventario?.nome || file.name.replace(/\.(json|csv)$/i, '');
+      
       setMessage("Arquivo enviado com sucesso!");
-      if (onUploadConcluido) onUploadConcluido(); // Chama a função de atualização
+      
+      // Limpa o campo de arquivo
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      
+      // Chama a função de atualização passando o nome do novo inventário
+      if (onUploadConcluido) onUploadConcluido(nomeInventario);
     } else {
       setMessage("Falha ao enviar arquivo.");
     }
@@ -46,7 +57,7 @@ export default function Criar({ onUploadConcluido }) {
         <h2 className="text-xl font-bold text-gray-800 mb-4">
           Criar um novo inventário
         </h2>
-        <form onSubmit={handleUpload} encType="multipart/form-data">
+        <form encType="multipart/form-data">
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Servidor(a) responsável pelo envio:
@@ -56,7 +67,6 @@ export default function Criar({ onUploadConcluido }) {
                 type="text"
                 value={responsavel}
                 disabled
-                className="bg-gray-100 border border-gray-300 text-gray-700 py-2 px-3 rounded cursor-not-allowed flex-1"
                 title="Nome capturado automaticamente do usuário logado"
               />
             </div>
@@ -74,12 +84,9 @@ export default function Criar({ onUploadConcluido }) {
             />
           </div>
 
-          <button
-            type="submit"
-            className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition duration-200"
-          >
+          <Button type="submit" onClick={handleUpload}>
             Enviar Arquivo
-          </button>
+          </Button>
         </form>
         {message && (
           <div

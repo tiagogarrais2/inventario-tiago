@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Button from "../../components/Button";
 
 export default function RelatorioPage({ params }) {
   const [nome, setNome] = useState("");
@@ -149,12 +150,12 @@ export default function RelatorioPage({ params }) {
         <p className="text-gray-600 text-center">
           Você não tem permissão para acessar este relatório.
         </p>
-        <button
+        <Button
           onClick={() => router.push("/")}
           className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-200"
         >
           Voltar ao Início
-        </button>
+        </Button>
       </div>
     );
   }

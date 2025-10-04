@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-
+import Button from "../components/Button";
 export default function MigratePage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
@@ -46,7 +46,7 @@ export default function MigratePage() {
             banco de dados.
           </p>
 
-          <button
+          <Button
             onClick={runMigration}
             disabled={loading}
             className={`w-full py-2 px-4 rounded-md text-white font-medium ${
@@ -56,7 +56,7 @@ export default function MigratePage() {
             }`}
           >
             {loading ? "Executando migrações..." : "Executar Migrações"}
-          </button>
+          </Button>
 
           {result && (
             <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-md">

@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import GerenciadorPermissoes from "../../components/GerenciadorPermissoes";
+import Button from "../../components/Button";
 
 export default function InventarioPage({ params }) {
   const [nome, setNome] = useState("");
@@ -311,12 +312,12 @@ export default function InventarioPage({ params }) {
           Entre em contato com o proprietário do inventário para solicitar
           acesso.
         </p>
-        <button
+        <Button
           onClick={() => router.push("/")}
           className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-200"
         >
           Voltar ao Início
-        </button>
+        </Button>
       </div>
     );
   }
@@ -336,10 +337,6 @@ export default function InventarioPage({ params }) {
       {notificacao && (
         <div
           style={{
-            position: "fixed",
-            top: "10px",
-            left: "50%",
-            transform: "translateX(-50%)",
             padding: "10px 20px",
             backgroundColor: "#d4edda",
             color: "#155724",
@@ -375,18 +372,18 @@ export default function InventarioPage({ params }) {
         <h2>{nome}</h2>
         <div>
           {isOwner && (
-            <button
+            <Button
               onClick={() => setShowPermissoes(true)}
               className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded transition duration-200"
             >
               Gerenciar Acesso
-            </button>
+            </Button>
           )}
         </div>
       </div>
-      <button onClick={() => router.push(`/relatorio/${nome}`)}>
-        Relatório geral deste inventário
-      </button>
+      <Button onClick={() => router.push(`/relatorios/${nome}`)}>
+        Relatórios
+      </Button>
       <hr />
       <h2>Realizar inventário</h2>
 
@@ -412,13 +409,13 @@ export default function InventarioPage({ params }) {
         placeholder="Digite o número do tombo"
         ref={inputRef} // Adiciona ref para foco automático
       />
-      <button onClick={handleConfirmar}>Confirmar</button>
+      <Button onClick={handleConfirmar}>Confirmar</Button>
 
       {erro && <p style={{ color: "red" }}>{erro}</p>}
       {erro === "Item não encontrado." && (
-        <button onClick={handleCadastrar} style={{ marginTop: 10 }}>
+        <Button onClick={handleCadastrar} style={{ marginTop: 10 }}>
           Cadastrar item
-        </button>
+        </Button>
       )}
 
       {resultado && (
@@ -459,7 +456,7 @@ export default function InventarioPage({ params }) {
                 </div>
               )}
               <div style={{ marginTop: "8px" }}>
-                <button
+                <Button
                   onClick={() =>
                     window.open(
                       `/api/correcoes/${nome}/${resultado.numero}`,
@@ -473,11 +470,10 @@ export default function InventarioPage({ params }) {
                     padding: "4px 8px",
                     borderRadius: "3px",
                     fontSize: "12px",
-                    cursor: "pointer",
                   }}
                 >
                   📋 Ver Histórico Completo
-                </button>
+                </Button>
               </div>
             </div>
           )}
@@ -507,13 +503,13 @@ export default function InventarioPage({ params }) {
             <option value="Em Manutenção">Em Manutenção</option>
           </select>
           <br />
-          <button
+          <Button
             onClick={confirmarEncontrado}
             style={{ marginTop: 10, marginRight: 10 }}
           >
             Confirmar Item Encontrado
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={handleDadosIncorretos}
             style={{
               marginTop: 10,
@@ -522,12 +518,11 @@ export default function InventarioPage({ params }) {
               border: "none",
               padding: "8px 16px",
               borderRadius: "4px",
-              cursor: "pointer",
             }}
             title="Clique se os dados exibidos estão incorretos"
           >
             📝 Dados Incorretos
-          </button>
+          </Button>
         </div>
       )}
     </div>

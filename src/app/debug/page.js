@@ -168,12 +168,12 @@ export default function DebugPage() {
 
       <div className="mt-8 p-4 bg-gray-50 rounded-lg">
         <h3 className="font-semibold mb-2">🛠️ Ações</h3>
-        <button
+        <Button
           onClick={carregarInventarios}
           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
         >
           🔄 Recarregar
-        </button>
+        </Button>
       </div>
     </div>
   );

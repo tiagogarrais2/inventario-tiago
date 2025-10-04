@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
+import Button from "./Button";
 
 export default function GerenciadorPermissoes({
   inventarioNome,
@@ -112,20 +113,20 @@ export default function GerenciadorPermissoes({
         >
           <div className="modal-header">
             <h2 className="modal-title">Acesso Negado</h2>
-            <button onClick={onClose} className="modal-close-btn">
+            <Button onClick={onClose} className="modal-close-btn">
               ✕
-            </button>
+            </Button>
           </div>
           <p style={{ color: "#6b7280", marginBottom: "16px" }}>
             Apenas o proprietário do inventário pode gerenciar permissões.
           </p>
-          <button
+          <Button
             onClick={onClose}
-            className="modal-btn modal-btn-secondary"
+            className="modal-btn modal-btn-primary"
             style={{ width: "100%" }}
           >
-            Fechar
-          </button>
+            Entendido
+          </Button>
         </div>
       </div>
     );
@@ -138,9 +139,9 @@ export default function GerenciadorPermissoes({
           <h2 className="modal-title">
             Gerenciar Permissões - {inventarioNome}
           </h2>
-          <button onClick={onClose} className="modal-close-btn">
+          <Button onClick={onClose} className="modal-close-btn">
             ✕
-          </button>
+          </Button>
         </div>
 
         {/* Adicionar nova permissão */}
@@ -156,13 +157,13 @@ export default function GerenciadorPermissoes({
               disabled={loading}
               required
             />
-            <button
+            <Button
               type="submit"
               disabled={loading}
               className="modal-btn modal-btn-primary"
             >
               {loading ? "..." : "Conceder"}
-            </button>
+            </Button>
           </form>
         </div>
 
@@ -199,13 +200,13 @@ export default function GerenciadorPermissoes({
                       {new Date(permissao.createdAt).toLocaleString("pt-BR")}
                     </div>
                   </div>
-                  <button
+                  <Button
                     onClick={() => removerPermissao(permissao.usuario.email)}
                     disabled={loading}
                     className="modal-btn modal-btn-danger"
                   >
                     Revogar
-                  </button>
+                  </Button>
                 </div>
               </div>
             ))
@@ -227,9 +228,9 @@ export default function GerenciadorPermissoes({
 
         {/* Botões de ação */}
         <div className="modal-actions">
-          <button onClick={onClose} className="modal-btn modal-btn-secondary">
+          <Button onClick={onClose} className="modal-btn modal-btn-secondary">
             Fechar
-          </button>
+          </Button>
         </div>
       </div>
     </div>

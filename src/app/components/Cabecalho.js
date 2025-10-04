@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useSession, signIn, signOut } from "next-auth/react";
+import Button from "./Button";
 
 export default function Cabecalho() {
   const { data: session, status } = useSession();
@@ -19,12 +20,12 @@ export default function Cabecalho() {
         {status === "authenticated" && session && (
           <div>
             {session.user?.email}
-            <button onClick={() => signOut()}>Sair</button>
+            <Button onClick={() => signOut()}>Sair</Button>
           </div>
         )}
 
         {status === "unauthenticated" && (
-          <button onClick={() => signIn("google")}>Entrar com Google</button>
+          <Button onClick={() => signIn("google")}>Entrar com Google</Button>
         )}
       </div>
     </div>

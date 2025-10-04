@@ -7,9 +7,16 @@ import Criar from "./components/Criar";
 export default function Home() {
   const { data: session, status } = useSession();
   const [atualizar, setAtualizar] = useState(false);
+  const [novoInventario, setNovoInventario] = useState(null);
 
-  function handleUploadConcluido() {
+  function handleUploadConcluido(nomeInventario) {
     setAtualizar((a) => !a); // Alterna o valor para forçar atualização
+    setNovoInventario(nomeInventario); // Armazena o nome do novo inventário
+    
+    // Remove o destaque após 10 segundos
+    setTimeout(() => {
+      setNovoInventario(null);
+    }, 10000);
   }
 
   // Loading state
@@ -90,7 +97,7 @@ export default function Home() {
   // Authenticated - show the main content
   return (
     <div>
-      <Listar atualizar={atualizar} />
+      <Listar atualizar={atualizar} novoInventario={novoInventario} />
       <hr />
       <Criar onUploadConcluido={handleUploadConcluido} />
     </div>

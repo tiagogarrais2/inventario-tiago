@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import Button from "./Button";
 
 // Lista fixa de estados de conservação
 const ESTADOS_CONSERVACAO = [
@@ -206,7 +207,7 @@ export default function Cadastrar() {
       <div style={{ padding: "20px", textAlign: "center" }}>
         <h2>Acesso Restrito</h2>
         <p>Você precisa estar autenticado para cadastrar itens.</p>
-        <button
+        <Button
           onClick={() => router.push("/")}
           style={{
             padding: "10px 20px",
@@ -214,11 +215,10 @@ export default function Cadastrar() {
             color: "white",
             border: "none",
             borderRadius: "4px",
-            cursor: "pointer",
           }}
         >
           Voltar ao Início
-        </button>
+        </Button>
       </div>
     );
   }
@@ -402,9 +402,9 @@ export default function Cadastrar() {
             </small>
           </div>
         )}
-        <button type="submit" style={{ padding: "10px 20px" }}>
+        <Button type="submit" style={{ padding: "10px 20px" }}>
           {isCorrecao ? "Salvar Correção" : "Salvar Cadastro"}
-        </button>
+        </Button>
       </form>
     </div>
   );
