@@ -240,6 +240,259 @@ class InventarioService {
       throw error;
     }
   }
+
+  static async findByOwner(usuarioId) {
+    try {
+      return await prisma.inventario.findMany({
+        where: { proprietarioId: usuarioId },
+        include: {
+          _count: {
+            select: {
+              itens: true,
+              correcoes: true,
+              permissoes: true,
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+    } catch (error) {
+      console.error(
+        "[INVENTARIO] Erro ao buscar inventários do proprietário:",
+        error
+      );
+      throw error;
+    }
+  }
+
+  static async findByUser(usuarioId) {
+    try {
+      return await prisma.inventario.findMany({
+        where: {
+          OR: [
+            { proprietarioId: usuarioId },
+            {
+              permissoes: {
+                some: {
+                  usuarioId: usuarioId,
+                  ativa: true,
+                },
+              },
+            },
+          ],
+        },
+        include: {
+          proprietario: {
+            select: { nome: true, email: true },
+          },
+          _count: {
+            select: {
+              itens: true,
+              correcoes: true,
+              permissoes: true,
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+    } catch (error) {
+      console.error(
+        "[INVENTARIO] Erro ao buscar inventários do usuário:",
+        error
+      );
+      throw error;
+    }
+  }
+
+  static async getEstatisticasGerais(usuarioId) {
+    try {
+      // Buscar inventários do usuário
+      const inventarios = await this.findByUser(usuarioId);
+      const inventarioIds = inventarios.map((inv) => inv.id);
+
+      if (inventarioIds.length === 0) {
+        return {
+          totalItens: 0,
+          itensInventariados: 0,
+          itensNaoInventariados: 0,
+          totalCorrecoes: 0,
+          percentualConcluido: 0,
+        };
+      }
+
+      // Buscar estatísticas dos itens
+      const [totalItens, itensInventariados, totalCorrecoes] =
+        await Promise.all([
+          prisma.itemInventario.count({
+            where: { inventarioId: { in: inventarioIds } },
+          }),
+          prisma.itemInventario.count({
+            where: {
+              inventarioId: { in: inventarioIds },
+              dataInventario: { not: null },
+            },
+          }),
+          prisma.correcaoItem.count({
+            where: { inventarioId: { in: inventarioIds } },
+          }),
+        ]);
+
+      const itensNaoInventariados = totalItens - itensInventariados;
+      const percentualConcluido =
+        totalItens > 0
+          ? Math.round((itensInventariados / totalItens) * 100)
+          : 0;
+
+      return {
+        totalItens,
+        itensInventariados,
+        itensNaoInventariados,
+        totalCorrecoes,
+        percentualConcluido,
+      };
+    } catch (error) {
+      console.error("[INVENTARIO] Erro ao buscar estatísticas gerais:", error);
+      throw error;
+    }
+  }
+
+  static async getEstatisticasInventario(inventarioId) {
+    try {
+      // Buscar estatísticas específicas do inventário
+      const [totalItens, itensInventariados, totalCorrecoes, totalSalas] =
+        await Promise.all([
+          prisma.itemInventario.count({
+            where: { inventarioId },
+          }),
+          prisma.itemInventario.count({
+            where: {
+              inventarioId,
+              dataInventario: { not: null },
+            },
+          }),
+          prisma.correcaoItem.count({
+            where: { inventarioId },
+          }),
+          prisma.sala.count({
+            where: { inventarioId },
+          }),
+        ]);
+
+      const itensNaoInventariados = totalItens - itensInventariados;
+      const percentualConcluido =
+        totalItens > 0
+          ? Math.round((itensInventariados / totalItens) * 100)
+          : 0;
+
+      return {
+        totalItens,
+        itensInventariados,
+        itensNaoInventariados,
+        totalCorrecoes,
+        totalSalas,
+        percentualConcluido,
+      };
+    } catch (error) {
+      console.error(
+        "[INVENTARIO] Erro ao buscar estatísticas do inventário:",
+        error
+      );
+      throw error;
+    }
+  }
+
+  static async getEstatisticasPorSala(inventarioId) {
+    try {
+      // Buscar todas as salas com estatísticas
+      const salas = await prisma.sala.findMany({
+        where: { inventarioId },
+        select: { nome: true },
+        orderBy: { nome: "asc" },
+      });
+
+      const estatisticasSalas = await Promise.all(
+        salas.map(async (sala) => {
+          const [totalItens, itensInventariados] = await Promise.all([
+            prisma.itemInventario.count({
+              where: {
+                inventarioId,
+                sala: sala.nome,
+              },
+            }),
+            prisma.itemInventario.count({
+              where: {
+                inventarioId,
+                sala: sala.nome,
+                dataInventario: { not: null },
+              },
+            }),
+          ]);
+
+          const percentual =
+            totalItens > 0
+              ? Math.round((itensInventariados / totalItens) * 100)
+              : 0;
+
+          return {
+            nome: sala.nome,
+            totalItens,
+            itensInventariados,
+            itensNaoInventariados: totalItens - itensInventariados,
+            percentual,
+          };
+        })
+      );
+
+      return estatisticasSalas;
+    } catch (error) {
+      console.error(
+        "[INVENTARIO] Erro ao buscar estatísticas por sala:",
+        error
+      );
+      throw error;
+    }
+  }
+
+  static async getResumoCorrecoes(inventarioId) {
+    try {
+      const correcoes = await prisma.correcaoItem.findMany({
+        where: { inventarioId },
+        include: {
+          inventariante: {
+            select: { nome: true },
+          },
+        },
+        orderBy: { dataCorrecao: "desc" },
+        take: 10,
+      });
+
+      const totalCorrecoes = await prisma.correcaoItem.count({
+        where: { inventarioId },
+      });
+
+      const correcoesPorUsuario = await prisma.correcaoItem.groupBy({
+        by: ["inventarianteId"],
+        where: { inventarioId },
+        _count: {
+          id: true,
+        },
+        orderBy: {
+          _count: {
+            id: "desc",
+          },
+        },
+      });
+
+      return {
+        total: totalCorrecoes,
+        recentes: correcoes,
+        porUsuario: correcoesPorUsuario,
+      };
+    } catch (error) {
+      console.error("[INVENTARIO] Erro ao buscar resumo de correções:", error);
+      throw error;
+    }
+  }
 }
 
 // Service para gerenciar itens de inventário
@@ -619,6 +872,45 @@ class AuditoriaService {
       });
     } catch (error) {
       console.error("Erro ao registrar auditoria:", error);
+    }
+  }
+
+  static async getAtividadeRecente(usuarioId, limite = 10) {
+    try {
+      return await prisma.auditLog.findMany({
+        where: { usuarioId },
+        orderBy: { timestamp: "desc" },
+        take: limite,
+        select: {
+          acao: true,
+          timestamp: true,
+          detalhes: true,
+        },
+      });
+    } catch (error) {
+      console.error("[AUDITORIA] Erro ao buscar atividade recente:", error);
+      throw error;
+    }
+  }
+
+  static async getAtividadeRecenteInventario(inventarioId, limite = 15) {
+    try {
+      return await prisma.auditLog.findMany({
+        where: { inventarioId },
+        include: {
+          usuario: {
+            select: { nome: true, email: true },
+          },
+        },
+        orderBy: { timestamp: "desc" },
+        take: limite,
+      });
+    } catch (error) {
+      console.error(
+        "[AUDITORIA] Erro ao buscar atividade recente do inventário:",
+        error
+      );
+      throw error;
     }
   }
 }

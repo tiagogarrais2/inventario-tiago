@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import Button from "./Button";
 
 export default function Listar({ atualizar, novoInventario }) {
   const [inventarios, setInventarios] = useState([]);
+  const router = useRouter();
 
   useEffect(() => {
     fetch("/api/listar")
@@ -13,7 +16,10 @@ export default function Listar({ atualizar, novoInventario }) {
 
   return (
     <div>
-      <h2>Inventários disponíveis</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2>Inventários disponíveis</h2>
+        <Button onClick={() => router.push("/dashboard")}>📊 Dashboard</Button>
+      </div>
       <ul>
         {inventarios.length === 0 && <li>Nenhum inventário disponível.</li>}
         {inventarios.map((nome) => {

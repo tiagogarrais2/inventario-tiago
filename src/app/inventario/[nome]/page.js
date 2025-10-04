@@ -263,12 +263,12 @@ export default function InventarioPage({ params }) {
 
     const confirmacao = window.confirm(
       `⚠️ ATENÇÃO: Esta ação é irreversível!\n\n` +
-      `Você está prestes a excluir PERMANENTEMENTE o inventário "${nome}" e todos os seus dados:\n\n` +
-      `• Todos os itens inventariados\n` +
-      `• Todas as correções de dados\n` +
-      `• Todas as permissões de acesso\n` +
-      `• Todo o histórico relacionado\n\n` +
-      `Digite "EXCLUIR" no próximo prompt para confirmar.`
+        `Você está prestes a excluir PERMANENTEMENTE o inventário "${nome}" e todos os seus dados:\n\n` +
+        `• Todos os itens inventariados\n` +
+        `• Todas as correções de dados\n` +
+        `• Todas as permissões de acesso\n` +
+        `• Todo o histórico relacionado\n\n` +
+        `Digite "EXCLUIR" no próximo prompt para confirmar.`
     );
 
     if (!confirmacao) return;
@@ -427,26 +427,42 @@ export default function InventarioPage({ params }) {
       <div>
         <h2>{nome}</h2>
         <div>
-          {isOwner && (
-            <>
-              <Button
-                onClick={() => setShowPermissoes(true)}
-                className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded transition duration-200 mr-2"
-              >
-                Gerenciar Acesso
-              </Button>
-              <Button
-                onClick={handleExcluirInventario}
-                disabled={excluindoInventario}
-                className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-200"
-                style={{
-                  opacity: excluindoInventario ? 0.7 : 1,
-                }}
-              >
-                {excluindoInventario ? "Excluindo..." : "🗑️ Excluir Inventário"}
-              </Button>
-            </>
-          )}
+          <div className="mb-4 flex flex-wrap gap-2">
+            <Button
+              onClick={() => router.push(`/inventario/${nome}/dashboard`)}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-200"
+            >
+              📊 Dashboard
+            </Button>
+            <Button
+              onClick={() => router.push(`/relatorio/${nome}`)}
+              className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition duration-200"
+            >
+              📋 Relatório
+            </Button>
+            {isOwner && (
+              <>
+                <Button
+                  onClick={() => setShowPermissoes(true)}
+                  className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded transition duration-200"
+                >
+                  Gerenciar Acesso
+                </Button>
+                <Button
+                  onClick={handleExcluirInventario}
+                  disabled={excluindoInventario}
+                  className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-200"
+                  style={{
+                    opacity: excluindoInventario ? 0.7 : 1,
+                  }}
+                >
+                  {excluindoInventario
+                    ? "Excluindo..."
+                    : "🗑️ Excluir Inventário"}
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </div>
       <Button onClick={() => router.push(`/relatorios/${nome}`)}>
