@@ -188,6 +188,58 @@ class InventarioService {
 
     return inventariosUnicos;
   }
+
+  static async excluirCompleto(inventarioId) {
+    // Excluir em cascata todos os dados relacionados ao inventário
+    try {
+      // 1. Excluir correções relacionadas
+      await prisma.correcaoItem.deleteMany({
+        where: { inventarioId: inventarioId },
+      });
+
+      // 2. Excluir itens do inventário
+      await prisma.itemInventario.deleteMany({
+        where: { inventarioId: inventarioId },
+      });
+
+      // 3. Excluir salas do inventário
+      await prisma.sala.deleteMany({
+        where: { inventarioId: inventarioId },
+      });
+
+      // 4. Excluir cabeçalhos do inventário
+      await prisma.cabecalhoInventario.deleteMany({
+        where: { inventarioId: inventarioId },
+      });
+
+      // 5. Excluir permissões do inventário
+      await prisma.permissao.deleteMany({
+        where: { inventarioId: inventarioId },
+      });
+
+      // 6. Excluir auditorias relacionadas
+      await prisma.auditLog.deleteMany({
+        where: { inventarioId: inventarioId },
+      });
+
+      // 7. Por último, excluir o inventário
+      await prisma.inventario.delete({
+        where: { id: inventarioId },
+      });
+
+      console.log(
+        `[EXCLUSAO] Inventário ${inventarioId} e todos os dados relacionados excluídos com sucesso`
+      );
+
+      return true;
+    } catch (error) {
+      console.error(
+        `[EXCLUSAO] Erro ao excluir inventário ${inventarioId}:`,
+        error
+      );
+      throw error;
+    }
+  }
 }
 
 // Service para gerenciar itens de inventário

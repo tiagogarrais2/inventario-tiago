@@ -35,15 +35,16 @@ export default function Criar({ onUploadConcluido }) {
 
     if (res.ok) {
       const result = await res.json();
-      const nomeInventario = result.inventario?.nome || file.name.replace(/\.(json|csv)$/i, '');
-      
+      const nomeInventario =
+        result.inventario?.nome || file.name.replace(/\.(json|csv)$/i, "");
+
       setMessage("Arquivo enviado com sucesso!");
-      
+
       // Limpa o campo de arquivo
       if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+        fileInputRef.current.value = "";
       }
-      
+
       // Chama a função de atualização passando o nome do novo inventário
       if (onUploadConcluido) onUploadConcluido(nomeInventario);
     } else {

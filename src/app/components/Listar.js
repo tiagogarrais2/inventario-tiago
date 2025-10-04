@@ -19,7 +19,7 @@ export default function Listar({ atualizar, novoInventario }) {
         {inventarios.map((nome) => {
           const isNovo = novoInventario && nome === novoInventario;
           return (
-            <li 
+            <li
               key={nome}
               style={{
                 padding: isNovo ? "8px 12px" : "4px 0",
@@ -28,19 +28,21 @@ export default function Listar({ atualizar, novoInventario }) {
                 borderRadius: isNovo ? "8px" : "0",
                 margin: isNovo ? "4px 0" : "2px 0",
                 transition: "all 0.3s ease",
-                boxShadow: isNovo ? "0 2px 8px rgba(40, 167, 69, 0.2)" : "none"
+                boxShadow: isNovo ? "0 2px 8px rgba(40, 167, 69, 0.2)" : "none",
               }}
             >
               {isNovo && (
-                <span style={{ 
-                  backgroundColor: "#28a745", 
-                  color: "white", 
-                  padding: "2px 6px", 
-                  borderRadius: "4px", 
-                  fontSize: "12px", 
-                  marginRight: "8px",
-                  fontWeight: "bold"
-                }}>
+                <span
+                  style={{
+                    backgroundColor: "#28a745",
+                    color: "white",
+                    padding: "2px 6px",
+                    borderRadius: "4px",
+                    fontSize: "12px",
+                    marginRight: "8px",
+                    fontWeight: "bold",
+                  }}
+                >
                   NOVO!
                 </span>
               )}

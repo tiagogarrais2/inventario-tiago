@@ -27,6 +27,7 @@ export default function InventarioPage({ params }) {
   const [isOwner, setIsOwner] = useState(false);
   const [accessLoading, setAccessLoading] = useState(true);
   const [showPermissoes, setShowPermissoes] = useState(false);
+  const [excluindoInventario, setExcluindoInventario] = useState(false);
   const router = useRouter();
   const inputRef = useRef(null);
 
@@ -254,6 +255,61 @@ export default function InventarioPage({ params }) {
     router.push(`/cadastrar?${params.toString()}`);
   }
 
+  async function handleExcluirInventario() {
+    if (!isOwner) {
+      alert("Apenas o proprietário pode excluir o inventário.");
+      return;
+    }
+
+    const confirmacao = window.confirm(
+      `⚠️ ATENÇÃO: Esta ação é irreversível!\n\n` +
+      `Você está prestes a excluir PERMANENTEMENTE o inventário "${nome}" e todos os seus dados:\n\n` +
+      `• Todos os itens inventariados\n` +
+      `• Todas as correções de dados\n` +
+      `• Todas as permissões de acesso\n` +
+      `• Todo o histórico relacionado\n\n` +
+      `Digite "EXCLUIR" no próximo prompt para confirmar.`
+    );
+
+    if (!confirmacao) return;
+
+    const confirmacaoTexto = window.prompt(
+      `Para confirmar a exclusão PERMANENTE do inventário "${nome}", digite exatamente: EXCLUIR`
+    );
+
+    if (confirmacaoTexto !== "EXCLUIR") {
+      alert("Exclusão cancelada. Texto de confirmação incorreto.");
+      return;
+    }
+
+    setExcluindoInventario(true);
+
+    try {
+      const response = await fetch(
+        `/api/excluir-inventario?inventario=${encodeURIComponent(nome)}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.ok) {
+        alert(`✅ Inventário "${nome}" excluído com sucesso!`);
+        router.push("/"); // Redireciona para a página inicial
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Erro ao excluir inventário");
+      }
+    } catch (error) {
+      console.error("Erro ao excluir inventário:", error);
+      alert(`❌ Erro ao excluir inventário: ${error.message}`);
+    } finally {
+      setExcluindoInventario(false);
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const nome = searchParams.get("nome");
@@ -372,12 +428,24 @@ export default function InventarioPage({ params }) {
         <h2>{nome}</h2>
         <div>
           {isOwner && (
-            <Button
-              onClick={() => setShowPermissoes(true)}
-              className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded transition duration-200"
-            >
-              Gerenciar Acesso
-            </Button>
+            <>
+              <Button
+                onClick={() => setShowPermissoes(true)}
+                className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded transition duration-200 mr-2"
+              >
+                Gerenciar Acesso
+              </Button>
+              <Button
+                onClick={handleExcluirInventario}
+                disabled={excluindoInventario}
+                className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-200"
+                style={{
+                  opacity: excluindoInventario ? 0.7 : 1,
+                }}
+              >
+                {excluindoInventario ? "Excluindo..." : "🗑️ Excluir Inventário"}
+              </Button>
+            </>
           )}
         </div>
       </div>

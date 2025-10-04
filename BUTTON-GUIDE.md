@@ -80,16 +80,16 @@ import Button from "./Button"; // dependendo da localização
 O componente Button é **totalmente compatível** com formulários HTML:
 
 ### Submit de Formulário
+
 ```javascript
 <form onSubmit={handleSubmit}>
   {/* campos do formulário */}
-  <Button type="submit">
-    Enviar Formulário
-  </Button>
+  <Button type="submit">Enviar Formulário</Button>
 </form>
 ```
 
 ### Características especiais para formulários:
+
 - ✅ **Preserva o comportamento nativo** de submit quando `type="submit"`
 - ✅ **Previne múltiplos submits** com bloqueio visual
 - ✅ **Compatível com validação HTML5** (required, etc.)

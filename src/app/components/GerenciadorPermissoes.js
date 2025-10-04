@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import Button from "./Button";
+import { useNotifications } from "./Notifications";
 
 export default function GerenciadorPermissoes({
   inventarioNome,
@@ -9,6 +10,7 @@ export default function GerenciadorPermissoes({
   onClose,
 }) {
   const { data: session } = useSession();
+  const { showSuccess, showError, showConfirmation } = useNotifications();
   const [permissoes, setPermissoes] = useState([]);
   const [novoEmail, setNovoEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -70,38 +72,41 @@ export default function GerenciadorPermissoes({
   };
 
   const removerPermissao = async (email) => {
-    if (!confirm(`Tem certeza que deseja revogar o acesso de ${email}?`)) {
-      return;
-    }
+    showConfirmation(
+      `Tem certeza que deseja revogar o acesso de ${email}?`,
+      async () => {
+        setLoading(true);
+        setMessage("");
 
-    setLoading(true);
-    setMessage("");
+        try {
+          const response = await fetch("/api/permissoes", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              inventario: inventarioNome,
+              email: email,
+            }),
+          });
 
-    try {
-      const response = await fetch("/api/permissoes", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          inventarioNome,
-          emailUsuario: email,
-        }),
-      });
+          const data = await response.json();
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setMessage("Permissão revogada com sucesso!");
-        carregarPermissoes();
-      } else {
-        setMessage(`Erro: ${data.error}`);
+          if (response.ok) {
+            showSuccess(`Acesso de ${email} revogado com sucesso!`);
+            carregarPermissoes();
+          } else {
+            showError(data.error || "Erro ao revogar acesso");
+          }
+        } catch (error) {
+          console.error("Erro ao revogar permissão:", error);
+          showError("Erro ao revogar acesso");
+        } finally {
+          setLoading(false);
+        }
+      },
+      () => {
+        // Cancelado - não faz nada
       }
-    } catch (error) {
-      setMessage("Erro ao revogar permissão.");
-    }
-
-    setLoading(false);
+    );
   };
 
   if (!isOwner) {

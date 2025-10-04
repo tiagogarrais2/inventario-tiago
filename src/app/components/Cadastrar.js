@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Button from "./Button";
+import { useNotifications } from "./Notifications";
 
 // Lista fixa de estados de conservação
 const ESTADOS_CONSERVACAO = [
@@ -30,6 +31,7 @@ export default function Cadastrar() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { data: session, status } = useSession();
+  const { showSuccess, showError } = useNotifications();
 
   const [cabecalho, setCabecalho] = useState(null);
   const [salasOptions, setSalasOptions] = useState([]);
@@ -190,10 +192,10 @@ export default function Cadastrar() {
         localStorage.setItem("notificacao", mensagem);
         router.push(`/inventario/${nome}`); // Redireciona de volta
       } else {
-        alert("Erro ao cadastrar.");
+        showError("Erro ao cadastrar.");
       }
     } catch (error) {
-      alert("Erro ao cadastrar.");
+      showError("Erro ao cadastrar.");
     }
   };
 

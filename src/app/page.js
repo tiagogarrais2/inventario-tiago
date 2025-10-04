@@ -12,7 +12,7 @@ export default function Home() {
   function handleUploadConcluido(nomeInventario) {
     setAtualizar((a) => !a); // Alterna o valor para forçar atualização
     setNovoInventario(nomeInventario); // Armazena o nome do novo inventário
-    
+
     // Remove o destaque após 10 segundos
     setTimeout(() => {
       setNovoInventario(null);
