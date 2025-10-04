@@ -1,6 +1,6 @@
-# 📋 Sistema de Inventário Tiago v2.1.2
+# 📋 Sistema de Inventário Tiago v2.2.0
 
-Sistema completo para gerenciamento de inventários com banco de dados PostgreSQL, autenticação, controle de acesso, auditoria e **sistema de correções avançado**. Desenvolvido em Next.js 15 com NextAuth para autenticação segura via Google OAuth e Prisma ORM para persistência de dados.
+Sistema completo para gerenciamento de inventários com banco de dados PostgreSQL, autenticação, controle de acesso, auditoria, **sistema de correções avançado** e **funcionalidade de exclusão de inventários**. Desenvolvido em Next.js 15 com NextAuth para autenticação segura via Google OAuth e Prisma ORM para persistência de dados.
 
 ---
 
@@ -100,7 +100,7 @@ Sistema completo para gerenciamento de inventários com banco de dados PostgreSQ
 - **Interface otimizada**: Foco automático e UX aprimorada
 - **Marcação especial**: Itens cadastrados durante inventário são identificados
 
-### 🔧 **Sistema de Correções v2.1.0 (NOVO!)**
+### 🔧 **Sistema de Correções v2.1.0**
 
 - **Correção de dados**: Permite corrigir informações de itens já inventariados
 - **Histórico completo**: Rastreamento cronológico de todas as mudanças realizadas
@@ -110,6 +110,33 @@ Sistema completo para gerenciamento de inventários com banco de dados PostgreSQ
 - **Preservação de dados**: Mantém valores originais quando campos não são alterados
 - **API robusta**: Endpoints especializados para correções e consultas de histórico
 - **Marcação especial**: Itens cadastrados durante inventário são identificados
+
+### 🗑️ **Sistema de Exclusão de Inventários v2.2.0 (NOVO!)**
+
+- **Exclusão segura**: Apenas proprietários podem excluir seus inventários
+- **Confirmação dupla**: Sistema de confirmação com diálogo e digitação manual
+- **Exclusão em cascata**: Remove automaticamente todos os dados relacionados:
+  - Itens do inventário
+  - Correções realizadas
+  - Permissões concedidas
+  - Salas cadastradas
+  - Cabeçalhos personalizados
+  - Logs de auditoria
+- **Auditoria completa**: Registra todas as exclusões com detalhes
+- **Interface intuitiva**: Botão destacado visível apenas para proprietários
+- **Feedback visual**: Indicadores de progresso durante a exclusão
+- **Redirecionamento automático**: Volta à página inicial após exclusão
+
+### 🔔 **Sistema de Notificações v2.2.0 (NOVO!)**
+
+- **Notificações centralizadas**: Sistema unificado para todos os tipos de feedback
+- **Múltiplos tipos**: Sucesso, erro, informação e alerta
+- **Posicionamento fixo**: Notificações no topo da tela, sempre visíveis
+- **Auto-dismiss**: Remoção automática após tempo configurável
+- **Fila inteligente**: Múltiplas notificações empilhadas ordenadamente
+- **Design responsivo**: Adaptação automática para mobile e desktop
+- **Feedback visual**: Cores e ícones específicos para cada tipo
+- **Integração universal**: Usado em todos os componentes do sistema
 
 ### 📈 **Relatórios e Visualização Aprimorados**
 
@@ -458,6 +485,32 @@ npx prisma migrate reset
 npx prisma migrate deploy
 ```
 
+## 🎉 Novidades da Versão 2.2.0
+
+### **🗑️ Sistema de Exclusão de Inventários**
+
+- **Exclusão segura**: Apenas proprietários podem excluir seus inventários
+- **Confirmação dupla**: Sistema de proteção contra exclusões acidentais
+- **Exclusão em cascata**: Remove automaticamente todos os dados relacionados
+- **Auditoria completa**: Logs detalhados de todas as exclusões
+- **Interface intuitiva**: Botão visível apenas para proprietários
+
+### **🔔 Sistema de Notificações Centralizado**
+
+- **Notificações unificadas**: Sistema padrão para todos os feedbacks
+- **Múltiplos tipos**: Sucesso, erro, informação e alerta
+- **Auto-dismiss**: Remoção automática configurável
+- **Fila inteligente**: Múltiplas notificações organizadas
+- **Design responsivo**: Adaptação para todos os dispositivos
+
+### **⚙️ Melhorias de UX e Padronização**
+
+- **Componente Button universal**: Comportamento padronizado em toda aplicação
+- **Bloqueio automático**: Prevenção de cliques duplos (5 segundos)
+- **Feedback visual**: Indicadores de estado durante processamento
+- **Upload aprimorado**: Limpeza automática de campos após envio
+- **Highlights visuais**: Destaque para novos inventários criados
+
 ## 🎉 Novidades da Versão 2.1.0
 
 ### **🔧 Sistema de Correções Completo**
@@ -552,6 +605,32 @@ npx prisma migrate deploy
 ---
 
 ## 📈 Changelog
+
+### **v2.2.0** - 04/10/2025
+
+- ✅ **Sistema de exclusão de inventários**: Funcionalidade completa para proprietários
+- ✅ **Sistema de notificações**: Componente centralizado para todos os feedbacks
+- ✅ **Componente Button universal**: Padronização com bloqueio automático
+- ✅ **Melhorias de UX**: Upload aprimorado e highlights visuais
+- ✅ **Segurança aprimorada**: Confirmação dupla e auditoria de exclusões
+
+### **v2.1.2** - 02/10/2025
+
+- ✅ **Correções de deploy**: Problemas com Prisma e banco PostgreSQL
+- ✅ **Migração automática**: Scripts de migração para produção
+- ✅ **Estabilidade**: Correções de bugs em produção
+
+### **v2.1.1** - 01/10/2025
+
+- ✅ **Correções de deploy**: Ajustes para Vercel
+- ✅ **Otimizações**: Performance e estabilidade
+
+### **v2.1.0** - 30/09/2025
+
+- ✅ **Sistema de correções**: Funcionalidade completa de correção de dados
+- ✅ **Histórico de alterações**: Rastreamento cronológico completo
+- ✅ **Interface aprimorada**: Badges visuais e navegação integrada
+- ✅ **API robusta**: Endpoints especializados para correções
 
 ### **v2.0.0** - 28/09/2025
 

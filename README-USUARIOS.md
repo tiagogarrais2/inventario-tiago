@@ -1,6 +1,6 @@
 # 📋 Guia do Usuário - Sistema de Inventário
 
-**Versão 2.1.2 | Para Membros de Comissões Inventariantes**
+**Versão 2.2.0 | Para Membros de Comissões Inventariantes**
 
 ---
 
@@ -32,7 +32,8 @@ Este guia foi criado especialmente para **você que faz parte de uma comissão i
 - ✅ **Conferir** se os bens estão onde deveriam estar
 - ✅ **Registrar** novos bens encontrados
 - ✅ **Atualizar** informações dos bens (estado, localização)
-- ✅ **Corrigir** dados de bens já inventariados (NOVO v2.1.0!)
+- ✅ **Corrigir** dados de bens já inventariados (v2.1.0!)
+- ✅ **Excluir** inventários completos se você for proprietário (NOVO v2.2.0!)
 - ✅ **Visualizar histórico** de todas as correções realizadas
 - ✅ **Gerar relatórios** organizados por sala com indicadores visuais
 - ✅ **Trabalhar em equipe** com outros membros da comissão
@@ -320,6 +321,20 @@ Cada correção salva:
 - **Recuperável**: Item com problema, mas vale a pena consertar
 - **Antieconômico**: Item muito danificado, não vale consertar
 
+### ❓ **"Como posso excluir um inventário?" (NOVO v2.2.0)**
+
+- **Apenas proprietários** podem excluir inventários (quem fez o upload original)
+- Na página de detalhes do inventário, haverá um botão **"Excluir Inventário"**
+- O sistema pedirá **confirmação dupla** para evitar exclusões acidentais:
+  1. Primeiro uma confirmação simples
+  2. Depois você deve digitar **"EXCLUIR"** para confirmar
+- **⚠️ ATENÇÃO**: A exclusão é **permanente** e remove **todos os dados**:
+  - Todos os itens inventariados
+  - Todas as correções realizadas
+  - Todas as permissões concedidas
+  - Todo o histórico do inventário
+- **Dica**: Use com cuidado! Só exclua se realmente não precisar mais dos dados
+
 ## 📞 Precisa de Ajuda?
 
 Se tiver qualquer dúvida ou problema:
@@ -344,6 +359,7 @@ Se tiver qualquer dúvida ou problema:
 8. **Trocar de sala** → Selecionar nova sala no menu
 9. **Ver progresso** → Acessar relatório do inventário
 10. **Ver correções** → Clicar nos badges laranjas ou números dos itens
+11. **Para excluir** (só proprietários) → "Excluir Inventário" → Confirmar → Digitar "EXCLUIR"
 
 ---
 
