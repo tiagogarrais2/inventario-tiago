@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import Button from "../components/Button";
 
 export default function DebugPage() {
   const { data: session, status } = useSession();
