@@ -16,10 +16,7 @@ export default function Listar({ atualizar, novoInventario }) {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-4">
-        <h2>Inventários disponíveis</h2>
-        <Button onClick={() => router.push("/dashboard")}>📊 Dashboard</Button>
-      </div>
+      <h2>Inventários disponíveis</h2>
       <ul>
         {inventarios.length === 0 && <li>Nenhum inventário disponível.</li>}
         {inventarios.map((nome) => {
@@ -57,6 +54,9 @@ export default function Listar({ atualizar, novoInventario }) {
           );
         })}
       </ul>
+      <Button onClick={() => router.push("/dashboard")}>
+        📊 Dashboard dos seus inventários
+      </Button>
     </div>
   );
 }

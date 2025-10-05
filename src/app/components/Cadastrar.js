@@ -190,7 +190,15 @@ export default function Cadastrar() {
           : `Tombo n° ${formData["NUMERO"]} cadastrado com sucesso!`;
 
         localStorage.setItem("notificacao", mensagem);
-        router.push(`/inventario/${nome}`); // Redireciona de volta
+
+        // Verifica se veio da página de inventário dedicada
+        const from = searchParams.get("from");
+        const redirectPath =
+          from === "inventariar"
+            ? `/inventario/${nome}/inventariar`
+            : `/inventario/${nome}`;
+
+        router.push(redirectPath); // Redireciona de volta
       } else {
         showError("Erro ao cadastrar.");
       }

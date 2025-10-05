@@ -185,12 +185,12 @@ li {
   animation: fadeIn 0.5s ease-in;
 }
 
-@keyframes fadeIn {
+@keyframes spin {
   from {
-    opacity: 0;
+    transform: rotate(0deg);
   }
   to {
-    opacity: 1;
+    transform: rotate(360deg);
   }
 }
 

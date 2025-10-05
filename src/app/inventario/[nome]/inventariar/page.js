@@ -2,18 +2,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import GerenciadorPermissoes from "../../components/GerenciadorPermissoes";
-import Button from "../../components/Button";
+import Button from "../../../components/Button";
 
-export default function InventarioPage({ params }) {
+export default function InventariarPage({ params }) {
   const [nome, setNome] = useState("");
-
-  useEffect(() => {
-    if (params?.nome) {
-      setNome(params.nome);
-    }
-  }, [params]);
   const { data: session, status } = useSession();
+  const router = useRouter();
+
+  // Estados para inventário
   const [valor, setValor] = useState("");
   const [resultado, setResultado] = useState(null);
   const [erro, setErro] = useState("");
@@ -24,12 +20,14 @@ export default function InventarioPage({ params }) {
   const [ultimoTombo, setUltimoTombo] = useState("");
   const [notificacao, setNotificacao] = useState("");
   const [hasAccess, setHasAccess] = useState(false);
-  const [isOwner, setIsOwner] = useState(false);
   const [accessLoading, setAccessLoading] = useState(true);
-  const [showPermissoes, setShowPermissoes] = useState(false);
-  const [excluindoInventario, setExcluindoInventario] = useState(false);
-  const router = useRouter();
   const inputRef = useRef(null);
+
+  useEffect(() => {
+    if (params?.nome) {
+      setNome(params.nome);
+    }
+  }, [params]);
 
   // Verificar permissões de acesso
   useEffect(() => {
@@ -42,7 +40,6 @@ export default function InventarioPage({ params }) {
       }
 
       try {
-        // Verificar se tem permissão para acessar este inventário
         const response = await fetch(
           `/api/verificar-acesso?inventario=${nome}`
         );
@@ -50,15 +47,12 @@ export default function InventarioPage({ params }) {
 
         if (response.ok) {
           setHasAccess(data.hasAccess);
-          setIsOwner(data.isOwner);
         } else {
           setHasAccess(false);
-          setIsOwner(false);
         }
       } catch (error) {
         console.error("Erro ao verificar permissões:", error);
         setHasAccess(false);
-        setIsOwner(false);
       }
 
       setAccessLoading(false);
@@ -79,7 +73,7 @@ export default function InventarioPage({ params }) {
     const notificacaoSalva = localStorage.getItem("notificacao");
     if (notificacaoSalva) {
       setNotificacao(notificacaoSalva);
-      localStorage.removeItem("notificacao"); // Remove após carregar
+      localStorage.removeItem("notificacao");
     }
 
     async function fetchSalas() {
@@ -119,8 +113,6 @@ export default function InventarioPage({ params }) {
     setSalaSelecionada(e.target.value);
     localStorage.setItem("salaSelecionada", e.target.value);
   }
-
-  // Função removida - inventariante não é mais editável
 
   async function buscarInventario() {
     setErro("");
@@ -182,18 +174,17 @@ export default function InventarioPage({ params }) {
       });
 
       if (res.ok) {
-        setUltimoTombo(valor); // Define o último tombo inventariado
-        setResultado(null); // Limpa o resultado após confirmação
+        setUltimoTombo(valor);
+        setResultado(null);
         setValor("");
-        // Mantém o foco no input do tombo
         if (inputRef.current) {
           inputRef.current.focus();
         }
       } else {
-        alert("Erro ao confirmar."); // Mantém alert para erro, ou substitua se quiser
+        alert("Erro ao confirmar.");
       }
     } catch (error) {
-      alert("Erro ao confirmar."); // Mantém alert para erro
+      alert("Erro ao confirmar.");
     }
   }
 
@@ -216,6 +207,7 @@ export default function InventarioPage({ params }) {
       nome: nome,
       numero: valor,
       sala: salaSelecionada,
+      from: "inventariar", // Indica que veio da página de inventário
     });
     router.push(`/cadastrar?${params.toString()}`);
   }
@@ -223,7 +215,6 @@ export default function InventarioPage({ params }) {
   function handleDadosIncorretos() {
     if (!resultado) return;
 
-    // Criar parâmetros com todos os dados do item original para pré-preenchimento
     const params = new URLSearchParams({
       nome: nome,
       isCorrecao: "true",
@@ -250,90 +241,11 @@ export default function InventarioPage({ params }) {
       modelo: resultado.modelo || "",
       setor: resultado.setor || "",
       estadoConservacao: resultado.estadoConservacao || "",
+      from: "inventariar", // Indica que veio da página de inventário
     });
 
     router.push(`/cadastrar?${params.toString()}`);
   }
-
-  async function handleExcluirInventario() {
-    if (!isOwner) {
-      alert("Apenas o proprietário pode excluir o inventário.");
-      return;
-    }
-
-    const confirmacao = window.confirm(
-      `⚠️ ATENÇÃO: Esta ação é irreversível!\n\n` +
-        `Você está prestes a excluir PERMANENTEMENTE o inventário "${nome}" e todos os seus dados:\n\n` +
-        `• Todos os itens inventariados\n` +
-        `• Todas as correções de dados\n` +
-        `• Todas as permissões de acesso\n` +
-        `• Todo o histórico relacionado\n\n` +
-        `Digite "EXCLUIR" no próximo prompt para confirmar.`
-    );
-
-    if (!confirmacao) return;
-
-    const confirmacaoTexto = window.prompt(
-      `Para confirmar a exclusão PERMANENTE do inventário "${nome}", digite exatamente: EXCLUIR`
-    );
-
-    if (confirmacaoTexto !== "EXCLUIR") {
-      alert("Exclusão cancelada. Texto de confirmação incorreto.");
-      return;
-    }
-
-    setExcluindoInventario(true);
-
-    try {
-      const response = await fetch(
-        `/api/excluir-inventario?inventario=${encodeURIComponent(nome)}`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (response.ok) {
-        alert(`✅ Inventário "${nome}" excluído com sucesso!`);
-        router.push("/"); // Redireciona para a página inicial
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Erro ao excluir inventário");
-      }
-    } catch (error) {
-      console.error("Erro ao excluir inventário:", error);
-      alert(`❌ Erro ao excluir inventário: ${error.message}`);
-    } finally {
-      setExcluindoInventario(false);
-    }
-  }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const nome = searchParams.get("nome");
-
-    try {
-      const res = await fetch("/api/add-inventario", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nome, ...formData }),
-      });
-
-      if (res.ok) {
-        localStorage.setItem(
-          "notificacao",
-          `O tombo ${formData["NUMERO"]} foi cadastrado!`
-        ); // Salva notificação com o número
-        router.push(`/inventario/${nome}`); // Redireciona de volta
-      } else {
-        alert("Erro ao cadastrar.");
-      }
-    } catch (error) {
-      alert("Erro ao cadastrar.");
-    }
-  };
 
   // Loading de autenticação
   if (status === "loading" || accessLoading) {
@@ -350,7 +262,7 @@ export default function InventarioPage({ params }) {
       <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
         <h1 className="text-2xl font-bold text-gray-800">Acesso Restrito</h1>
         <p className="text-gray-600 text-center">
-          Você precisa estar autenticado para acessar inventários.
+          Você precisa estar autenticado para acessar o inventário.
         </p>
       </div>
     );
@@ -380,15 +292,6 @@ export default function InventarioPage({ params }) {
 
   return (
     <div>
-      {/* Gerenciador de Permissões Modal */}
-      {showPermissoes && (
-        <GerenciadorPermissoes
-          inventarioNome={nome}
-          isOwner={isOwner}
-          onClose={() => setShowPermissoes(false)}
-        />
-      )}
-
       {/* Notificação persistente */}
       {notificacao && (
         <div
@@ -424,56 +327,172 @@ export default function InventarioPage({ params }) {
         </div>
       )}
 
+      {/* Cabeçalho */}
       <div>
-        <h2>{nome}</h2>
-        <div>
-          <div className="mb-4 flex flex-wrap gap-2">
-            {isOwner && (
-              <>
-                <Button
-                  onClick={() => setShowPermissoes(true)}
-                  className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded transition duration-200"
-                >
-                  Gerenciar Acesso
-                </Button>
-                <Button
-                  onClick={handleExcluirInventario}
-                  disabled={excluindoInventario}
-                  className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-200"
-                  style={{
-                    opacity: excluindoInventario ? 0.7 : 1,
-                  }}
-                >
-                  {excluindoInventario
-                    ? "Excluindo..."
-                    : "🗑️ Excluir Inventário"}
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
+        <h1>
+          Inventário:{" "}
+          <a
+            href={`/inventario/${nome}`}
+            style={{
+              color: "#007bff",
+              textDecoration: "none",
+              cursor: "pointer",
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.textDecoration = "underline";
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.textDecoration = "none";
+            }}
+            title="Voltar ao inventário"
+          >
+            {nome}
+          </a>
+        </h1>
       </div>
+
       <hr />
 
-      <div className="mb-4">
-        <h3>Relatórios e Análises</h3>
-        <div className="flex flex-wrap gap-2">
-          <Button onClick={() => router.push(`/relatorios/${nome}`)}>
-            📈 Relatórios Detalhados
-          </Button>
-        </div>
-      </div>
+      {/* Inventariante - exibido automaticamente */}
+      <p className="mb-4">
+        <strong>Inventariante:</strong>{" "}
+        {inventariante || "Carregando nome do usuário..."}
+      </p>
 
-      <div className="mb-4">
-        <h3>Inventário</h3>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            onClick={() => router.push(`/inventario/${nome}/inventariar`)}
+      {/* Campo de seleção de sala */}
+      <select value={salaSelecionada} onChange={handleSalaChange}>
+        {salas.map((sala) => (
+          <option key={sala} value={sala}>
+            {sala}
+          </option>
+        ))}
+      </select>
+      <br />
+
+      <input
+        type="number"
+        value={valor}
+        onChange={handleChange}
+        onKeyDown={handleKeyDown}
+        placeholder="Digite o número do tombo"
+        ref={inputRef}
+      />
+      <Button onClick={handleConfirmar}>Confirmar</Button>
+
+      {erro && <p style={{ color: "red" }}>{erro}</p>}
+      {erro === "Item não encontrado." && (
+        <Button onClick={handleCadastrar} style={{ marginTop: 10 }}>
+          Cadastrar item
+        </Button>
+      )}
+
+      {resultado && (
+        <div style={{ marginTop: 20 }}>
+          {resultado.cadastradoDuranteInventario && (
+            <div
+              style={{
+                backgroundColor: "#007bff",
+                color: "white",
+                padding: "8px 12px",
+                borderRadius: "5px",
+                marginBottom: "10px",
+                fontSize: "14px",
+                fontWeight: "bold",
+              }}
+            >
+              📝 Este item foi CADASTRADO durante o inventário
+            </div>
+          )}
+          {resultado.temCorrecoes && (
+            <div
+              style={{
+                backgroundColor: "#ff9800",
+                color: "white",
+                padding: "8px 12px",
+                borderRadius: "5px",
+                marginBottom: "10px",
+                fontSize: "14px",
+                fontWeight: "bold",
+              }}
+            >
+              ⚠️ Este item possui {resultado.totalCorrecoes} correção(ões) de
+              dados registrada(s)
+              {resultado.ultimaCorrecao && (
+                <div style={{ fontSize: "12px", marginTop: "4px" }}>
+                  Última correção:{" "}
+                  {new Date(resultado.ultimaCorrecao).toLocaleString()}
+                </div>
+              )}
+              <div style={{ marginTop: "8px" }}>
+                <Button
+                  onClick={() =>
+                    window.open(
+                      `/api/correcoes/${nome}/${resultado.numero}`,
+                      "_blank"
+                    )
+                  }
+                  style={{
+                    backgroundColor: "#fff",
+                    color: "#ff9800",
+                    border: "1px solid #fff",
+                    padding: "4px 8px",
+                    borderRadius: "3px",
+                    fontSize: "12px",
+                  }}
+                >
+                  📋 Ver Histórico Completo
+                </Button>
+              </div>
+            </div>
+          )}
+          <pre
+            style={{
+              textAlign: "left",
+              background: "#eee",
+              padding: 10,
+              border: resultado.dataInventario ? "2px solid red" : "none",
+            }}
           >
-            📝 Realizar Inventário
+            {JSON.stringify(resultado, null, 2)}
+          </pre>
+          {resultado.dataInventario && (
+            <p style={{ color: "red", fontWeight: "bold" }}>
+              Este item já foi inventariado.
+            </p>
+          )}
+          {/* Campos para confirmação - sempre mostra */}
+          <select
+            value={statusSelecionado}
+            onChange={(e) => setStatusSelecionado(e.target.value)}
+            style={{ marginTop: 10 }}
+          >
+            <option value="Em Uso">Em Uso</option>
+            <option value="Ocioso">Ocioso</option>
+            <option value="Em Manutenção">Em Manutenção</option>
+          </select>
+          <br />
+          <Button
+            onClick={confirmarEncontrado}
+            style={{ marginTop: 10, marginRight: 10 }}
+          >
+            Confirmar Item Encontrado
+          </Button>
+          <Button
+            onClick={handleDadosIncorretos}
+            style={{
+              marginTop: 10,
+              backgroundColor: "#ffc107",
+              color: "#000",
+              border: "none",
+              padding: "8px 16px",
+              borderRadius: "4px",
+            }}
+            title="Clique se os dados exibidos estão incorretos"
+          >
+            📝 Dados Incorretos
           </Button>
         </div>
-      </div>
+      )}
     </div>
   );
 }

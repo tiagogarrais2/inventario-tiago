@@ -92,10 +92,28 @@ function InventarioDashboardClient({ nomeInventario }) {
   // Loading state
   if (status === "loading" || carregando) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">
+      <div
+        style={{
+          minHeight: "100vh",
+          backgroundColor: "var(--light-bg)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <div style={{ textAlign: "center" }}>
+          <div
+            style={{
+              border: "4px solid #e5e7eb",
+              borderTop: "4px solid var(--primary-color)",
+              borderRadius: "50%",
+              width: "128px",
+              height: "128px",
+              animation: "spin 1s linear infinite",
+              margin: "0 auto",
+            }}
+          ></div>
+          <p style={{ marginTop: "16px", color: "#6b7280" }}>
             Carregando dashboard do inventário...
           </p>
         </div>
@@ -106,14 +124,49 @@ function InventarioDashboardClient({ nomeInventario }) {
   // Error state
   if (erro) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full text-center">
-          <div className="text-red-500 text-5xl mb-4">⚠️</div>
-          <h2 className="text-xl font-bold text-gray-800 mb-2">
+      <div
+        style={{
+          minHeight: "100vh",
+          backgroundColor: "var(--light-bg)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <div
+          style={{
+            backgroundColor: "white",
+            padding: "32px",
+            borderRadius: "8px",
+            boxShadow: "var(--shadow)",
+            maxWidth: "512px",
+            width: "100%",
+            textAlign: "center",
+          }}
+        >
+          <div
+            style={{
+              color: "var(--danger-color)",
+              fontSize: "48px",
+              marginBottom: "16px",
+            }}
+          >
+            ⚠️
+          </div>
+          <h2
+            style={{
+              fontSize: "20px",
+              fontWeight: "bold",
+              color: "var(--text-color)",
+              marginBottom: "8px",
+            }}
+          >
             Erro ao carregar
           </h2>
-          <p className="text-gray-600 mb-4">{erro}</p>
-          <div className="flex space-x-2 justify-center">
+          <p style={{ color: "#6b7280", marginBottom: "16px" }}>{erro}</p>
+          <div
+            style={{ display: "flex", gap: "8px", justifyContent: "center" }}
+          >
             <Button onClick={buscarDadosDashboard}>Tentar Novamente</Button>
             <Button onClick={() => router.push("/")}>Voltar ao Início</Button>
           </div>
@@ -128,24 +181,45 @@ function InventarioDashboardClient({ nomeInventario }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div style={{ minHeight: "100vh", backgroundColor: "var(--light-bg)" }}>
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
+      <div
+        style={{
+          backgroundColor: "white",
+          boxShadow: "var(--shadow)",
+          borderBottom: "1px solid var(--border-color)",
+        }}
+      >
+        <div
+          style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 16px" }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "24px 0",
+            }}
+          >
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h1
+                style={{
+                  fontSize: "30px",
+                  fontWeight: "bold",
+                  color: "var(--text-color)",
+                }}
+              >
                 Dashboard do Inventário
               </h1>
-              <p className="text-gray-600">
+              <p style={{ color: "#6b7280" }}>
                 {dados?.inventario?.nomeExibicao || nomeInventario}
               </p>
-              <p className="text-sm text-gray-500">
+              <p style={{ fontSize: "14px", color: "#9ca3af" }}>
                 Proprietário: {dados?.inventario?.proprietario} | Criado em:{" "}
                 {formatarData(dados?.inventario?.criadoEm)}
               </p>
             </div>
-            <div className="flex space-x-3">
+            <div style={{ display: "flex", gap: "12px" }}>
               <Button
                 onClick={() => router.push(`/inventario/${nomeInventario}`)}
               >
@@ -163,22 +237,53 @@ function InventarioDashboardClient({ nomeInventario }) {
       </div>
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div
+        style={{ maxWidth: "1280px", margin: "0 auto", padding: "32px 16px" }}
+      >
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+            gap: "24px",
+            marginBottom: "32px",
+          }}
+        >
           {/* Total de Itens */}
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="text-3xl">📦</div>
+          <div
+            style={{
+              backgroundColor: "white",
+              borderRadius: "8px",
+              boxShadow: "var(--shadow)",
+              overflow: "hidden",
+            }}
+          >
+            <div style={{ padding: "20px" }}>
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <div style={{ flexShrink: 0 }}>
+                  <div style={{ fontSize: "30px" }}>📦</div>
                 </div>
-                <div className="ml-5 w-0 flex-1">
+                <div style={{ marginLeft: "20px", flex: 1, minWidth: 0 }}>
                   <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
+                    <dt
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: "500",
+                        color: "#6b7280",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
                       Total de Itens
                     </dt>
-                    <dd className="text-3xl font-bold text-gray-900">
+                    <dd
+                      style={{
+                        fontSize: "30px",
+                        fontWeight: "bold",
+                        color: "var(--text-color)",
+                      }}
+                    >
                       {dados?.estatisticas?.totalItens || 0}
                     </dd>
                   </dl>
@@ -188,33 +293,72 @@ function InventarioDashboardClient({ nomeInventario }) {
           </div>
 
           {/* Progresso */}
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="text-3xl">✅</div>
+          <div
+            style={{
+              backgroundColor: "white",
+              borderRadius: "8px",
+              boxShadow: "var(--shadow)",
+              overflow: "hidden",
+            }}
+          >
+            <div style={{ padding: "20px" }}>
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <div style={{ flexShrink: 0 }}>
+                  <div style={{ fontSize: "30px" }}>✅</div>
                 </div>
-                <div className="ml-5 w-0 flex-1">
+                <div style={{ marginLeft: "20px", flex: 1, minWidth: 0 }}>
                   <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
+                    <dt
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: "500",
+                        color: "#6b7280",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
                       Inventariados
                     </dt>
-                    <dd className="text-3xl font-bold text-green-600">
+                    <dd
+                      style={{
+                        fontSize: "30px",
+                        fontWeight: "bold",
+                        color: "var(--success-color)",
+                      }}
+                    >
                       {dados?.estatisticas?.itensInventariados || 0}
                     </dd>
                   </dl>
                 </div>
               </div>
-              <div className="mt-3">
-                <div className="bg-gray-200 rounded-full h-2">
+              <div style={{ marginTop: "12px" }}>
+                <div
+                  style={{
+                    backgroundColor: "#e5e7eb",
+                    borderRadius: "9999px",
+                    height: "8px",
+                  }}
+                >
                   <div
-                    className={`h-2 rounded-full transition-all duration-300 ${getStatusColor(dados?.estatisticas?.percentualConcluido || 0)}`}
                     style={{
+                      height: "8px",
+                      borderRadius: "9999px",
+                      transition: "all 0.3s",
+                      backgroundColor: getStatusColor(
+                        dados?.estatisticas?.percentualConcluido || 0
+                      ),
                       width: `${dados?.estatisticas?.percentualConcluido || 0}%`,
                     }}
                   ></div>
                 </div>
-                <div className="mt-1 text-sm text-gray-600">
+                <div
+                  style={{
+                    marginTop: "4px",
+                    fontSize: "14px",
+                    color: "#6b7280",
+                  }}
+                >
                   {dados?.estatisticas?.percentualConcluido || 0}% concluído
                 </div>
               </div>
@@ -222,18 +366,40 @@ function InventarioDashboardClient({ nomeInventario }) {
           </div>
 
           {/* Salas */}
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="text-3xl">🏠</div>
+          <div
+            style={{
+              backgroundColor: "white",
+              borderRadius: "8px",
+              boxShadow: "var(--shadow)",
+              overflow: "hidden",
+            }}
+          >
+            <div style={{ padding: "20px" }}>
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <div style={{ flexShrink: 0 }}>
+                  <div style={{ fontSize: "30px" }}>🏠</div>
                 </div>
-                <div className="ml-5 w-0 flex-1">
+                <div style={{ marginLeft: "20px", flex: 1, minWidth: 0 }}>
                   <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
+                    <dt
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: "500",
+                        color: "#6b7280",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
                       Total de Salas
                     </dt>
-                    <dd className="text-3xl font-bold text-blue-600">
+                    <dd
+                      style={{
+                        fontSize: "30px",
+                        fontWeight: "bold",
+                        color: "var(--info-color)",
+                      }}
+                    >
                       {dados?.estatisticas?.totalSalas || 0}
                     </dd>
                   </dl>
@@ -243,18 +409,40 @@ function InventarioDashboardClient({ nomeInventario }) {
           </div>
 
           {/* Correções */}
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="text-3xl">🔧</div>
+          <div
+            style={{
+              backgroundColor: "white",
+              borderRadius: "8px",
+              boxShadow: "var(--shadow)",
+              overflow: "hidden",
+            }}
+          >
+            <div style={{ padding: "20px" }}>
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <div style={{ flexShrink: 0 }}>
+                  <div style={{ fontSize: "30px" }}>🔧</div>
                 </div>
-                <div className="ml-5 w-0 flex-1">
+                <div style={{ marginLeft: "20px", flex: 1, minWidth: 0 }}>
                   <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
+                    <dt
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: "500",
+                        color: "#6b7280",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
                       Correções
                     </dt>
-                    <dd className="text-3xl font-bold text-orange-600">
+                    <dd
+                      style={{
+                        fontSize: "30px",
+                        fontWeight: "bold",
+                        color: "var(--warning-color)",
+                      }}
+                    >
                       {dados?.estatisticas?.totalCorrecoes || 0}
                     </dd>
                   </dl>
@@ -267,38 +455,107 @@ function InventarioDashboardClient({ nomeInventario }) {
         {/* Duas Colunas */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Progresso por Sala */}
-          <div className="bg-white shadow rounded-lg">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">
+          <div
+            style={{
+              backgroundColor: "white",
+              borderRadius: "8px",
+              boxShadow: "var(--shadow)",
+            }}
+          >
+            <div
+              style={{
+                padding: "24px",
+                borderBottom: "1px solid var(--border-color)",
+              }}
+            >
+              <h3
+                style={{
+                  fontSize: "18px",
+                  fontWeight: "500",
+                  color: "var(--text-color)",
+                }}
+              >
                 Progresso por Sala
               </h3>
             </div>
-            <div className="px-6 py-4">
+            <div style={{ padding: "24px" }}>
               {dados?.salas && dados.salas.length > 0 ? (
-                <div className="space-y-4">
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "16px",
+                  }}
+                >
                   {dados.salas.slice(0, 8).map((sala, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between"
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
                     >
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p
+                          style={{
+                            fontSize: "14px",
+                            fontWeight: "500",
+                            color: "var(--text-color)",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
                           {sala.nome}
                         </p>
-                        <div className="flex items-center mt-1">
-                          <div className="bg-gray-200 rounded-full h-2 flex-1 mr-3">
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            marginTop: "4px",
+                          }}
+                        >
+                          <div
+                            style={{
+                              backgroundColor: "#e5e7eb",
+                              borderRadius: "9999px",
+                              height: "8px",
+                              flex: 1,
+                              marginRight: "12px",
+                            }}
+                          >
                             <div
-                              className={`h-2 rounded-full transition-all duration-300 ${getStatusColor(sala.percentual)}`}
-                              style={{ width: `${sala.percentual}%` }}
+                              style={{
+                                height: "8px",
+                                borderRadius: "9999px",
+                                transition: "all 0.3s",
+                                backgroundColor: getStatusColor(
+                                  sala.percentual
+                                ),
+                                width: `${sala.percentual}%`,
+                              }}
                             ></div>
                           </div>
-                          <span className="text-xs text-gray-500 w-12 text-right">
+                          <span
+                            style={{
+                              fontSize: "12px",
+                              color: "#6b7280",
+                              width: "48px",
+                              textAlign: "right",
+                            }}
+                          >
                             {sala.percentual}%
                           </span>
                         </div>
                       </div>
-                      <div className="ml-4 text-right">
-                        <p className="text-sm text-gray-900">
+                      <div style={{ marginLeft: "16px", textAlign: "right" }}>
+                        <p
+                          style={{
+                            fontSize: "14px",
+                            color: "var(--text-color)",
+                          }}
+                        >
                           {sala.itensInventariados}/{sala.totalItens}
                         </p>
                       </div>
@@ -306,32 +563,78 @@ function InventarioDashboardClient({ nomeInventario }) {
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500 text-sm">Nenhuma sala cadastrada</p>
+                <p style={{ color: "#6b7280", fontSize: "14px" }}>
+                  Nenhuma sala cadastrada
+                </p>
               )}
             </div>
           </div>
 
           {/* Atividade Recente */}
-          <div className="bg-white shadow rounded-lg">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">
+          <div
+            style={{
+              backgroundColor: "white",
+              borderRadius: "8px",
+              boxShadow: "var(--shadow)",
+            }}
+          >
+            <div
+              style={{
+                padding: "24px",
+                borderBottom: "1px solid var(--border-color)",
+              }}
+            >
+              <h3
+                style={{
+                  fontSize: "18px",
+                  fontWeight: "500",
+                  color: "var(--text-color)",
+                }}
+              >
                 Atividade Recente
               </h3>
             </div>
-            <div className="px-6 py-4">
+            <div style={{ padding: "24px" }}>
               {dados?.atividade && dados.atividade.length > 0 ? (
-                <div className="space-y-3">
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "12px",
+                  }}
+                >
                   {dados.atividade.slice(0, 10).map((item, index) => (
-                    <div key={index} className="flex items-start space-x-3">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2"></div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-900">
-                          <span className="font-medium">
+                    <div
+                      key={index}
+                      style={{
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: "12px",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "8px",
+                          height: "8px",
+                          backgroundColor: "var(--primary-color)",
+                          borderRadius: "50%",
+                          flexShrink: 0,
+                          marginTop: "8px",
+                        }}
+                      ></div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p
+                          style={{
+                            fontSize: "14px",
+                            color: "var(--text-color)",
+                          }}
+                        >
+                          <span style={{ fontWeight: "500" }}>
                             {item.usuario?.nome || "Sistema"}
                           </span>{" "}
                           {formatarAcao(item.acao)}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p style={{ fontSize: "12px", color: "#6b7280" }}>
                           {formatarData(item.timestamp)}
                         </p>
                       </div>
@@ -339,7 +642,7 @@ function InventarioDashboardClient({ nomeInventario }) {
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500 text-sm">
+                <p style={{ color: "#6b7280", fontSize: "14px" }}>
                   Nenhuma atividade recente
                 </p>
               )}
@@ -348,45 +651,123 @@ function InventarioDashboardClient({ nomeInventario }) {
         </div>
 
         {/* Estatísticas Detalhadas */}
-        <div className="mt-8 bg-white shadow rounded-lg">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900">
+        <div
+          style={{
+            marginTop: "32px",
+            backgroundColor: "white",
+            borderRadius: "8px",
+            boxShadow: "var(--shadow)",
+          }}
+        >
+          <div
+            style={{
+              padding: "24px",
+              borderBottom: "1px solid var(--border-color)",
+            }}
+          >
+            <h3
+              style={{
+                fontSize: "18px",
+                fontWeight: "500",
+                color: "var(--text-color)",
+              }}
+            >
               Resumo Detalhado
             </h3>
           </div>
-          <div className="px-6 py-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">
+          <div style={{ padding: "24px" }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+                gap: "24px",
+              }}
+            >
+              <div style={{ textAlign: "center" }}>
+                <div
+                  style={{
+                    fontSize: "24px",
+                    fontWeight: "bold",
+                    color: "var(--success-color)",
+                  }}
+                >
                   {dados?.estatisticas?.itensInventariados || 0}
                 </div>
-                <div className="text-sm text-gray-500 mt-1">
+                <div
+                  style={{
+                    fontSize: "14px",
+                    color: "#6b7280",
+                    marginTop: "4px",
+                  }}
+                >
                   Itens Inventariados
                 </div>
-                <div className="text-xs text-gray-400 mt-1">
+                <div
+                  style={{
+                    fontSize: "12px",
+                    color: "#9ca3af",
+                    marginTop: "4px",
+                  }}
+                >
                   {dados?.estatisticas?.percentualConcluido || 0}% do total
                 </div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-red-600">
+              <div style={{ textAlign: "center" }}>
+                <div
+                  style={{
+                    fontSize: "24px",
+                    fontWeight: "bold",
+                    color: "var(--danger-color)",
+                  }}
+                >
                   {dados?.estatisticas?.itensNaoInventariados || 0}
                 </div>
-                <div className="text-sm text-gray-500 mt-1">
+                <div
+                  style={{
+                    fontSize: "14px",
+                    color: "#6b7280",
+                    marginTop: "4px",
+                  }}
+                >
                   Itens Pendentes
                 </div>
-                <div className="text-xs text-gray-400 mt-1">
+                <div
+                  style={{
+                    fontSize: "12px",
+                    color: "#9ca3af",
+                    marginTop: "4px",
+                  }}
+                >
                   {100 - (dados?.estatisticas?.percentualConcluido || 0)}%
                   restante
                 </div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-orange-600">
+              <div style={{ textAlign: "center" }}>
+                <div
+                  style={{
+                    fontSize: "24px",
+                    fontWeight: "bold",
+                    color: "var(--warning-color)",
+                  }}
+                >
                   {dados?.estatisticas?.totalCorrecoes || 0}
                 </div>
-                <div className="text-sm text-gray-500 mt-1">
+                <div
+                  style={{
+                    fontSize: "14px",
+                    color: "#6b7280",
+                    marginTop: "4px",
+                  }}
+                >
                   Correções Realizadas
                 </div>
-                <div className="text-xs text-gray-400 mt-1">
+                <div
+                  style={{
+                    fontSize: "12px",
+                    color: "#9ca3af",
+                    marginTop: "4px",
+                  }}
+                >
                   Dados atualizados
                 </div>
               </div>

@@ -90,11 +90,37 @@ export default function RelatoriosPage({ params }) {
     <div>
       {/* Cabeçalho */}
       <div>
-        <h1>Relatórios do Inventário: {nome}</h1>
+        <h1>
+          Relatórios do Inventário:{" "}
+          <a
+            href={`/inventario/${nome}`}
+            style={{
+              color: "#007bff",
+              textDecoration: "none",
+              cursor: "pointer",
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.textDecoration = "underline";
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.textDecoration = "none";
+            }}
+            title="Clique para voltar ao inventário"
+          >
+            {nome}
+          </a>
+        </h1>
       </div>
 
       {/* Lista de Relatórios Disponíveis */}
       <div>
+        {/* Dashboard */}
+        <Button onClick={() => router.push(`/inventario/${nome}/dashboard`)}>
+          📊 Dashboard
+        </Button>
+        Visão analítica com estatísticas, progresso por sala e atividade
+        recente.
+        <hr />
         {/* Relatório Geral */}
         <Button onClick={() => router.push(`/relatorio/${nome}`)}>
           Relatório Geral
