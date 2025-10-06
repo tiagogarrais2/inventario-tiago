@@ -186,8 +186,8 @@ export default function Cadastrar() {
 
       if (res.ok) {
         const mensagem = isCorrecao
-          ? `Correção do tombo n° ${numeroOriginal} registrada com sucesso!`
-          : `Tombo n° ${formData["NUMERO"]} cadastrado com sucesso!`;
+          ? `Última correção realizada: ${numeroOriginal}`
+          : `Último cadastro realizado: ${formData["NUMERO"]}`;
 
         localStorage.setItem("notificacao", mensagem);
 

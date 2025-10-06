@@ -330,7 +330,6 @@ export default function InventariarPage({ params }) {
       {/* Cabeçalho */}
       <div>
         <h1>
-          Inventário:{" "}
           <a
             href={`/inventario/${nome}`}
             style={{
@@ -445,16 +444,35 @@ export default function InventariarPage({ params }) {
               </div>
             </div>
           )}
-          <pre
+          <div
             style={{
-              textAlign: "left",
-              background: "#eee",
-              padding: 10,
-              border: resultado.dataInventario ? "2px solid red" : "none",
+              backgroundColor: "var(--light-bg)",
+              border: resultado.dataInventario
+                ? "2px solid var(--danger-color)"
+                : "1px solid var(--border-color)",
+              borderRadius: "8px",
+              padding: "20px",
+              marginTop: "15px",
+              fontFamily: "monospace",
+              fontSize: "14px",
             }}
           >
-            {JSON.stringify(resultado, null, 2)}
-          </pre>
+            {/* Lista simples de campo: valor */}
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "4px" }}
+            >
+              {Object.entries(resultado).map(([campo, valor]) => (
+                <div key={campo} style={{ display: "flex" }}>
+                  <span style={{ fontWeight: "bold", minWidth: "150px" }}>
+                    {campo}:
+                  </span>
+                  <span style={{ marginLeft: "8px" }}>
+                    {valor === null || valor === undefined ? "" : String(valor)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
           {resultado.dataInventario && (
             <p style={{ color: "red", fontWeight: "bold" }}>
               Este item já foi inventariado.

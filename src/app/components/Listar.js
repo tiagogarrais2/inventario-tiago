@@ -17,7 +17,7 @@ export default function Listar({ atualizar, novoInventario }) {
   return (
     <div>
       <h2>Inventários disponíveis</h2>
-      <ul>
+      <ul style={{ textAlign: "center" }}>
         {inventarios.length === 0 && <li>Nenhum inventário disponível.</li>}
         {inventarios.map((nome) => {
           const isNovo = novoInventario && nome === novoInventario;
