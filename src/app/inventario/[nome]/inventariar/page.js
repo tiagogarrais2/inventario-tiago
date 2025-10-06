@@ -461,16 +461,38 @@ export default function InventariarPage({ params }) {
             <div
               style={{ display: "flex", flexDirection: "column", gap: "4px" }}
             >
-              {Object.entries(resultado).map(([campo, valor]) => (
-                <div key={campo} style={{ display: "flex" }}>
-                  <span style={{ fontWeight: "bold", minWidth: "150px" }}>
-                    {campo}:
-                  </span>
-                  <span style={{ marginLeft: "8px" }}>
-                    {valor === null || valor === undefined ? "" : String(valor)}
-                  </span>
-                </div>
-              ))}
+              {Object.entries(resultado).map(([campo, valor]) => {
+                // Função para formatar valores corretamente
+                const formatarValor = (val) => {
+                  if (val === null || val === undefined) return "";
+                  if (typeof val === "object") {
+                    // Se for um objeto, tenta extrair informações úteis
+                    if (val.name) return val.name; // Para objetos com propriedade name
+                    if (val.email) return val.email; // Para objetos com propriedade email
+                    if (val.toString && val.toString !== Object.prototype.toString) {
+                      return val.toString(); // Se tiver um toString customizado
+                    }
+                    // Para outros objetos, mostra as propriedades principais
+                    const keys = Object.keys(val);
+                    if (keys.length > 0) {
+                      return keys.map(key => `${key}: ${val[key]}`).join(", ");
+                    }
+                    return "[objeto]";
+                  }
+                  return String(val);
+                };
+
+                return (
+                  <div key={campo} style={{ display: "flex" }}>
+                    <span style={{ fontWeight: "bold", minWidth: "150px" }}>
+                      {campo}:
+                    </span>
+                    <span style={{ marginLeft: "8px" }}>
+                      {formatarValor(valor)}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
           {resultado.dataInventario && (
