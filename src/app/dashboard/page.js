@@ -218,9 +218,6 @@ export default function Dashboard() {
               <Button onClick={() => router.push("/")}>
                 🏠 Página Inicial
               </Button>
-              <Button onClick={() => router.push("/cadastrar")}>
-                ➕ Novo Inventário
-              </Button>
             </div>
           </div>
         </div>

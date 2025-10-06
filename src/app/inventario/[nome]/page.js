@@ -427,53 +427,34 @@ export default function InventarioPage({ params }) {
       <div>
         <h2>{nome}</h2>
         <div>
-          <div className="mb-4 flex flex-wrap gap-2">
-            {isOwner && (
-              <>
-                <Button
-                  onClick={() => setShowPermissoes(true)}
-                  className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded transition duration-200"
-                >
-                  Gerenciar Acesso
-                </Button>
-                <Button
-                  onClick={handleExcluirInventario}
-                  disabled={excluindoInventario}
-                  className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-200"
-                  style={{
-                    opacity: excluindoInventario ? 0.7 : 1,
-                  }}
-                >
-                  {excluindoInventario
-                    ? "Excluindo..."
-                    : "🗑️ Excluir Inventário"}
-                </Button>
-              </>
-            )}
-          </div>
+          {isOwner && (
+            <>
+              <Button
+                onClick={() => setShowPermissoes(true)}
+                className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded transition duration-200"
+              >
+                Gerenciar Acesso
+              </Button>
+              <Button
+                onClick={handleExcluirInventario}
+                disabled={excluindoInventario}
+                className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-200"
+                style={{
+                  opacity: excluindoInventario ? 0.7 : 1,
+                }}
+              >
+                {excluindoInventario ? "Excluindo..." : "🗑️ Excluir Inventário"}
+              </Button>
+            </>
+          )}
         </div>
       </div>
-      <hr />
-
-      <div className="mb-4">
-        <h3>Relatórios e Análises</h3>
-        <div className="flex flex-wrap gap-2">
-          <Button onClick={() => router.push(`/relatorios/${nome}`)}>
-            📈 Relatórios Detalhados
-          </Button>
-        </div>
-      </div>
-
-      <div className="mb-4">
-        <h3>Inventário</h3>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            onClick={() => router.push(`/inventario/${nome}/inventariar`)}
-          >
-            📝 Realizar Inventário
-          </Button>
-        </div>
-      </div>
+      <Button onClick={() => router.push(`/relatorios/${nome}`)}>
+        📈 Relatórios
+      </Button>
+      <Button onClick={() => router.push(`/inventario/${nome}/inventariar`)}>
+        📝 Realizar Inventário
+      </Button>
     </div>
   );
 }

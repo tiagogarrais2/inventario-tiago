@@ -66,7 +66,7 @@ export async function POST(request) {
 
     // Cria nome único do inventário
     const timestamp = Date.now();
-    const nomeInventario = `inventario-${timestamp}-${sanitizeName(nomeUsuarioAutenticado)}`;
+    const nomeInventario = `Inventario-${timestamp}-${sanitizeName(nomeUsuarioAutenticado)}`;
     const nomeExibicao = nomeUsuarioAutenticado
       .replace(/[^a-zA-Z0-9\s]/g, "")
       .trim();

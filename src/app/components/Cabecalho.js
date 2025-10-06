@@ -9,7 +9,7 @@ export default function Cabecalho() {
   return (
     <div>
       <h1>
-        <Link href={"/"}>Sistema Inventário Tiago</Link>
+        <Link href={"/"}>Inventário Tiago</Link>
       </h1>
 
       <div>
@@ -18,7 +18,7 @@ export default function Cabecalho() {
         )}
 
         {status === "authenticated" && session && (
-          <div>
+          <div style={{ textAlign: "center" }}>
             {session.user?.email}
             <Button onClick={() => signOut()}>Sair</Button>
           </div>

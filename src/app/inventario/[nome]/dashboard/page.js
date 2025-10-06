@@ -83,10 +83,10 @@ function InventarioDashboardClient({ nomeInventario }) {
   };
 
   const getStatusColor = (percentual) => {
-    if (percentual >= 90) return "bg-green-500";
-    if (percentual >= 70) return "bg-yellow-500";
-    if (percentual >= 50) return "bg-orange-500";
-    return "bg-red-500";
+    if (percentual >= 90) return "var(--success-color)";
+    if (percentual >= 70) return "var(--warning-color)";
+    if (percentual >= 50) return "var(--primary-color)";
+    return "var(--danger-color)";
   };
 
   // Loading state
@@ -104,7 +104,7 @@ function InventarioDashboardClient({ nomeInventario }) {
         <div style={{ textAlign: "center" }}>
           <div
             style={{
-              border: "4px solid #e5e7eb",
+              border: "4px solid var(--light-bg)",
               borderTop: "4px solid var(--primary-color)",
               borderRadius: "50%",
               width: "128px",
@@ -113,7 +113,13 @@ function InventarioDashboardClient({ nomeInventario }) {
               margin: "0 auto",
             }}
           ></div>
-          <p style={{ marginTop: "16px", color: "#6b7280" }}>
+          <p
+            style={{
+              marginTop: "16px",
+              color: "var(--text-color)",
+              opacity: 0.6,
+            }}
+          >
             Carregando dashboard do inventário...
           </p>
         </div>
@@ -163,7 +169,15 @@ function InventarioDashboardClient({ nomeInventario }) {
           >
             Erro ao carregar
           </h2>
-          <p style={{ color: "#6b7280", marginBottom: "16px" }}>{erro}</p>
+          <p
+            style={{
+              color: "var(--text-color)",
+              opacity: 0.6,
+              marginBottom: "16px",
+            }}
+          >
+            {erro}
+          </p>
           <div
             style={{ display: "flex", gap: "8px", justifyContent: "center" }}
           >
@@ -196,30 +210,41 @@ function InventarioDashboardClient({ nomeInventario }) {
           <div
             style={{
               display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
+              flexDirection: "column",
+              gap: "16px",
               padding: "24px 0",
             }}
           >
-            <div>
+            <div style={{ textAlign: "center" }}>
               <h1
                 style={{
-                  fontSize: "30px",
+                  fontSize: "28px",
                   fontWeight: "bold",
                   color: "var(--text-color)",
+                  marginBottom: "8px",
                 }}
               >
                 Dashboard do Inventário
               </h1>
-              <p style={{ color: "#6b7280" }}>
-                {dados?.inventario?.nomeExibicao || nomeInventario}
-              </p>
-              <p style={{ fontSize: "14px", color: "#9ca3af" }}>
+              <p
+                style={{
+                  color: "var(--text-color)",
+                  opacity: 0.7,
+                  fontSize: "16px",
+                }}
+              >
                 Proprietário: {dados?.inventario?.proprietario} | Criado em:{" "}
                 {formatarData(dados?.inventario?.criadoEm)}
               </p>
             </div>
-            <div style={{ display: "flex", gap: "12px" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                gap: "12px",
+                flexWrap: "wrap",
+              }}
+            >
               <Button
                 onClick={() => router.push(`/inventario/${nomeInventario}`)}
               >
@@ -237,9 +262,7 @@ function InventarioDashboardClient({ nomeInventario }) {
       </div>
 
       {/* Content */}
-      <div
-        style={{ maxWidth: "1280px", margin: "0 auto", padding: "32px 16px" }}
-      >
+      <div>
         {/* Stats Cards */}
         <div
           style={{
@@ -269,7 +292,8 @@ function InventarioDashboardClient({ nomeInventario }) {
                       style={{
                         fontSize: "14px",
                         fontWeight: "500",
-                        color: "#6b7280",
+                        color: "var(--text-color)",
+                        opacity: 0.6,
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
@@ -312,7 +336,8 @@ function InventarioDashboardClient({ nomeInventario }) {
                       style={{
                         fontSize: "14px",
                         fontWeight: "500",
-                        color: "#6b7280",
+                        color: "var(--text-color)",
+                        opacity: 0.6,
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
@@ -335,7 +360,7 @@ function InventarioDashboardClient({ nomeInventario }) {
               <div style={{ marginTop: "12px" }}>
                 <div
                   style={{
-                    backgroundColor: "#e5e7eb",
+                    backgroundColor: "var(--light-bg)",
                     borderRadius: "9999px",
                     height: "8px",
                   }}
@@ -356,7 +381,8 @@ function InventarioDashboardClient({ nomeInventario }) {
                   style={{
                     marginTop: "4px",
                     fontSize: "14px",
-                    color: "#6b7280",
+                    color: "var(--text-color)",
+                    opacity: 0.6,
                   }}
                 >
                   {dados?.estatisticas?.percentualConcluido || 0}% concluído
@@ -385,7 +411,8 @@ function InventarioDashboardClient({ nomeInventario }) {
                       style={{
                         fontSize: "14px",
                         fontWeight: "500",
-                        color: "#6b7280",
+                        color: "var(--text-color)",
+                        opacity: 0.6,
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
@@ -428,7 +455,8 @@ function InventarioDashboardClient({ nomeInventario }) {
                       style={{
                         fontSize: "14px",
                         fontWeight: "500",
-                        color: "#6b7280",
+                        color: "var(--text-color)",
+                        opacity: 0.6,
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
@@ -453,7 +481,13 @@ function InventarioDashboardClient({ nomeInventario }) {
         </div>
 
         {/* Duas Colunas */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr",
+            gap: "32px",
+          }}
+        >
           {/* Progresso por Sala */}
           <div
             style={{
@@ -518,7 +552,7 @@ function InventarioDashboardClient({ nomeInventario }) {
                         >
                           <div
                             style={{
-                              backgroundColor: "#e5e7eb",
+                              backgroundColor: "var(--light-bg)",
                               borderRadius: "9999px",
                               height: "8px",
                               flex: 1,
@@ -540,7 +574,8 @@ function InventarioDashboardClient({ nomeInventario }) {
                           <span
                             style={{
                               fontSize: "12px",
-                              color: "#6b7280",
+                              color: "var(--text-color)",
+                              opacity: 0.5,
                               width: "48px",
                               textAlign: "right",
                             }}
@@ -563,7 +598,13 @@ function InventarioDashboardClient({ nomeInventario }) {
                   ))}
                 </div>
               ) : (
-                <p style={{ color: "#6b7280", fontSize: "14px" }}>
+                <p
+                  style={{
+                    color: "var(--text-color)",
+                    opacity: 0.5,
+                    fontSize: "14px",
+                  }}
+                >
                   Nenhuma sala cadastrada
                 </p>
               )}
@@ -634,7 +675,13 @@ function InventarioDashboardClient({ nomeInventario }) {
                           </span>{" "}
                           {formatarAcao(item.acao)}
                         </p>
-                        <p style={{ fontSize: "12px", color: "#6b7280" }}>
+                        <p
+                          style={{
+                            fontSize: "12px",
+                            color: "var(--text-color)",
+                            opacity: 0.5,
+                          }}
+                        >
                           {formatarData(item.timestamp)}
                         </p>
                       </div>
@@ -642,7 +689,13 @@ function InventarioDashboardClient({ nomeInventario }) {
                   ))}
                 </div>
               ) : (
-                <p style={{ color: "#6b7280", fontSize: "14px" }}>
+                <p
+                  style={{
+                    color: "var(--text-color)",
+                    opacity: 0.5,
+                    fontSize: "14px",
+                  }}
+                >
                   Nenhuma atividade recente
                 </p>
               )}
@@ -696,7 +749,8 @@ function InventarioDashboardClient({ nomeInventario }) {
                 <div
                   style={{
                     fontSize: "14px",
-                    color: "#6b7280",
+                    color: "var(--text-color)",
+                    opacity: 0.6,
                     marginTop: "4px",
                   }}
                 >
@@ -705,7 +759,8 @@ function InventarioDashboardClient({ nomeInventario }) {
                 <div
                   style={{
                     fontSize: "12px",
-                    color: "#9ca3af",
+                    color: "var(--text-color)",
+                    opacity: 0.4,
                     marginTop: "4px",
                   }}
                 >
@@ -725,7 +780,8 @@ function InventarioDashboardClient({ nomeInventario }) {
                 <div
                   style={{
                     fontSize: "14px",
-                    color: "#6b7280",
+                    color: "var(--text-color)",
+                    opacity: 0.6,
                     marginTop: "4px",
                   }}
                 >
@@ -734,7 +790,8 @@ function InventarioDashboardClient({ nomeInventario }) {
                 <div
                   style={{
                     fontSize: "12px",
-                    color: "#9ca3af",
+                    color: "var(--text-color)",
+                    opacity: 0.4,
                     marginTop: "4px",
                   }}
                 >
@@ -755,7 +812,8 @@ function InventarioDashboardClient({ nomeInventario }) {
                 <div
                   style={{
                     fontSize: "14px",
-                    color: "#6b7280",
+                    color: "var(--text-color)",
+                    opacity: 0.6,
                     marginTop: "4px",
                   }}
                 >
@@ -764,7 +822,8 @@ function InventarioDashboardClient({ nomeInventario }) {
                 <div
                   style={{
                     fontSize: "12px",
-                    color: "#9ca3af",
+                    color: "var(--text-color)",
+                    opacity: 0.4,
                     marginTop: "4px",
                   }}
                 >
