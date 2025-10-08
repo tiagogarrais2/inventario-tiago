@@ -724,6 +724,76 @@ class SalaService {
   }
 }
 
+// Service para gerenciar servidores
+class ServidorService {
+  static async findByInventario(nomeInventario) {
+    const inventario = await InventarioService.findByName(nomeInventario);
+    if (!inventario) return [];
+
+    return await prisma.servidor.findMany({
+      where: { inventarioId: inventario.id },
+      orderBy: { nome: "asc" },
+    });
+  }
+
+  static async create(nomeInventario, dados) {
+    const inventario = await InventarioService.findByName(nomeInventario);
+    if (!inventario) throw new Error("Inventário não encontrado");
+
+    return await prisma.servidor.create({
+      data: {
+        inventarioId: inventario.id,
+        ...dados,
+      },
+    });
+  }
+
+  static async createMany(nomeInventario, servidores) {
+    console.log(
+      `[ServidorService] Criando ${servidores.length} servidores para ${nomeInventario}`
+    );
+
+    const inventario = await InventarioService.findByName(nomeInventario);
+    if (!inventario) {
+      console.log(
+        `[ServidorService] ERRO: Inventário ${nomeInventario} não encontrado`
+      );
+      throw new Error("Inventário não encontrado");
+    }
+
+    // Remover duplicatas e criar dados únicos
+    const servidoresUnicos = [
+      ...new Set(
+        servidores.filter((servidor) => servidor && servidor.trim() !== "")
+      ),
+    ];
+
+    const servidoresData = servidoresUnicos.map((nome) => ({
+      inventarioId: inventario.id,
+      nome: nome.trim(),
+    }));
+
+    console.log(
+      `[ServidorService] Dados preparados para ${servidoresData.length} servidores únicos`
+    );
+
+    if (servidoresData.length === 0) {
+      console.log(`[ServidorService] Nenhum servidor válido para criar`);
+      return [];
+    }
+
+    return await prisma.servidor.createMany({
+      data: servidoresData,
+      skipDuplicates: true, // Ignora duplicatas no banco
+    });
+  }
+
+  // Alias para compatibilidade com API routes
+  static async listByInventario(nomeInventario) {
+    return await this.findByInventario(nomeInventario);
+  }
+}
+
 // Service para gerenciar cabeçalhos
 class CabecalhoService {
   static async findByInventario(nomeInventario) {
@@ -1044,6 +1114,7 @@ export {
   InventarioService,
   ItemInventarioService,
   SalaService,
+  ServidorService,
   CabecalhoService,
   PermissaoService,
   AuditoriaService,

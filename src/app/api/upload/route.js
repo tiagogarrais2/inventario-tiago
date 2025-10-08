@@ -4,11 +4,13 @@ import { Readable } from "stream";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
 import { obterIP } from "../../lib/auditoria";
+import { sendProgress } from "./progress-utils.js";
 import {
   UsuarioService,
   InventarioService,
   ItemInventarioService,
   SalaService,
+  ServidorService,
   CabecalhoService,
   AuditoriaService,
 } from "../../../lib/services.js";
@@ -37,6 +39,8 @@ export async function POST(request) {
   const formData = await request.formData();
   const file = formData.get("file");
   const responsavel = formData.get("responsavel");
+  const sessionId =
+    formData.get("sessionId") || `upload-${Date.now()}-${Math.random()}`;
 
   if (!file || typeof file === "string") {
     return NextResponse.json(
@@ -125,6 +129,15 @@ export async function POST(request) {
 
     // === SALVAR NO BANCO DE DADOS ===
 
+    // Enviar progresso inicial
+    sendProgress(sessionId, {
+      type: "progress",
+      stage: "starting",
+      message: "Iniciando processamento do inventário...",
+      progress: 0,
+      total: records.length,
+    });
+
     // 1. Criar o inventário
     console.log(`[UPLOAD] Criando inventário: ${nomeInventario}`);
     const inventario = await InventarioService.create(
@@ -133,10 +146,26 @@ export async function POST(request) {
       session.user.email
     );
 
+    sendProgress(sessionId, {
+      type: "progress",
+      stage: "inventory_created",
+      message: `Inventário "${nomeExibicao}" criado com sucesso`,
+      progress: 0,
+      total: records.length,
+    });
+
     // 2. Extrair e salvar cabeçalhos
     const headers = records.length > 0 ? Object.keys(records[0]) : [];
     console.log(`[UPLOAD] Salvando ${headers.length} cabeçalhos...`);
     await CabecalhoService.createMany(nomeInventario, headers);
+
+    sendProgress(sessionId, {
+      type: "progress",
+      stage: "headers_saved",
+      message: `${headers.length} cabeçalhos salvos`,
+      progress: 0,
+      total: records.length,
+    });
 
     // 3. Extrair e salvar salas únicas
     const salaSet = new Set(records.map((r) => r.SALA).filter(Boolean));
@@ -144,20 +173,60 @@ export async function POST(request) {
     console.log(`[UPLOAD] Salvando ${salasArray.length} salas...`);
     await SalaService.createMany(nomeInventario, salasArray);
 
-    // 4. Salvar itens do inventário
+    sendProgress(sessionId, {
+      type: "progress",
+      stage: "rooms_saved",
+      message: `${salasArray.length} salas únicas salvas`,
+      progress: 0,
+      total: records.length,
+    });
+
+    // 4. Extrair e salvar servidores únicos do campo "carga_atual"
+    const servidorSet = new Set(
+      records.map((r) => r["CARGA_ATUAL"]).filter(Boolean)
+    );
+    const servidoresArray = [...servidorSet];
+    console.log(`[UPLOAD] Salvando ${servidoresArray.length} servidores...`);
+    await ServidorService.createMany(nomeInventario, servidoresArray);
+
+    sendProgress(sessionId, {
+      type: "progress",
+      stage: "servers_saved",
+      message: `${servidoresArray.length} servidores únicos salvos`,
+      progress: 0,
+      total: records.length,
+    });
+
+    // 5. Salvar itens do inventário
     console.log(`[UPLOAD] Salvando ${records.length} itens...`);
     let itensSalvos = 0;
     let errosItens = 0;
+
+    sendProgress(sessionId, {
+      type: "progress",
+      stage: "saving_items",
+      message: `Iniciando salvamento de ${records.length} itens...`,
+      progress: 0,
+      total: records.length,
+    });
 
     for (const item of records) {
       try {
         await ItemInventarioService.create(nomeInventario, item);
         itensSalvos++;
 
-        if (itensSalvos % 100 === 0) {
+        if (itensSalvos % 50 === 0) {
           console.log(
             `[UPLOAD] ${itensSalvos}/${records.length} itens salvos...`
           );
+
+          sendProgress(sessionId, {
+            type: "progress",
+            stage: "saving_items",
+            message: `${itensSalvos}/${records.length} itens salvos...`,
+            progress: itensSalvos,
+            total: records.length,
+          });
         }
       } catch (error) {
         errosItens++;
@@ -167,6 +236,15 @@ export async function POST(request) {
         );
       }
     }
+
+    // Progresso final dos itens
+    sendProgress(sessionId, {
+      type: "progress",
+      stage: "items_saved",
+      message: `Itens salvos: ${itensSalvos}, Erros: ${errosItens}`,
+      progress: itensSalvos,
+      total: records.length,
+    });
 
     // 5. Extrair setores para estatísticas
     const setorSet = new Set(
@@ -203,6 +281,26 @@ export async function POST(request) {
       `[UPLOAD] ${session.user?.name || session.user?.email} criou inventário ${nomeInventario} com ${itensSalvos} itens`
     );
 
+    // Enviar progresso de conclusão
+    sendProgress(sessionId, {
+      type: "completed",
+      stage: "finished",
+      message: `Upload concluído com sucesso! ${itensSalvos} itens salvos.`,
+      progress: itensSalvos,
+      total: records.length,
+      inventario: {
+        nome: nomeInventario,
+        nomeExibicao: nomeExibicao,
+      },
+      stats: {
+        registros: itensSalvos,
+        erros: errosItens,
+        salas: salaSet.size,
+        setores: setorSet.size,
+        servidores: servidoresArray.length,
+      },
+    });
+
     return NextResponse.json({
       message: "Inventário criado com sucesso!",
       inventario: {
@@ -214,10 +312,19 @@ export async function POST(request) {
         erros: errosItens,
         salas: salaSet.size,
         setores: setorSet.size,
+        servidores: servidoresArray.length,
       },
     });
   } catch (error) {
     console.error("[UPLOAD] Erro durante processamento:", error);
+
+    // Enviar progresso de erro
+    sendProgress(sessionId, {
+      type: "error",
+      stage: "error",
+      message: `Erro durante o processamento: ${error.message}`,
+      error: error.message,
+    });
 
     // Log do erro
     await AuditoriaService.log("ERRO_UPLOAD_INVENTARIO", session.user, {
