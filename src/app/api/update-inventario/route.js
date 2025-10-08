@@ -6,7 +6,9 @@ import {
   ItemInventarioService,
   PermissaoService,
   AuditoriaService,
+  UsuarioService,
 } from "../../../lib/services.js";
+import prisma from "../../../lib/db.js";
 
 export async function POST(request) {
   // Verificar autenticação
@@ -85,8 +87,7 @@ export async function POST(request) {
     const updateData = {
       dataInventario: dataInventario || new Date().toISOString(),
       salaEncontrada: salaEncontrada || null,
-      sala: sala || null,
-      status: status || null,
+      statusInventario: status || null,
       estadoConservacao: estadoConservacao || null,
       cargaAtual: cargaAtual || null,
     };
@@ -102,6 +103,76 @@ export async function POST(request) {
     );
 
     console.log(`✅ Item atualizado com sucesso:`, itemAtualizado);
+
+    // Registrar atualizações do inventário como correções para aparecer nos relatórios
+    try {
+      // Buscar o usuário
+      const usuario = await UsuarioService.findByEmail(session.user.email);
+      if (!usuario) {
+        console.warn("Usuário não encontrado para registrar correção");
+      } else {
+        // Mapear campos alterados durante o inventário
+        const camposMapeamento = {
+          status: "statusInventario",
+          estadoConservacao: "estadoConservacao",
+          cargaAtual: "cargaAtual",
+        };
+
+        // Comparar dados e identificar diferenças
+        const dadosCorrigidos = {};
+        for (const [campoFormulario, campoBanco] of Object.entries(
+          camposMapeamento
+        )) {
+          const valorOriginal = itemExistente[campoBanco];
+          const valorNovo = updateData[campoBanco];
+
+          // Só registra se houve mudança intencional
+          if (valorNovo !== null && valorNovo !== valorOriginal) {
+            dadosCorrigidos[campoFormulario] = {
+              original: valorOriginal || "Não informado",
+              novo: valorNovo || "Não informado",
+            };
+          }
+        }
+
+        // Se houve alterações, registrar como correção
+        if (Object.keys(dadosCorrigidos).length > 0) {
+          const diferencasTexto = Object.entries(dadosCorrigidos)
+            .map(
+              ([campo, valores]) =>
+                `${campo}: "${valores.original}" → "${valores.novo}"`
+            )
+            .join(" | ");
+
+          const dadosCorrecao = {
+            inventarioId: inventario.id,
+            numeroItemOriginal: numero,
+            numero: itemExistente.numero,
+            status: updateData.statusInventario || itemExistente.status,
+            estadoConservacao:
+              updateData.estadoConservacao || itemExistente.estadoConservacao,
+            cargaAtual: updateData.cargaAtual || itemExistente.cargaAtual,
+            sala: itemExistente.sala,
+            inventarianteId: usuario.id,
+            observacoes: `Atualização realizada durante inventário em ${new Date().toLocaleString()}\n\nCampos alterados: ${diferencasTexto}`,
+            dataCorrecao: new Date(),
+          };
+
+          // Salvar a correção
+          await prisma.correcaoItem.create({
+            data: dadosCorrecao,
+          });
+
+          console.log(
+            `📝 Correção registrada para atualizações do inventário:`,
+            dadosCorrigidos
+          );
+        }
+      }
+    } catch (error) {
+      console.error("❌ Erro ao registrar correção do inventário:", error);
+      // Não falha a operação se não conseguir registrar a correção
+    }
 
     // Log de auditoria
     await AuditoriaService.log(

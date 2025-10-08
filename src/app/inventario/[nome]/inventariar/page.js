@@ -181,8 +181,8 @@ export default function InventariarPage({ params }) {
       const item = await res.json();
       setResultado(item);
 
-      // Inicializar selects com valores atuais do item
-      setStatusSelecionado(item.status || "Em Uso");
+      // Inicializar selects com valores atuais do item (priorizar campos do inventário)
+      setStatusSelecionado(item.statusInventario || item.status || "Em Uso");
       setEstadoConservacaoSelecionado(item.estadoConservacao || "Bom");
       setCargaAtualSelecionada(item.cargaAtual || "");
       setSalaItemSelecionada(item.sala || "");
@@ -395,7 +395,9 @@ export default function InventariarPage({ params }) {
 
       {/* Campo de seleção de sala atual do inventário */}
       <div style={{ marginBottom: "16px" }}>
-        <label style={{ display: "block", fontWeight: "bold", marginBottom: "4px" }}>
+        <label
+          style={{ display: "block", fontWeight: "bold", marginBottom: "4px" }}
+        >
           🏢 Sala atual do inventário:
         </label>
         <select
@@ -577,29 +579,26 @@ export default function InventariarPage({ params }) {
                 <span style={{ fontWeight: "bold", minWidth: "120px" }}>
                   Sala:
                 </span>
-                <div style={{ display: "flex", alignItems: "center", marginLeft: "8px" }}>
-                  <select
-                    value={salaItemSelecionada}
-                    onChange={(e) => setSalaItemSelecionada(e.target.value)}
-                    style={{
-                      padding: "2px 4px",
-                      fontSize: "14px",
-                      minWidth: "150px",
-                      border: salaItemSelecionada !== salaSelecionada && salaItemSelecionada ? "2px solid #ff6b6b" : "1px solid #ccc",
-                      borderRadius: "4px",
-                      backgroundColor: salaItemSelecionada !== salaSelecionada && salaItemSelecionada ? "#fff5f5" : "white",
-                    }}
-                  >
-                    <option value="">Selecione uma sala</option>
-                    {salas.map((sala) => (
-                      <option key={sala} value={sala}>
-                        {sala}
-                      </option>
-                    ))}
-                  </select>
-                  {salaItemSelecionada !== salaSelecionada && salaItemSelecionada && (
-                    <div style={{ marginLeft: "8px", fontSize: "12px", color: "#ff6b6b" }}>
-                      <span style={{ fontSize: "16px", marginRight: "4px" }}>⚠️</span>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    marginLeft: "8px",
+                  }}
+                >
+                  <span style={{ marginRight: "8px" }}>
+                    {resultado.sala || "N/A"}
+                  </span>
+                  {resultado.sala !== salaSelecionada && resultado.sala && (
+                    <div
+                      style={{
+                        fontSize: "12px",
+                        color: "#ff6b6b",
+                      }}
+                    >
+                      <span style={{ fontSize: "16px", marginRight: "4px" }}>
+                        ⚠️
+                      </span>
                       <span>Item movido ou em sala diferente</span>
                     </div>
                   )}
