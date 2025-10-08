@@ -24,8 +24,11 @@ export async function POST(request) {
       nome,
       numero,
       salaEncontrada,
+      sala,
       dataInventario,
       status,
+      estadoConservacao,
+      cargaAtual,
       inventariante,
     } = await request.json();
 
@@ -33,8 +36,11 @@ export async function POST(request) {
     console.log(`👤 Usuário: ${session.user.email}`);
     console.log(`📋 Dados de atualização:`, {
       salaEncontrada,
+      sala,
       dataInventario,
       status,
+      estadoConservacao,
+      cargaAtual,
       inventariante,
     });
 
@@ -79,7 +85,10 @@ export async function POST(request) {
     const updateData = {
       dataInventario: dataInventario || new Date().toISOString(),
       salaEncontrada: salaEncontrada || null,
+      sala: sala || null,
       status: status || null,
+      estadoConservacao: estadoConservacao || null,
+      cargaAtual: cargaAtual || null,
     };
 
     console.log(`💾 Atualizando item no banco:`, updateData);

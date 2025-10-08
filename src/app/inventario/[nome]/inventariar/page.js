@@ -4,6 +4,28 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Button from "../../../components/Button";
 
+// Lista fixa de estados de conservação
+const ESTADOS_CONSERVACAO = [
+  "Bom",
+  "Regular",
+  "Ocioso",
+  "Recuperável",
+  "Antieconômico",
+];
+
+// Lista fixa de status
+const STATUS_OPTIONS = [
+  "Ativo",
+  "Baixado",
+  "Em Uso",
+  "Ocioso",
+  "Em Manutenção",
+  "Recuperável",
+  "Em Desfazimento",
+  "Extraviado/Desaparecido",
+  "Pendente",
+];
+
 export default function InventariarPage({ params }) {
   const [nome, setNome] = useState("");
   const { data: session, status } = useSession();
@@ -20,6 +42,7 @@ export default function InventariarPage({ params }) {
   const [estadoConservacaoSelecionado, setEstadoConservacaoSelecionado] =
     useState("Bom");
   const [cargaAtualSelecionada, setCargaAtualSelecionada] = useState("");
+  const [salaItemSelecionada, setSalaItemSelecionada] = useState("");
   const [servidores, setServidores] = useState([]);
   const [ultimoTombo, setUltimoTombo] = useState("");
   const [notificacao, setNotificacao] = useState("");
@@ -162,6 +185,7 @@ export default function InventariarPage({ params }) {
       setStatusSelecionado(item.status || "Em Uso");
       setEstadoConservacaoSelecionado(item.estadoConservacao || "Bom");
       setCargaAtualSelecionada(item.cargaAtual || "");
+      setSalaItemSelecionada(item.sala || "");
     } catch (error) {
       setErro("Erro ao buscar o item.");
       console.error("Erro na busca:", error);
@@ -173,9 +197,9 @@ export default function InventariarPage({ params }) {
 
     const salaOriginal = resultado.sala || "";
     const confirmarSala =
-      salaSelecionada !== salaOriginal
+      salaItemSelecionada !== salaOriginal
         ? window.confirm(
-            `A sala selecionada (${salaSelecionada}) difere da sala original (${salaOriginal}). Confirmar?`
+            `A sala selecionada (${salaItemSelecionada}) difere da sala original (${salaOriginal}). Confirmar?`
           )
         : true;
 
@@ -191,6 +215,7 @@ export default function InventariarPage({ params }) {
           nome,
           numero: valor,
           salaEncontrada: salaSelecionada,
+          sala: salaItemSelecionada,
           dataInventario,
           status: statusSelecionado,
           estadoConservacao: estadoConservacaoSelecionado,
@@ -368,15 +393,30 @@ export default function InventariarPage({ params }) {
         {inventariante || "Carregando nome do usuário..."}
       </p>
 
-      {/* Campo de seleção de sala */}
-      <select value={salaSelecionada} onChange={handleSalaChange}>
-        {salas.map((sala) => (
-          <option key={sala} value={sala}>
-            {sala}
-          </option>
-        ))}
-      </select>
-      <br />
+      {/* Campo de seleção de sala atual do inventário */}
+      <div style={{ marginBottom: "16px" }}>
+        <label style={{ display: "block", fontWeight: "bold", marginBottom: "4px" }}>
+          🏢 Sala atual do inventário:
+        </label>
+        <select
+          value={salaSelecionada}
+          onChange={handleSalaChange}
+          style={{
+            padding: "4px 8px",
+            fontSize: "14px",
+            minWidth: "200px",
+            border: "2px solid #4CAF50",
+            borderRadius: "4px",
+            backgroundColor: "#f0f8f0",
+          }}
+        >
+          {salas.map((sala) => (
+            <option key={sala} value={sala}>
+              {sala}
+            </option>
+          ))}
+        </select>
+      </div>
 
       <input
         type="number"
@@ -493,9 +533,11 @@ export default function InventariarPage({ params }) {
                     fontSize: "14px",
                   }}
                 >
-                  <option value="Em Uso">Em Uso</option>
-                  <option value="Ocioso">Ocioso</option>
-                  <option value="Em Manutenção">Em Manutenção</option>
+                  {STATUS_OPTIONS.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -531,13 +573,37 @@ export default function InventariarPage({ params }) {
                 </select>
               </div>
 
-              <div style={{ display: "flex" }}>
+              <div style={{ display: "flex", alignItems: "center" }}>
                 <span style={{ fontWeight: "bold", minWidth: "120px" }}>
                   Sala:
                 </span>
-                <span style={{ marginLeft: "8px" }}>
-                  {resultado.sala || "N/A"}
-                </span>
+                <div style={{ display: "flex", alignItems: "center", marginLeft: "8px" }}>
+                  <select
+                    value={salaItemSelecionada}
+                    onChange={(e) => setSalaItemSelecionada(e.target.value)}
+                    style={{
+                      padding: "2px 4px",
+                      fontSize: "14px",
+                      minWidth: "150px",
+                      border: salaItemSelecionada !== salaSelecionada && salaItemSelecionada ? "2px solid #ff6b6b" : "1px solid #ccc",
+                      borderRadius: "4px",
+                      backgroundColor: salaItemSelecionada !== salaSelecionada && salaItemSelecionada ? "#fff5f5" : "white",
+                    }}
+                  >
+                    <option value="">Selecione uma sala</option>
+                    {salas.map((sala) => (
+                      <option key={sala} value={sala}>
+                        {sala}
+                      </option>
+                    ))}
+                  </select>
+                  {salaItemSelecionada !== salaSelecionada && salaItemSelecionada && (
+                    <div style={{ marginLeft: "8px", fontSize: "12px", color: "#ff6b6b" }}>
+                      <span style={{ fontSize: "16px", marginRight: "4px" }}>⚠️</span>
+                      <span>Item movido ou em sala diferente</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div style={{ display: "flex", alignItems: "center" }}>
@@ -555,11 +621,11 @@ export default function InventariarPage({ params }) {
                     fontSize: "14px",
                   }}
                 >
-                  <option value="Bom">Bom</option>
-                  <option value="Regular">Regular</option>
-                  <option value="Ocioso">Ocioso</option>
-                  <option value="Recuperável">Recuperável</option>
-                  <option value="Antieconômico">Antieconômico</option>
+                  {ESTADOS_CONSERVACAO.map((estado) => (
+                    <option key={estado} value={estado}>
+                      {estado}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
