@@ -183,9 +183,10 @@ export async function POST(request) {
 
     // 4. Extrair e salvar servidores únicos do campo "carga_atual"
     const servidorSet = new Set(
-      records.map((r) => r["CARGA_ATUAL"]).filter(Boolean)
+      records.map((r) => r["CARGA ATUAL"] || r["CARGA_ATUAL"]).filter(Boolean)
     );
     const servidoresArray = [...servidorSet];
+    console.log(`[UPLOAD] Servidores encontrados:`, servidoresArray);
     console.log(`[UPLOAD] Salvando ${servidoresArray.length} servidores...`);
     await ServidorService.createMany(nomeInventario, servidoresArray);
 

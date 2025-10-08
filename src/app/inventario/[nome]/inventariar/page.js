@@ -17,6 +17,10 @@ export default function InventariarPage({ params }) {
   const [salaSelecionada, setSalaSelecionada] = useState("");
   const [inventariante, setInventariante] = useState("");
   const [statusSelecionado, setStatusSelecionado] = useState("Em Uso");
+  const [estadoConservacaoSelecionado, setEstadoConservacaoSelecionado] =
+    useState("Bom");
+  const [cargaAtualSelecionada, setCargaAtualSelecionada] = useState("");
+  const [servidores, setServidores] = useState([]);
   const [ultimoTombo, setUltimoTombo] = useState("");
   const [notificacao, setNotificacao] = useState("");
   const [hasAccess, setHasAccess] = useState(false);
@@ -78,27 +82,42 @@ export default function InventariarPage({ params }) {
 
     async function fetchSalas() {
       try {
-        const res = await fetch(
-          `/api/salas?inventario=${encodeURIComponent(nome)}`
-        );
-        if (!res.ok) {
-          const errorData = await res.json();
+        const [salasRes, servidoresRes] = await Promise.all([
+          fetch(`/api/salas?inventario=${encodeURIComponent(nome)}`),
+          fetch(`/api/servidores?inventario=${encodeURIComponent(nome)}`),
+        ]);
+
+        if (!salasRes.ok) {
+          const errorData = await salasRes.json();
           throw new Error(
-            errorData.error || `Erro ${res.status}: ${res.statusText}`
+            errorData.error || `Erro ${salasRes.status}: ${salasRes.statusText}`
           );
         }
-        const data = await res.json();
-        setSalas(data);
+
+        if (!servidoresRes.ok) {
+          // Servidores podem não existir ainda, então não é erro crítico
+          console.warn(
+            "Servidores não encontrados, continuando sem lista de servidores"
+          );
+          setServidores([]);
+        } else {
+          const servidoresData = await servidoresRes.json();
+          setServidores(servidoresData);
+        }
+
+        const salasData = await salasRes.json();
+        setSalas(salasData);
         const salaSalva = localStorage.getItem("salaSelecionada");
-        if (salaSalva && data.includes(salaSalva)) {
+        if (salaSalva && salasData.includes(salaSalva)) {
           setSalaSelecionada(salaSalva);
-        } else if (data.length > 0) {
-          setSalaSelecionada(data[0]);
+        } else if (salasData.length > 0) {
+          setSalaSelecionada(salasData[0]);
         }
       } catch (error) {
         console.error("Erro ao carregar salas:", error);
         setErro(`Erro ao carregar salas: ${error.message}`);
         setSalas([]);
+        setServidores([]);
       }
     }
     fetchSalas();
@@ -138,6 +157,11 @@ export default function InventariarPage({ params }) {
 
       const item = await res.json();
       setResultado(item);
+
+      // Inicializar selects com valores atuais do item
+      setStatusSelecionado(item.status || "Em Uso");
+      setEstadoConservacaoSelecionado(item.estadoConservacao || "Bom");
+      setCargaAtualSelecionada(item.cargaAtual || "");
     } catch (error) {
       setErro("Erro ao buscar o item.");
       console.error("Erro na busca:", error);
@@ -169,6 +193,8 @@ export default function InventariarPage({ params }) {
           salaEncontrada: salaSelecionada,
           dataInventario,
           status: statusSelecionado,
+          estadoConservacao: estadoConservacaoSelecionado,
+          cargaAtual: cargaAtualSelecionada,
           inventariante,
         }),
       });
@@ -222,24 +248,8 @@ export default function InventariarPage({ params }) {
       numero: resultado.numero,
       sala: salaSelecionada,
       status: resultado.status || "",
-      ed: resultado.ed || "",
-      contaContabil: resultado.contaContabil || "",
       descricao: resultado.descricao || "",
-      rotulos: resultado.rotulos || "",
       cargaAtual: resultado.cargaAtual || "",
-      setorResponsavel: resultado.setorResponsavel || "",
-      campusCarga: resultado.campusCarga || "",
-      cargaContabil: resultado.cargaContabil || "",
-      valorAquisicao: resultado.valorAquisicao || "",
-      valorDepreciado: resultado.valorDepreciado || "",
-      numeroNotaFiscal: resultado.numeroNotaFiscal || "",
-      numeroSerie: resultado.numeroSerie || "",
-      dataEntrada: resultado.dataEntrada || "",
-      dataCarga: resultado.dataCarga || "",
-      fornecedor: resultado.fornecedor || "",
-      marca: resultado.marca || "",
-      modelo: resultado.modelo || "",
-      setor: resultado.setor || "",
       estadoConservacao: resultado.estadoConservacao || "",
       from: "inventariar", // Indica que veio da página de inventário
     });
@@ -457,47 +467,101 @@ export default function InventariarPage({ params }) {
               fontSize: "14px",
             }}
           >
-            {/* Lista simples de campo: valor */}
+            {/* Lista limitada de informações essenciais */}
             <div
-              style={{ display: "flex", flexDirection: "column", gap: "4px" }}
+              style={{ display: "flex", flexDirection: "column", gap: "8px" }}
             >
-              {Object.entries(resultado).map(([campo, valor]) => {
-                // Função para formatar valores corretamente
-                const formatarValor = (val) => {
-                  if (val === null || val === undefined) return "";
-                  if (typeof val === "object") {
-                    // Se for um objeto, tenta extrair informações úteis
-                    if (val.name) return val.name; // Para objetos com propriedade name
-                    if (val.email) return val.email; // Para objetos com propriedade email
-                    if (
-                      val.toString &&
-                      val.toString !== Object.prototype.toString
-                    ) {
-                      return val.toString(); // Se tiver um toString customizado
-                    }
-                    // Para outros objetos, mostra as propriedades principais
-                    const keys = Object.keys(val);
-                    if (keys.length > 0) {
-                      return keys
-                        .map((key) => `${key}: ${val[key]}`)
-                        .join(", ");
-                    }
-                    return "[objeto]";
-                  }
-                  return String(val);
-                };
+              <div style={{ display: "flex" }}>
+                <span style={{ fontWeight: "bold", minWidth: "120px" }}>
+                  Número:
+                </span>
+                <span style={{ marginLeft: "8px" }}>
+                  {resultado.numero || "N/A"}
+                </span>
+              </div>
 
-                return (
-                  <div key={campo} style={{ display: "flex" }}>
-                    <span style={{ fontWeight: "bold", minWidth: "150px" }}>
-                      {campo}:
-                    </span>
-                    <span style={{ marginLeft: "8px" }}>
-                      {formatarValor(valor)}
-                    </span>
-                  </div>
-                );
-              })}
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <span style={{ fontWeight: "bold", minWidth: "120px" }}>
+                  Status:
+                </span>
+                <select
+                  value={statusSelecionado}
+                  onChange={(e) => setStatusSelecionado(e.target.value)}
+                  style={{
+                    marginLeft: "8px",
+                    padding: "2px 4px",
+                    fontSize: "14px",
+                  }}
+                >
+                  <option value="Em Uso">Em Uso</option>
+                  <option value="Ocioso">Ocioso</option>
+                  <option value="Em Manutenção">Em Manutenção</option>
+                </select>
+              </div>
+
+              <div style={{ display: "flex" }}>
+                <span style={{ fontWeight: "bold", minWidth: "120px" }}>
+                  Descrição:
+                </span>
+                <span style={{ marginLeft: "8px" }}>
+                  {resultado.descricao || "N/A"}
+                </span>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <span style={{ fontWeight: "bold", minWidth: "120px" }}>
+                  Carga Atual:
+                </span>
+                <select
+                  value={cargaAtualSelecionada}
+                  onChange={(e) => setCargaAtualSelecionada(e.target.value)}
+                  style={{
+                    marginLeft: "8px",
+                    padding: "2px 4px",
+                    fontSize: "14px",
+                    minWidth: "200px",
+                  }}
+                >
+                  <option value="">Selecione um servidor</option>
+                  {servidores.map((servidor) => (
+                    <option key={servidor} value={servidor}>
+                      {servidor}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: "flex" }}>
+                <span style={{ fontWeight: "bold", minWidth: "120px" }}>
+                  Sala:
+                </span>
+                <span style={{ marginLeft: "8px" }}>
+                  {resultado.sala || "N/A"}
+                </span>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <span style={{ fontWeight: "bold", minWidth: "120px" }}>
+                  Estado Conservação:
+                </span>
+                <select
+                  value={estadoConservacaoSelecionado}
+                  onChange={(e) =>
+                    setEstadoConservacaoSelecionado(e.target.value)
+                  }
+                  style={{
+                    marginLeft: "8px",
+                    padding: "2px 4px",
+                    fontSize: "14px",
+                  }}
+                >
+                  <option value="Bom">Bom</option>
+                  <option value="Regular">Regular</option>
+                  <option value="Ocioso">Ocioso</option>
+                  <option value="Recuperável">Recuperável</option>
+                  <option value="Antieconômico">Antieconômico</option>
+                </select>
+              </div>
             </div>
           </div>
           {resultado.dataInventario && (
@@ -506,15 +570,6 @@ export default function InventariarPage({ params }) {
             </p>
           )}
           {/* Campos para confirmação - sempre mostra */}
-          <select
-            value={statusSelecionado}
-            onChange={(e) => setStatusSelecionado(e.target.value)}
-            style={{ marginTop: 10 }}
-          >
-            <option value="Em Uso">Em Uso</option>
-            <option value="Ocioso">Ocioso</option>
-            <option value="Em Manutenção">Em Manutenção</option>
-          </select>
           <br />
           <Button
             onClick={confirmarEncontrado}

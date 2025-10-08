@@ -41,6 +41,16 @@ export default function Cadastrar() {
   const [isCorrecao, setIsCorrecao] = useState(false);
   const [numeroOriginal, setNumeroOriginal] = useState(null);
 
+  // Campos permitidos para correção (limitação solicitada)
+  const CAMPOS_CORRECAO_PERMITIDOS = [
+    "NUMERO",
+    "STATUS",
+    "DESCRICAO",
+    "CARGA ATUAL",
+    "SALA",
+    "ESTADO DE CONSERVAÇÃO",
+  ];
+
   useEffect(() => {
     async function fetchFormFields() {
       const nome = searchParams.get("nome");
@@ -269,7 +279,12 @@ export default function Cadastrar() {
           : "Cadastrar Item de Inventário"}
       </h1>
       <form onSubmit={handleSubmit}>
-        {cabecalho?.map((fieldName) => {
+        {(isCorrecao
+          ? cabecalho?.filter((fieldName) =>
+              CAMPOS_CORRECAO_PERMITIDOS.includes(fieldName)
+            )
+          : cabecalho
+        )?.map((fieldName) => {
           if (fieldName === "#") {
             return null;
           }
