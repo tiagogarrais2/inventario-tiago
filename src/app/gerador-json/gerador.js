@@ -1,7 +1,7 @@
 const fs = require("fs");
 
 // Número de objetos que você quer gerar
-const NUM_REGISTROS = 50;
+const NUM_REGISTROS = 200;
 
 function gerarDadoAleatorio(tipo) {
   switch (tipo) {

@@ -469,13 +469,18 @@ export default function InventariarPage({ params }) {
                     // Se for um objeto, tenta extrair informações úteis
                     if (val.name) return val.name; // Para objetos com propriedade name
                     if (val.email) return val.email; // Para objetos com propriedade email
-                    if (val.toString && val.toString !== Object.prototype.toString) {
+                    if (
+                      val.toString &&
+                      val.toString !== Object.prototype.toString
+                    ) {
                       return val.toString(); // Se tiver um toString customizado
                     }
                     // Para outros objetos, mostra as propriedades principais
                     const keys = Object.keys(val);
                     if (keys.length > 0) {
-                      return keys.map(key => `${key}: ${val[key]}`).join(", ");
+                      return keys
+                        .map((key) => `${key}: ${val[key]}`)
+                        .join(", ");
                     }
                     return "[objeto]";
                   }

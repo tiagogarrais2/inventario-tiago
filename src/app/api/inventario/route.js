@@ -78,22 +78,19 @@ export async function GET(request) {
         );
       }
 
-      // Verificar se o item tem correções
-      const temCorrecoes = await CorrecaoService.hasCorrections(
+      // Verificar se o item tem correções (mais eficiente)
+      const correcoesItem = await CorrecaoService.findByNumeroOriginal(
         inventario.nome,
         tombo
       );
-      const totalCorrecoes = temCorrecoes
-        ? await CorrecaoService.findByNumeroOriginal(inventario.nome, tombo)
-        : [];
 
       // Adicionar informações de correção ao item
       const itemComCorrecoes = {
         ...item,
-        temCorrecoes,
-        totalCorrecoes: totalCorrecoes.length,
+        temCorrecoes: correcoesItem.length > 0,
+        totalCorrecoes: correcoesItem.length,
         ultimaCorrecao:
-          totalCorrecoes.length > 0 ? totalCorrecoes[0].dataCorrecao : null,
+          correcoesItem.length > 0 ? correcoesItem[correcoesItem.length - 1].dataCorrecao : null,
       };
 
       // Registrar acesso ao item no log de auditoria
@@ -110,31 +107,31 @@ export async function GET(request) {
     // Retornar todos os itens do inventário
     const itens = await ItemInventarioService.listByInventario(inventario.nome);
 
-    // Adicionar informações de correção para cada item
-    const itensComCorrecoes = await Promise.all(
-      itens.map(async (item) => {
-        const temCorrecoes = await CorrecaoService.hasCorrections(
-          inventario.nome,
-          item.numero
-        );
-        const totalCorrecoes = temCorrecoes
-          ? await CorrecaoService.findByNumeroOriginal(
-              inventario.nome,
-              item.numero
-            )
-          : [];
+    // Buscar todas as correções do inventário de uma vez (mais eficiente)
+    const todasCorrecoes = await CorrecaoService.listByInventario(inventario.nome);
 
-        return {
-          ...item,
-          temCorrecoes,
-          totalCorrecoes: totalCorrecoes.length,
-          ultimaCorrecao:
-            totalCorrecoes.length > 0
-              ? totalCorrecoes[totalCorrecoes.length - 1].dataCorrecao
-              : null,
-        };
-      })
-    );
+    // Agrupar correções por numero do item
+    const correcoesPorItem = {};
+    todasCorrecoes.forEach(correcao => {
+      const numero = correcao.numeroItemOriginal;
+      if (!correcoesPorItem[numero]) {
+        correcoesPorItem[numero] = [];
+      }
+      correcoesPorItem[numero].push(correcao);
+    });
+
+    // Adicionar informações de correção para cada item (sem consultas adicionais)
+    const itensComCorrecoes = itens.map(item => {
+      const correcoesItem = correcoesPorItem[item.numero] || [];
+      return {
+        ...item,
+        temCorrecoes: correcoesItem.length > 0,
+        totalCorrecoes: correcoesItem.length,
+        ultimaCorrecao: correcoesItem.length > 0
+          ? correcoesItem[correcoesItem.length - 1].dataCorrecao
+          : null,
+      };
+    });
 
     // Registrar acesso ao inventário no log de auditoria
     await AuditoriaService.log(

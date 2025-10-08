@@ -57,10 +57,11 @@ export default function RelatorioPage({ params }) {
 
     async function fetchRelatorio() {
       try {
-        // Buscar todas as salas e todos os itens em paralelo
-        const [salasRes, itensRes] = await Promise.all([
+        // Buscar todas as salas, itens e correções em paralelo
+        const [salasRes, itensRes, correcoesRes] = await Promise.all([
           fetch(`/api/salas?inventario=${encodeURIComponent(nome)}`),
           fetch(`/api/inventario?inventario=${encodeURIComponent(nome)}`),
+          fetch(`/api/correcoes-todas/${encodeURIComponent(nome)}`),
         ]);
 
         if (!salasRes.ok) {
@@ -71,17 +72,22 @@ export default function RelatorioPage({ params }) {
           const errorData = await itensRes.json();
           throw new Error(errorData.error || "Erro ao carregar inventário.");
         }
+        if (!correcoesRes.ok) {
+          console.warn("Erro ao carregar correções, continuando sem elas:", await correcoesRes.text());
+        }
 
         const salas = await salasRes.json();
         const itens = await itensRes.json();
+        const correcoesData = correcoesRes.ok ? await correcoesRes.json() : { correcoesPorItem: {} };
+        const correcoesPorItem = correcoesData.correcoesPorItem || {};
 
-        // Buscar correções para cada item e adicionar ao agrupamento
+        // Agrupar itens por sala
         const agrupado = {};
         salas.forEach((sala) => {
           agrupado[sala] = [];
         });
 
-        // Agrupar itens por sala e incluir correções
+        // Agrupar itens por sala e incluir correções (já carregadas)
         for (const item of itens) {
           const sala = item.salaEncontrada || item.sala || "Sala não definida";
 
@@ -89,25 +95,10 @@ export default function RelatorioPage({ params }) {
             agrupado[sala] = [];
           }
 
-          // Se o item tem correções, buscar o histórico completo
-          let correcoes = [];
-          if (item.temCorrecoes) {
-            try {
-              const correcoesRes = await fetch(
-                `/api/correcoes-json/${nome}/${item.numero}`
-              );
-              if (correcoesRes.ok) {
-                const correcoesData = await correcoesRes.json();
-                correcoes = correcoesData.correcoes || [];
-              }
-            } catch (error) {
-              console.error("Erro ao buscar correções:", error);
-            }
-          }
-
+          // Adicionar item com suas correções (já carregadas da API)
           agrupado[sala].push({
             ...item,
-            historicoCorrecoes: correcoes,
+            historicoCorrecoes: correcoesPorItem[item.numero] || [],
           });
         }
 
