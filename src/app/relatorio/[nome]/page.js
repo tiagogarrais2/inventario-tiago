@@ -73,12 +73,17 @@ export default function RelatorioPage({ params }) {
           throw new Error(errorData.error || "Erro ao carregar inventário.");
         }
         if (!correcoesRes.ok) {
-          console.warn("Erro ao carregar correções, continuando sem elas:", await correcoesRes.text());
+          console.warn(
+            "Erro ao carregar correções, continuando sem elas:",
+            await correcoesRes.text()
+          );
         }
 
         const salas = await salasRes.json();
         const itens = await itensRes.json();
-        const correcoesData = correcoesRes.ok ? await correcoesRes.json() : { correcoesPorItem: {} };
+        const correcoesData = correcoesRes.ok
+          ? await correcoesRes.json()
+          : { correcoesPorItem: {} };
         const correcoesPorItem = correcoesData.correcoesPorItem || {};
 
         // Agrupar itens por sala
