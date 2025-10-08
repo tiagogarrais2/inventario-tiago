@@ -480,226 +480,125 @@ function InventarioDashboardClient({ nomeInventario }) {
           </div>
         </div>
 
-        {/* Duas Colunas */}
+        {/* Progresso por Sala */}
         <div
           style={{
-            display: "grid",
-            gridTemplateColumns: "1fr",
-            gap: "32px",
+            backgroundColor: "white",
+            borderRadius: "8px",
+            boxShadow: "var(--shadow)",
+            marginBottom: "32px",
           }}
         >
-          {/* Progresso por Sala */}
           <div
             style={{
-              backgroundColor: "white",
-              borderRadius: "8px",
-              boxShadow: "var(--shadow)",
+              padding: "24px",
+              borderBottom: "1px solid var(--border-color)",
             }}
           >
-            <div
+            <h3
               style={{
-                padding: "24px",
-                borderBottom: "1px solid var(--border-color)",
+                fontSize: "18px",
+                fontWeight: "500",
+                color: "var(--text-color)",
               }}
             >
-              <h3
+              Progresso por Sala
+            </h3>
+          </div>
+          <div style={{ padding: "24px" }}>
+            {dados?.salas && dados.salas.length > 0 ? (
+              <div
                 style={{
-                  fontSize: "18px",
-                  fontWeight: "500",
-                  color: "var(--text-color)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "16px",
                 }}
               >
-                Progresso por Sala
-              </h3>
-            </div>
-            <div style={{ padding: "24px" }}>
-              {dados?.salas && dados.salas.length > 0 ? (
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "16px",
-                  }}
-                >
-                  {dados.salas.slice(0, 8).map((sala, index) => (
-                    <div
-                      key={index}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p
-                          style={{
-                            fontSize: "14px",
-                            fontWeight: "500",
-                            color: "var(--text-color)",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {sala.nome}
-                        </p>
+                {dados.salas.map((sala, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p
+                        style={{
+                          fontSize: "14px",
+                          fontWeight: "500",
+                          color: "var(--text-color)",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {sala.nome}
+                      </p>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          marginTop: "4px",
+                        }}
+                      >
                         <div
                           style={{
-                            display: "flex",
-                            alignItems: "center",
-                            marginTop: "4px",
+                            backgroundColor: "var(--light-bg)",
+                            borderRadius: "9999px",
+                            height: "8px",
+                            flex: 1,
+                            marginRight: "12px",
                           }}
                         >
                           <div
                             style={{
-                              backgroundColor: "var(--light-bg)",
-                              borderRadius: "9999px",
                               height: "8px",
-                              flex: 1,
-                              marginRight: "12px",
+                              borderRadius: "9999px",
+                              transition: "all 0.3s",
+                              backgroundColor: getStatusColor(sala.percentual),
+                              width: `${sala.percentual}%`,
                             }}
-                          >
-                            <div
-                              style={{
-                                height: "8px",
-                                borderRadius: "9999px",
-                                transition: "all 0.3s",
-                                backgroundColor: getStatusColor(
-                                  sala.percentual
-                                ),
-                                width: `${sala.percentual}%`,
-                              }}
-                            ></div>
-                          </div>
-                          <span
-                            style={{
-                              fontSize: "12px",
-                              color: "var(--text-color)",
-                              opacity: 0.5,
-                              width: "48px",
-                              textAlign: "right",
-                            }}
-                          >
-                            {sala.percentual}%
-                          </span>
+                          ></div>
                         </div>
-                      </div>
-                      <div style={{ marginLeft: "16px", textAlign: "right" }}>
-                        <p
-                          style={{
-                            fontSize: "14px",
-                            color: "var(--text-color)",
-                          }}
-                        >
-                          {sala.itensInventariados}/{sala.totalItens}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p
-                  style={{
-                    color: "var(--text-color)",
-                    opacity: 0.5,
-                    fontSize: "14px",
-                  }}
-                >
-                  Nenhuma sala cadastrada
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Atividade Recente */}
-          <div
-            style={{
-              backgroundColor: "white",
-              borderRadius: "8px",
-              boxShadow: "var(--shadow)",
-            }}
-          >
-            <div
-              style={{
-                padding: "24px",
-                borderBottom: "1px solid var(--border-color)",
-              }}
-            >
-              <h3
-                style={{
-                  fontSize: "18px",
-                  fontWeight: "500",
-                  color: "var(--text-color)",
-                }}
-              >
-                Atividade Recente
-              </h3>
-            </div>
-            <div style={{ padding: "24px" }}>
-              {dados?.atividade && dados.atividade.length > 0 ? (
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "12px",
-                  }}
-                >
-                  {dados.atividade.slice(0, 10).map((item, index) => (
-                    <div
-                      key={index}
-                      style={{
-                        display: "flex",
-                        alignItems: "flex-start",
-                        gap: "12px",
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: "8px",
-                          height: "8px",
-                          backgroundColor: "var(--primary-color)",
-                          borderRadius: "50%",
-                          flexShrink: 0,
-                          marginTop: "8px",
-                        }}
-                      ></div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p
-                          style={{
-                            fontSize: "14px",
-                            color: "var(--text-color)",
-                          }}
-                        >
-                          <span style={{ fontWeight: "500" }}>
-                            {item.usuario?.nome || "Sistema"}
-                          </span>{" "}
-                          {formatarAcao(item.acao)}
-                        </p>
-                        <p
+                        <span
                           style={{
                             fontSize: "12px",
                             color: "var(--text-color)",
                             opacity: 0.5,
+                            width: "48px",
+                            textAlign: "right",
                           }}
                         >
-                          {formatarData(item.timestamp)}
-                        </p>
+                          {sala.percentual}%
+                        </span>
                       </div>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <p
-                  style={{
-                    color: "var(--text-color)",
-                    opacity: 0.5,
-                    fontSize: "14px",
-                  }}
-                >
-                  Nenhuma atividade recente
-                </p>
-              )}
-            </div>
+                    <div style={{ marginLeft: "16px", textAlign: "right" }}>
+                      <p
+                        style={{
+                          fontSize: "14px",
+                          color: "var(--text-color)",
+                        }}
+                      >
+                        {sala.itensInventariados}/{sala.totalItens}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p
+                style={{
+                  color: "var(--text-color)",
+                  opacity: 0.5,
+                  fontSize: "14px",
+                }}
+              >
+                Nenhuma sala cadastrada
+              </p>
+            )}
           </div>
         </div>
 

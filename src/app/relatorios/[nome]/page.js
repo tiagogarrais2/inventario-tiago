@@ -8,9 +8,12 @@ export default function RelatoriosPage({ params }) {
   const [nome, setNome] = useState("");
 
   useEffect(() => {
-    if (params?.nome) {
-      setNome(params.nome);
-    }
+    // Resolver params de forma assíncrona
+    const resolveParams = async () => {
+      const resolvedParams = await params;
+      setNome(resolvedParams.nome);
+    };
+    resolveParams();
   }, [params]);
 
   const { data: session, status } = useSession();
@@ -118,15 +121,16 @@ export default function RelatoriosPage({ params }) {
         <Button onClick={() => router.push(`/inventario/${nome}/dashboard`)}>
           📊 Dashboard
         </Button>
-        Visão analítica com estatísticas, progresso por sala e atividade
-        recente.
-        <hr />
         {/* Relatório Geral */}
         <Button onClick={() => router.push(`/relatorio/${nome}`)}>
           Relatório Geral
         </Button>
-        Itens do inventário agrupados por sala, com status de inventariado e
-        correções.
+        {/* Relatório de Itens Movidos */}
+        <Button
+          onClick={() => router.push(`/relatorios/${nome}/itens-movidos`)}
+        >
+          🚚 Itens Movidos
+        </Button>
         <hr />
       </div>
 

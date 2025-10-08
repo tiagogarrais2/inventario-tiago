@@ -282,6 +282,33 @@ export default function RelatorioPage({ params }) {
                         📝 CADASTRADO
                       </div>
                     )}
+                    {/* Badge MOVIDO - quando item foi encontrado em sala diferente */}
+                    {item.salaEncontrada &&
+                      item.sala &&
+                      item.salaEncontrada !== item.sala && (
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: "-8px",
+                            right: (() => {
+                              let position = 10;
+                              if (item.dataInventario) position += 120;
+                              if (item.temCorrecoes) position += 120;
+                              if (item.cadastradoDuranteInventario)
+                                position += 120;
+                              return position + "px";
+                            })(),
+                            backgroundColor: "#9c27b0",
+                            color: "white",
+                            padding: "2px 8px",
+                            fontSize: "12px",
+                            borderRadius: "10px",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          🚚 MOVIDO
+                        </div>
+                      )}
                     <strong>Número:</strong> {item.numero} <br />
                     <strong>Descrição:</strong> {item.descricao || "N/A"} <br />
                     <strong>Status:</strong>{" "}
@@ -293,6 +320,16 @@ export default function RelatorioPage({ params }) {
                     {item.dataInventario
                       ? new Date(item.dataInventario).toLocaleDateString()
                       : "Não inventariado"}
+                    {item.salaEncontrada &&
+                      item.sala &&
+                      item.salaEncontrada !== item.sala && (
+                        <>
+                          <br />
+                          <strong style={{ color: "#9c27b0" }}>
+                            🚚 Item movido - Sala original: {item.sala}
+                          </strong>
+                        </>
+                      )}
                     {item.cadastradoDuranteInventario && (
                       <>
                         <br />
