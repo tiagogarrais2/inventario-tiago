@@ -1,5 +1,6 @@
 import "./globals.css";
 import Cabecalho from "./components/Cabecalho";
+import Rodape from "./components/Rodape";
 import Providers from "./components/Providers";
 
 export const metadata = {
@@ -15,10 +16,11 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="pt-br">
-      <body>
+      <body className="min-h-screen flex flex-col">
         <Providers>
           <Cabecalho />
-          {children}
+          <main className="flex-grow">{children}</main>
+          <Rodape />
         </Providers>
       </body>
     </html>

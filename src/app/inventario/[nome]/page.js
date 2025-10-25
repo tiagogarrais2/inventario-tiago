@@ -4,15 +4,12 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import GerenciadorPermissoes from "../../components/GerenciadorPermissoes";
 import Button from "../../components/Button";
+import TimerText from "../../components/TimerText";
 
 export default function InventarioPage({ params }) {
-  const [nome, setNome] = useState("");
+  const unwrappedParams = React.use(params);
+  const [nome, setNome] = useState(unwrappedParams?.nome || "");
 
-  useEffect(() => {
-    if (params?.nome) {
-      setNome(params.nome);
-    }
-  }, [params]);
   const { data: session, status } = useSession();
   const [valor, setValor] = useState("");
   const [resultado, setResultado] = useState(null);
@@ -28,6 +25,7 @@ export default function InventarioPage({ params }) {
   const [accessLoading, setAccessLoading] = useState(true);
   const [showPermissoes, setShowPermissoes] = useState(false);
   const [excluindoInventario, setExcluindoInventario] = useState(false);
+  const [showAccessDeniedTimer, setShowAccessDeniedTimer] = useState(false);
   const router = useRouter();
   const inputRef = useRef(null);
 
@@ -62,6 +60,11 @@ export default function InventarioPage({ params }) {
       }
 
       setAccessLoading(false);
+
+      // Se não tem acesso, mostrar timer antes da tela final
+      if (!data?.hasAccess) {
+        setShowAccessDeniedTimer(true);
+      }
     }
 
     verificarPermissoes();
@@ -357,7 +360,7 @@ export default function InventarioPage({ params }) {
   }
 
   // Usuário não tem acesso ao inventário
-  if (!hasAccess) {
+  if (!hasAccess && !showAccessDeniedTimer) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
         <h1 className="text-2xl font-bold text-red-600">Acesso Negado</h1>
@@ -374,6 +377,37 @@ export default function InventarioPage({ params }) {
         >
           Voltar ao Início
         </Button>
+      </div>
+    );
+  }
+
+  // Timer antes de mostrar acesso negado
+  if (showAccessDeniedTimer) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
+        <TimerText
+          initialTime={5}
+          finalText={
+            <div className="text-center">
+              <h1 className="text-2xl font-bold text-red-600 mb-4">
+                Acesso Negado
+              </h1>
+              <p className="text-gray-600 mb-2">
+                Você não tem permissão para acessar este inventário.
+              </p>
+              <p className="text-sm text-gray-500 mb-4">
+                Entre em contato com o proprietário do inventário para solicitar
+                acesso.
+              </p>
+              <Button
+                onClick={() => router.push("/")}
+                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-200"
+              >
+                Voltar ao Início
+              </Button>
+            </div>
+          }
+        />
       </div>
     );
   }

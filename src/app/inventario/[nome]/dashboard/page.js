@@ -1,12 +1,12 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Button from "../../../components/Button";
 
-export default async function InventarioDashboard({ params }) {
+export default function InventarioDashboard({ params }) {
   // Aguarda os params serem resolvidos (Next.js 15+)
-  const resolvedParams = await params;
+  const resolvedParams = React.use(params);
   const nomeInventario = resolvedParams.nome;
 
   return <InventarioDashboardClient nomeInventario={nomeInventario} />;
@@ -19,17 +19,7 @@ function InventarioDashboardClient({ nomeInventario }) {
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState(null);
 
-  useEffect(() => {
-    if (status === "loading") return;
-    if (!session) {
-      router.push("/");
-      return;
-    }
-
-    buscarDadosDashboard();
-  }, [session, status, router, nomeInventario]);
-
-  const buscarDadosDashboard = async () => {
+  const buscarDadosDashboard = useCallback(async () => {
     try {
       setCarregando(true);
       setErro(null);
@@ -58,7 +48,17 @@ function InventarioDashboardClient({ nomeInventario }) {
     } finally {
       setCarregando(false);
     }
-  };
+  }, [nomeInventario]);
+
+  useEffect(() => {
+    if (status === "loading") return;
+    if (!session) {
+      router.push("/");
+      return;
+    }
+
+    buscarDadosDashboard();
+  }, [session, status, router, buscarDadosDashboard]);
 
   const formatarData = (data) => {
     return new Date(data).toLocaleDateString("pt-BR", {

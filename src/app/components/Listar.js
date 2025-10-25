@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Button from "./Button";
+import TimerText from "./TimerText";
 
 export default function Listar({ atualizar, novoInventario }) {
   const [inventarios, setInventarios] = useState([]);
@@ -18,7 +19,12 @@ export default function Listar({ atualizar, novoInventario }) {
     <div>
       <h2>Inventários disponíveis</h2>
       <ul style={{ textAlign: "center" }}>
-        {inventarios.length === 0 && <li>Nenhum inventário disponível.</li>}
+        {inventarios.length === 0 && (
+          <TimerText
+            initialTime={3}
+            finalText="Nenhum inventário disponível."
+          />
+        )}
         {inventarios.map((nome) => {
           const isNovo = novoInventario && nome === novoInventario;
           return (

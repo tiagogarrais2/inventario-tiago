@@ -27,7 +27,8 @@ const STATUS_OPTIONS = [
 ];
 
 export default function InventariarPage({ params }) {
-  const [nome, setNome] = useState("");
+  const unwrappedParams = React.use(params);
+  const [nome, setNome] = useState(unwrappedParams?.nome || "");
   const { data: session, status } = useSession();
   const router = useRouter();
 
@@ -49,12 +50,6 @@ export default function InventariarPage({ params }) {
   const [hasAccess, setHasAccess] = useState(false);
   const [accessLoading, setAccessLoading] = useState(true);
   const inputRef = useRef(null);
-
-  useEffect(() => {
-    if (params?.nome) {
-      setNome(params.nome);
-    }
-  }, [params]);
 
   // Verificar permissões de acesso
   useEffect(() => {
@@ -641,20 +636,6 @@ export default function InventariarPage({ params }) {
             style={{ marginTop: 10, marginRight: 10 }}
           >
             Confirmar Item Encontrado
-          </Button>
-          <Button
-            onClick={handleDadosIncorretos}
-            style={{
-              marginTop: 10,
-              backgroundColor: "#ffc107",
-              color: "#000",
-              border: "none",
-              padding: "8px 16px",
-              borderRadius: "4px",
-            }}
-            title="Clique se os dados exibidos estão incorretos"
-          >
-            📝 Dados Incorretos
           </Button>
         </div>
       )}

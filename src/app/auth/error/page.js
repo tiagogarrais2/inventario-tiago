@@ -3,6 +3,8 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Suspense } from "react";
 
+export const dynamic = "force-dynamic";
+
 const errors = {
   Signin: "Tente fazer login com uma conta diferente.",
   OAuthSignin: "Tente fazer login com uma conta diferente.",

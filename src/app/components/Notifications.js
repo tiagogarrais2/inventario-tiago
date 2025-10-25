@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback } from "react";
 
 // Context para gerenciar as notificações
 const NotificationContext = createContext();
@@ -9,7 +9,9 @@ const NotificationContext = createContext();
 export const useNotifications = () => {
   const context = useContext(NotificationContext);
   if (!context) {
-    throw new Error('useNotifications deve ser usado dentro de NotificationProvider');
+    throw new Error(
+      "useNotifications deve ser usado dentro de NotificationProvider"
+    );
   }
   return context;
 };
@@ -19,24 +21,31 @@ export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const [confirmations, setConfirmations] = useState([]);
 
-  const addNotification = useCallback((message, type = 'info', duration = 5000) => {
-    const id = Date.now() + Math.random();
-    const notification = { id, message, type, duration };
-    
-    setNotifications(prev => [...prev, notification]);
-    
-    // Remove automaticamente após o tempo especificado
-    if (duration > 0) {
-      setTimeout(() => {
-        setNotifications(prev => prev.filter(notification => notification.id !== id));
-      }, duration);
-    }
-    
-    return id;
-  }, []);
+  const addNotification = useCallback(
+    (message, type = "info", duration = 5000) => {
+      const id = Date.now() + Math.random();
+      const notification = { id, message, type, duration };
+
+      setNotifications((prev) => [...prev, notification]);
+
+      // Remove automaticamente após o tempo especificado
+      if (duration > 0) {
+        setTimeout(() => {
+          setNotifications((prev) =>
+            prev.filter((notification) => notification.id !== id)
+          );
+        }, duration);
+      }
+
+      return id;
+    },
+    []
+  );
 
   const removeNotification = useCallback((id) => {
-    setNotifications(prev => prev.filter(notification => notification.id !== id));
+    setNotifications((prev) =>
+      prev.filter((notification) => notification.id !== id)
+    );
   }, []);
 
   const clearAllNotifications = useCallback(() => {
@@ -44,57 +53,76 @@ export const NotificationProvider = ({ children }) => {
   }, []);
 
   // Métodos de conveniência
-  const showSuccess = useCallback((message, duration) => addNotification(message, 'success', duration), [addNotification]);
-  const showError = useCallback((message, duration) => addNotification(message, 'error', duration), [addNotification]);
-  const showInfo = useCallback((message, duration) => addNotification(message, 'info', duration), [addNotification]);
-  const showWarning = useCallback((message, duration) => addNotification(message, 'warning', duration), [addNotification]);
+  const showSuccess = useCallback(
+    (message, duration) => addNotification(message, "success", duration),
+    [addNotification]
+  );
+  const showError = useCallback(
+    (message, duration) => addNotification(message, "error", duration),
+    [addNotification]
+  );
+  const showInfo = useCallback(
+    (message, duration) => addNotification(message, "info", duration),
+    [addNotification]
+  );
+  const showWarning = useCallback(
+    (message, duration) => addNotification(message, "warning", duration),
+    [addNotification]
+  );
+
+  // Função auxiliar para remover confirmações
+  const removeConfirmation = useCallback((id) => {
+    setConfirmations((prev) => prev.filter((conf) => conf.id !== id));
+  }, []);
 
   // Métodos de confirmação
-  const showConfirmation = useCallback((message, onConfirm, onCancel) => {
-    const id = Date.now() + Math.random();
-    
-    const confirmation = {
-      id,
-      message,
-      onConfirm: () => {
-        onConfirm && onConfirm();
-        setConfirmations(prev => prev.filter(conf => conf.id !== id));
-      },
-      onCancel: () => {
-        onCancel && onCancel();
-        setConfirmations(prev => prev.filter(conf => conf.id !== id));
-      }
-    };
+  const showConfirmation = useCallback(
+    (message, onConfirm, onCancel) => {
+      const id = Date.now() + Math.random();
 
-    setConfirmations(prev => [...prev, confirmation]);
-    return id;
-  }, []);
+      const confirmation = {
+        id,
+        message,
+        onConfirm: () => {
+          onConfirm && onConfirm();
+          removeConfirmation(id);
+        },
+        onCancel: () => {
+          onCancel && onCancel();
+          removeConfirmation(id);
+        },
+      };
 
-  const showPrompt = useCallback((message, placeholder = "", onConfirm, onCancel) => {
-    const id = Date.now() + Math.random();
-    
-    const prompt = {
-      id,
-      message,
-      placeholder,
-      isPrompt: true,
-      onConfirm: (value) => {
-        onConfirm && onConfirm(value);
-        removeConfirmation(id);
-      },
-      onCancel: () => {
-        onCancel && onCancel();
-        removeConfirmation(id);
-      }
-    };
+      setConfirmations((prev) => [...prev, confirmation]);
+      return id;
+    },
+    [removeConfirmation]
+  );
 
-    setConfirmations(prev => [...prev, prompt]);
-    return id;
-  }, []);
+  const showPrompt = useCallback(
+    (message, placeholder = "", onConfirm, onCancel) => {
+      const id = Date.now() + Math.random();
 
-  const removeConfirmation = useCallback((id) => {
-    setConfirmations(prev => prev.filter(conf => conf.id !== id));
-  }, []);
+      const prompt = {
+        id,
+        message,
+        placeholder,
+        isPrompt: true,
+        onConfirm: (value) => {
+          onConfirm && onConfirm(value);
+          removeConfirmation(id);
+        },
+        onCancel: () => {
+          onCancel && onCancel();
+          removeConfirmation(id);
+        },
+      };
+
+      setConfirmations((prev) => [...prev, prompt]);
+      return id;
+    },
+    [removeConfirmation]
+  );
 
   const value = {
     notifications,
@@ -106,16 +134,16 @@ export const NotificationProvider = ({ children }) => {
     showInfo,
     showWarning,
     showConfirmation,
-    showPrompt
+    showPrompt,
   };
 
   return (
     <NotificationContext.Provider value={value}>
       {children}
       <NotificationContainer />
-      <ConfirmationContainer 
-        confirmations={confirmations} 
-        removeConfirmation={removeConfirmation} 
+      <ConfirmationContainer
+        confirmations={confirmations}
+        removeConfirmation={removeConfirmation}
       />
     </NotificationContext.Provider>
   );
@@ -146,39 +174,41 @@ const NotificationItem = ({ notification, onClose }) => {
 
   const getTypeStyles = () => {
     switch (type) {
-      case 'success':
-        return 'bg-green-500 border-green-600 text-white';
-      case 'error':
-        return 'bg-red-500 border-red-600 text-white';
-      case 'warning':
-        return 'bg-yellow-500 border-yellow-600 text-white';
-      case 'info':
+      case "success":
+        return "bg-green-500 border-green-600 text-white";
+      case "error":
+        return "bg-red-500 border-red-600 text-white";
+      case "warning":
+        return "bg-yellow-500 border-yellow-600 text-white";
+      case "info":
       default:
-        return 'bg-blue-500 border-blue-600 text-white';
+        return "bg-blue-500 border-blue-600 text-white";
     }
   };
 
   const getIcon = () => {
     switch (type) {
-      case 'success':
-        return '✓';
-      case 'error':
-        return '✕';
-      case 'warning':
-        return '⚠';
-      case 'info':
+      case "success":
+        return "✓";
+      case "error":
+        return "✕";
+      case "warning":
+        return "⚠";
+      case "info":
       default:
-        return 'ℹ';
+        return "ℹ";
     }
   };
 
   return (
-    <div className={`
+    <div
+      className={`
       flex items-center justify-between
       min-w-80 max-w-md p-4 rounded-lg border-l-4 shadow-lg
       transform transition-all duration-300 ease-in-out
       ${getTypeStyles()}
-    `}>
+    `}
+    >
       <div className="flex items-center space-x-3">
         <span className="text-lg font-bold">{getIcon()}</span>
         <span className="text-sm font-medium">{message}</span>
@@ -198,62 +228,69 @@ const NotificationItem = ({ notification, onClose }) => {
 export const useConfirmation = () => {
   const [confirmations, setConfirmations] = useState([]);
 
-  const showConfirmation = useCallback((message, onConfirm, onCancel) => {
-    const id = Date.now() + Math.random();
-    
-    const confirmation = {
-      id,
-      message,
-      onConfirm: () => {
-        onConfirm && onConfirm();
-        removeConfirmation(id);
-      },
-      onCancel: () => {
-        onCancel && onCancel();
-        removeConfirmation(id);
-      }
-    };
-
-    setConfirmations(prev => [...prev, confirmation]);
-    return id;
-  }, []);
-
   const removeConfirmation = useCallback((id) => {
-    setConfirmations(prev => prev.filter(conf => conf.id !== id));
+    setConfirmations((prev) => prev.filter((conf) => conf.id !== id));
   }, []);
 
-  const showPrompt = useCallback((message, placeholder = "", onConfirm, onCancel) => {
-    const id = Date.now() + Math.random();
-    
-    const prompt = {
-      id,
-      message,
-      placeholder,
-      isPrompt: true,
-      onConfirm: (value) => {
-        onConfirm && onConfirm(value);
-        removeConfirmation(id);
-      },
-      onCancel: () => {
-        onCancel && onCancel();
-        removeConfirmation(id);
-      }
-    };
+  const showConfirmation = useCallback(
+    (message, onConfirm, onCancel) => {
+      const id = Date.now() + Math.random();
 
-    setConfirmations(prev => [...prev, prompt]);
-    return id;
-  }, []);
+      const confirmation = {
+        id,
+        message,
+        isPrompt: false,
+        onConfirm: () => {
+          onConfirm && onConfirm();
+          removeConfirmation(id);
+        },
+        onCancel: () => {
+          onCancel && onCancel();
+          removeConfirmation(id);
+        },
+      };
 
-  return { 
-    confirmations, 
-    showConfirmation, 
+      setConfirmations((prev) => [...prev, confirmation]);
+      return id;
+    },
+    [removeConfirmation]
+  );
+
+  const showPrompt = useCallback(
+    (message, placeholder = "", onConfirm, onCancel) => {
+      const id = Date.now() + Math.random();
+
+      const prompt = {
+        id,
+        message,
+        placeholder,
+        isPrompt: true,
+        onConfirm: (value) => {
+          onConfirm && onConfirm(value);
+          removeConfirmation(id);
+        },
+        onCancel: () => {
+          onCancel && onCancel();
+          removeConfirmation(id);
+        },
+      };
+
+      setConfirmations((prev) => [...prev, prompt]);
+      return id;
+    },
+    [removeConfirmation]
+  );
+
+  return {
+    confirmations,
+    showConfirmation,
     showPrompt,
     ConfirmationContainer: () => (
-      <ConfirmationContainer 
-        confirmations={confirmations} 
-        removeConfirmation={removeConfirmation} 
+      <ConfirmationContainer
+        confirmations={confirmations}
+        removeConfirmation={removeConfirmation}
       />
-    )
+    ),
   };
 };
 
@@ -263,19 +300,13 @@ const ConfirmationContainer = ({ confirmations, removeConfirmation }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      {confirmations.map((confirmation) => (
+      {confirmations.map((confirmation) =>
         confirmation.isPrompt ? (
-          <PromptDialog
-            key={confirmation.id}
-            {...confirmation}
-          />
+          <PromptDialog key={confirmation.id} {...confirmation} />
         ) : (
-          <ConfirmationDialog
-            key={confirmation.id}
-            {...confirmation}
-          />
+          <ConfirmationDialog key={confirmation.id} {...confirmation} />
         )
-      ))}
+      )}
     </div>
   );
 };
@@ -285,7 +316,9 @@ const ConfirmationDialog = ({ message, onConfirm, onCancel }) => {
   return (
     <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-xl max-w-md mx-4">
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-2">Confirmação</h3>
+        <h3 className="text-lg font-semibold text-gray-800 mb-2">
+          Confirmação
+        </h3>
         <p className="text-sm text-gray-600 whitespace-pre-line">{message}</p>
       </div>
       <div className="flex justify-end space-x-3">
@@ -308,16 +341,16 @@ const ConfirmationDialog = ({ message, onConfirm, onCancel }) => {
 
 // Componente de diálogo de prompt
 const PromptDialog = ({ message, placeholder, onConfirm, onCancel }) => {
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState("");
 
   const handleConfirm = () => {
     onConfirm(inputValue);
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleConfirm();
-    } else if (e.key === 'Escape') {
+    } else if (e.key === "Escape") {
       onCancel();
     }
   };
@@ -325,8 +358,12 @@ const PromptDialog = ({ message, placeholder, onConfirm, onCancel }) => {
   return (
     <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-xl max-w-md mx-4">
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-2">Confirmação</h3>
-        <p className="text-sm text-gray-600 whitespace-pre-line mb-4">{message}</p>
+        <h3 className="text-lg font-semibold text-gray-800 mb-2">
+          Confirmação
+        </h3>
+        <p className="text-sm text-gray-600 whitespace-pre-line mb-4">
+          {message}
+        </p>
         <input
           type="text"
           value={inputValue}

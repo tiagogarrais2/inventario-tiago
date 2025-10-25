@@ -5,13 +5,9 @@ import { useRouter } from "next/navigation";
 import Button from "../../components/Button";
 
 export default function RelatorioPage({ params }) {
-  const [nome, setNome] = useState("");
+  const unwrappedParams = React.use(params);
+  const [nome, setNome] = useState(unwrappedParams?.nome || "");
 
-  useEffect(() => {
-    if (params?.nome) {
-      setNome(params.nome);
-    }
-  }, [params]);
   const { data: session, status } = useSession();
   const router = useRouter();
   const [itensPorSala, setItensPorSala] = useState({});

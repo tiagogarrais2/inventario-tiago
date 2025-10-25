@@ -3,9 +3,6 @@ const nextConfig = {
   // Otimizações para produção
   productionBrowserSourceMaps: false, // Desabilita source maps em produção
 
-  // Configurações de build
-  swcMinify: true,
-
   // Headers de segurança
   async headers() {
     return [
