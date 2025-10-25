@@ -1,4 +1,4 @@
-# 📋 Sistema de Inventário Tiago v2.2.0
+# 📋 Sistema de Inventário Tiago v2.3.0
 
 Sistema completo para gerenciamento de inventários com banco de dados PostgreSQL, autenticação, controle de acesso, auditoria, **sistema de correções avançado** e **funcionalidade de exclusão de inventários**. Desenvolvido em Next.js 15 com NextAuth para autenticação segura via Google OAuth e Prisma ORM para persistência de dados.
 
