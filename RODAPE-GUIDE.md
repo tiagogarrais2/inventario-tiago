@@ -26,7 +26,6 @@ O rodapé compacto contém:
 ### Linha Inferior (Desktop) / Segunda Linha (Mobile)
 
 - Link do GitHub
-- Instituição (IFCE - Campus Tianguá)
 
 ## Layout Responsivo
 
