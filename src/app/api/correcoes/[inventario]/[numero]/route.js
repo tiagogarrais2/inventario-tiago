@@ -182,7 +182,7 @@ export async function GET(request, { params }) {
         <!-- Cabeçalho de navegação -->
         <div class="top-header">
           <h1>
-            <a href="/">Sistema Inventário Tiago</a>
+            <a href="/">Sistema de Inventário</a>
             <span style="font-weight: normal; font-size: 16px; margin-left: 20px;">
               → <a href="/inventario/${inventario}">Voltar ao Inventário</a>
             </span>

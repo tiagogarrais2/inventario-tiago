@@ -9,7 +9,7 @@ export default function Cabecalho() {
   return (
     <div>
       <h1>
-        <Link href={"/"}>Inventário Tiago</Link>
+        <Link href={"/"}>Sistema de Inventário</Link>
       </h1>
 
       <div>
