@@ -17,9 +17,9 @@ const ESTADOS_CONSERVACAO = [
 
 // Lista fixa de status
 const STATUS_OPTIONS = [
+  "Em Uso",
   "Ativo",
   "Baixado",
-  "Em Uso",
   "Ocioso",
   "Em Manutenção",
   "Recuperável",

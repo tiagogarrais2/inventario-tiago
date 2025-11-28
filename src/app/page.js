@@ -98,6 +98,7 @@ export default function Home() {
   return (
     <div>
       <Listar atualizar={atualizar} novoInventario={novoInventario} />
+      <div style={{ height: "250px" }}></div>
       <hr />
       <hr />
       <Criar onUploadConcluido={handleUploadConcluido} />

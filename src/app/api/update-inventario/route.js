@@ -111,10 +111,8 @@ export async function POST(request) {
       if (!usuario) {
         console.warn("Usuário não encontrado para registrar correção");
       } else {
-        // Mapear campos alterados durante o inventário
+        // Mapear campos alterados durante o inventário (excluindo status e estadoConservacao)
         const camposMapeamento = {
-          status: "statusInventario",
-          estadoConservacao: "estadoConservacao",
           cargaAtual: "cargaAtual",
         };
 
