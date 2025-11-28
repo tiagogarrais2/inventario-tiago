@@ -99,6 +99,7 @@ export default function Home() {
     <div>
       <Listar atualizar={atualizar} novoInventario={novoInventario} />
       <hr />
+      <hr />
       <Criar onUploadConcluido={handleUploadConcluido} />
     </div>
   );

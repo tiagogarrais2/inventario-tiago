@@ -136,12 +136,12 @@ export default function Criar({ onUploadConcluido }) {
     <div className="bg-white p-6 rounded-lg shadow-md">
       <div>
         <h2 className="text-xl font-bold text-gray-800 mb-4">
-          Criar um novo inventário
+          Você quer criar o seu próprio inventário?
         </h2>
         <form encType="multipart/form-data">
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Servidor(a) responsável pelo envio:
+              Responsável pelo envio:
             </label>
             <div className="flex items-center space-x-2">
               <input

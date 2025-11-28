@@ -123,7 +123,7 @@ export default function RelatoriosPage({ params }) {
         </Button>
         {/* Relatório Geral */}
         <Button onClick={() => router.push(`/relatorio/${nome}`)}>
-          Relatório Geral
+          📊 Relatório Geral
         </Button>
         {/* Relatório de Itens Movidos */}
         <Button
