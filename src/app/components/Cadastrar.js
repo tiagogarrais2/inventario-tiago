@@ -35,6 +35,7 @@ export default function Cadastrar() {
 
   const [cabecalho, setCabecalho] = useState(null);
   const [salasOptions, setSalasOptions] = useState([]);
+  const [servidoresOptions, setServidoresOptions] = useState([]);
   const [formData, setFormData] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -69,9 +70,10 @@ export default function Cadastrar() {
       }
 
       try {
-        const [cabecalhoRes, salasRes] = await Promise.all([
+        const [cabecalhoRes, salasRes, servidoresRes] = await Promise.all([
           fetch(`/api/cabecalhos?inventario=${encodeURIComponent(nome)}`),
           fetch(`/api/salas?inventario=${encodeURIComponent(nome)}`),
+          fetch(`/api/servidores?inventario=${encodeURIComponent(nome)}`),
         ]);
 
         if (!cabecalhoRes.ok) {
@@ -87,8 +89,16 @@ export default function Cadastrar() {
           );
         }
 
+        if (!servidoresRes.ok) {
+          const errorData = await servidoresRes.json();
+          throw new Error(
+            errorData.error || "Lista de servidores não encontrada ou inválida."
+          );
+        }
+
         let cabecalhoData = await cabecalhoRes.json();
         const salasData = await salasRes.json();
+        const servidoresData = await servidoresRes.json();
 
         cabecalhoData = [
           "DATA DO INVENTARIO",
@@ -97,6 +107,7 @@ export default function Cadastrar() {
         ];
 
         salasData.sort();
+        servidoresData.sort();
 
         const initialData = {};
         cabecalhoData.forEach((field) => {
@@ -155,6 +166,7 @@ export default function Cadastrar() {
 
         setCabecalho(cabecalhoData);
         setSalasOptions(salasData);
+        setServidoresOptions(servidoresData);
         setFormData(initialData);
       } catch (e) {
         console.error("Erro ao carregar dados do formulário:", e);
@@ -292,6 +304,7 @@ export default function Cadastrar() {
           const isNumero = fieldName === "NUMERO";
           const isEstadoConservacao = fieldName === "ESTADO DE CONSERVAÇÃO";
           const isSalaField = fieldName === "SALA";
+          const isCargaAtualField = fieldName === "CARGA ATUAL";
           const isDataInventario = fieldName === "DATA DO INVENTARIO";
           const isServidorInventariante =
             fieldName === "SERVIDOR(A) INVENTARIANTE";
@@ -329,6 +342,22 @@ export default function Cadastrar() {
                   {salasOptions.map((sala) => (
                     <option key={sala} value={sala}>
                       {sala}
+                    </option>
+                  ))}
+                </select>
+              ) : isCargaAtualField ? (
+                <select
+                  id={fieldName}
+                  name={fieldName}
+                  value={formData[fieldName] || ""}
+                  onChange={handleChange}
+                  required
+                  style={{ marginLeft: "10px", padding: "5px" }}
+                >
+                  <option value="">Selecione um servidor</option>
+                  {servidoresOptions.map((servidor) => (
+                    <option key={servidor} value={servidor}>
+                      {servidor}
                     </option>
                   ))}
                 </select>
