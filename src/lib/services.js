@@ -522,6 +522,31 @@ class ItemInventarioService {
     }
   }
 
+  static async findBySerie(nomeInventario, numeroSerie) {
+    try {
+      const inventario = await InventarioService.findByName(nomeInventario);
+
+      if (!inventario) {
+        return null;
+      }
+
+      return await prisma.itemInventario.findFirst({
+        where: {
+          inventarioId: inventario.id,
+          numeroSerie: numeroSerie.toString(),
+        },
+        include: {
+          inventariante: {
+            select: { nome: true, email: true },
+          },
+        },
+      });
+    } catch (error) {
+      console.error(`Erro em findBySerie:`, error);
+      throw error;
+    }
+  }
+
   static async create(nomeInventario, dados) {
     const inventario = await InventarioService.findByName(nomeInventario);
     if (!inventario) throw new Error("Inventário não encontrado");

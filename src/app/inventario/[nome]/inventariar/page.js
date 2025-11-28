@@ -49,6 +49,8 @@ export default function InventariarPage({ params }) {
   const [notificacao, setNotificacao] = useState("");
   const [hasAccess, setHasAccess] = useState(false);
   const [accessLoading, setAccessLoading] = useState(true);
+  const [serieValor, setSerieValor] = useState("");
+  const [mostrarBuscaSerie, setMostrarBuscaSerie] = useState(false);
   const inputRef = useRef(null);
 
   // Verificar permissões de acesso
@@ -154,6 +156,8 @@ export default function InventariarPage({ params }) {
   async function buscarInventario() {
     setErro("");
     setResultado(null);
+    setMostrarBuscaSerie(false);
+    setSerieValor("");
     if (!valor) return;
 
     try {
@@ -168,6 +172,7 @@ export default function InventariarPage({ params }) {
           errorData.error.includes("Item não encontrado")
         ) {
           setErro("Item não encontrado.");
+          setMostrarBuscaSerie(true);
           return;
         }
         throw new Error(errorData.error || "Erro ao buscar item.");
@@ -184,6 +189,42 @@ export default function InventariarPage({ params }) {
     } catch (error) {
       setErro("Erro ao buscar o item.");
       console.error("Erro na busca:", error);
+    }
+  }
+
+  async function buscarPorSerie() {
+    setErro("");
+    setResultado(null);
+    if (!serieValor) return;
+
+    try {
+      const res = await fetch(
+        `/api/inventario?inventario=${encodeURIComponent(nome)}&serie=${encodeURIComponent(serieValor)}`
+      );
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        if (
+          res.status === 404 &&
+          errorData.error.includes("Item não encontrado")
+        ) {
+          setErro("Item não encontrado pelo número de série.");
+          return;
+        }
+        throw new Error(errorData.error || "Erro ao buscar item por série.");
+      }
+
+      const item = await res.json();
+      setResultado(item);
+
+      // Inicializar selects com valores atuais do item (priorizar campos do inventário)
+      setStatusSelecionado(item.statusInventario || item.status || "Em Uso");
+      setEstadoConservacaoSelecionado(item.estadoConservacao || "Bom");
+      setCargaAtualSelecionada(item.cargaAtual || "");
+      setSalaItemSelecionada(item.sala || "");
+    } catch (error) {
+      setErro("Erro ao buscar o item por série.");
+      console.error("Erro na busca por série:", error);
     }
   }
 
@@ -425,8 +466,60 @@ export default function InventariarPage({ params }) {
       />
       <Button onClick={handleConfirmar}>Confirmar</Button>
 
-      {erro && <p style={{ color: "red" }}>{erro}</p>}
+      {erro && <p style={{ color: "red", textAlign: "center" }}>{erro}</p>}
       {erro === "Item não encontrado." && (
+        <div style={{ textAlign: "center", marginTop: 10, marginBottom: 10 }}>
+          <div
+            style={{
+              display: "inline-block",
+              textAlign: "center",
+            }}
+          >
+            <p style={{ color: "#666", fontSize: "14px", marginBottom: "8px" }}>
+              🔍 Deseja buscar pelo número de série?
+            </p>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "8px",
+                maxWidth: "300px",
+                margin: "0 auto",
+              }}
+            >
+              <input
+                type="text"
+                value={serieValor}
+                onChange={(e) => setSerieValor(e.target.value)}
+                placeholder="Digite o número de série"
+                style={{
+                  padding: "6px 10px",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                  fontSize: "14px",
+                  width: "100%",
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    buscarPorSerie();
+                  }
+                }}
+              />
+              <Button
+                onClick={buscarPorSerie}
+                style={{ padding: "6px 12px", width: "100%" }}
+              >
+                Buscar por Série
+              </Button>
+            </div>
+            <p style={{ color: "#666", fontSize: "14px", marginTop: "8px" }}>
+              ou cadastre um novo item:
+            </p>
+          </div>
+        </div>
+      )}
+      {(erro === "Item não encontrado." ||
+        erro === "Item não encontrado pelo número de série.") && (
         <Button onClick={handleCadastrar} style={{ marginTop: 10 }}>
           Cadastrar item
         </Button>

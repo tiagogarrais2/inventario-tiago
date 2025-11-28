@@ -23,6 +23,7 @@ export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const nomeInventario = searchParams.get("inventario");
   const tombo = searchParams.get("tombo");
+  const serie = searchParams.get("serie");
 
   if (!nomeInventario) {
     return NextResponse.json(
@@ -90,7 +91,9 @@ export async function GET(request) {
         temCorrecoes: correcoesItem.length > 0,
         totalCorrecoes: correcoesItem.length,
         ultimaCorrecao:
-          correcoesItem.length > 0 ? correcoesItem[correcoesItem.length - 1].dataCorrecao : null,
+          correcoesItem.length > 0
+            ? correcoesItem[correcoesItem.length - 1].dataCorrecao
+            : null,
       };
 
       // Registrar acesso ao item no log de auditoria
@@ -104,15 +107,65 @@ export async function GET(request) {
       return NextResponse.json(itemComCorrecoes);
     }
 
+    // Se foi solicitado uma série específica, buscar apenas esse item
+    if (serie) {
+      let item;
+      try {
+        item = await ItemInventarioService.findBySerie(nomeInventario, serie);
+
+        if (!item) {
+          return NextResponse.json(
+            { error: "Item não encontrado." },
+            { status: 404 }
+          );
+        }
+      } catch (error) {
+        console.error(`Erro ao buscar item por série:`, error);
+        return NextResponse.json(
+          { error: `Erro interno: ${error.message}` },
+          { status: 500 }
+        );
+      }
+
+      // Verificar se o item tem correções (mais eficiente)
+      const correcoesItem = await CorrecaoService.findByNumeroOriginal(
+        inventario.nome,
+        item.numero
+      );
+
+      // Adicionar informações de correção ao item
+      const itemComCorrecoes = {
+        ...item,
+        temCorrecoes: correcoesItem.length > 0,
+        totalCorrecoes: correcoesItem.length,
+        ultimaCorrecao:
+          correcoesItem.length > 0
+            ? correcoesItem[correcoesItem.length - 1].dataCorrecao
+            : null,
+      };
+
+      // Registrar acesso ao item no log de auditoria
+      await AuditoriaService.log(
+        "search_item_by_serie",
+        session.user,
+        { serie: serie },
+        inventario.nome
+      );
+
+      return NextResponse.json(itemComCorrecoes);
+    }
+
     // Retornar todos os itens do inventário
     const itens = await ItemInventarioService.listByInventario(inventario.nome);
 
     // Buscar todas as correções do inventário de uma vez (mais eficiente)
-    const todasCorrecoes = await CorrecaoService.listByInventario(inventario.nome);
+    const todasCorrecoes = await CorrecaoService.listByInventario(
+      inventario.nome
+    );
 
     // Agrupar correções por numero do item
     const correcoesPorItem = {};
-    todasCorrecoes.forEach(correcao => {
+    todasCorrecoes.forEach((correcao) => {
       const numero = correcao.numeroItemOriginal;
       if (!correcoesPorItem[numero]) {
         correcoesPorItem[numero] = [];
@@ -121,15 +174,16 @@ export async function GET(request) {
     });
 
     // Adicionar informações de correção para cada item (sem consultas adicionais)
-    const itensComCorrecoes = itens.map(item => {
+    const itensComCorrecoes = itens.map((item) => {
       const correcoesItem = correcoesPorItem[item.numero] || [];
       return {
         ...item,
         temCorrecoes: correcoesItem.length > 0,
         totalCorrecoes: correcoesItem.length,
-        ultimaCorrecao: correcoesItem.length > 0
-          ? correcoesItem[correcoesItem.length - 1].dataCorrecao
-          : null,
+        ultimaCorrecao:
+          correcoesItem.length > 0
+            ? correcoesItem[correcoesItem.length - 1].dataCorrecao
+            : null,
       };
     });
 
