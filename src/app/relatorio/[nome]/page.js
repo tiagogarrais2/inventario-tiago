@@ -15,6 +15,10 @@ export default function RelatorioPage({ params }) {
   const [error, setError] = useState("");
   const [hasAccess, setHasAccess] = useState(false);
   const [accessLoading, setAccessLoading] = useState(true);
+  const [salasFiltradas, setSalasFiltradas] = useState([]);
+  const [todasSalas, setTodasSalas] = useState([]);
+  const [mostrarTodasSalas, setMostrarTodasSalas] = useState(true);
+  const [filtrosVisiveis, setFiltrosVisiveis] = useState(true);
 
   // Verificar permissões de acesso
   useEffect(() => {
@@ -81,6 +85,10 @@ export default function RelatorioPage({ params }) {
           ? await correcoesRes.json()
           : { correcoesPorItem: {} };
         const correcoesPorItem = correcoesData.correcoesPorItem || {};
+
+        // Guardar todas as salas para o filtro
+        setTodasSalas(salas.sort());
+        setSalasFiltradas(salas.sort());
 
         // Agrupar itens por sala
         const agrupado = {};
@@ -155,6 +163,31 @@ export default function RelatorioPage({ params }) {
   if (loading) return <p>Carregando relatório...</p>;
   if (error) return <p style={{ color: "red" }}>{error}</p>;
 
+  const handleToggleSala = (sala) => {
+    if (salasFiltradas.includes(sala)) {
+      setSalasFiltradas(salasFiltradas.filter((s) => s !== sala));
+    } else {
+      setSalasFiltradas([...salasFiltradas, sala]);
+    }
+    setMostrarTodasSalas(false);
+  };
+
+  const handleMostrarTodas = () => {
+    setMostrarTodasSalas(true);
+    setSalasFiltradas([...todasSalas]);
+  };
+
+  const handleLimparFiltros = () => {
+    setMostrarTodasSalas(false);
+    setSalasFiltradas([]);
+  };
+
+  const salasParaExibir = mostrarTodasSalas
+    ? Object.keys(itensPorSala).sort()
+    : Object.keys(itensPorSala)
+        .filter((sala) => salasFiltradas.includes(sala))
+        .sort();
+
   return (
     <div style={{ padding: "20px" }}>
       <h2>Relatório Geral</h2>
@@ -177,8 +210,135 @@ export default function RelatorioPage({ params }) {
           {nome}
         </a>
       </h2>
+
+      {/* Filtro de Salas */}
+      <div
+        style={{
+          marginBottom: "20px",
+          padding: "15px",
+          border: "1px solid #ddd",
+          borderRadius: "5px",
+          backgroundColor: "#f8f9fa",
+        }}
+      >
+        <h3 style={{ margin: 0, marginBottom: "10px" }}>
+          🔍 Filtrar por Salas
+        </h3>
+        <Button
+          onClick={() => setFiltrosVisiveis(!filtrosVisiveis)}
+          style={{
+            backgroundColor: "#6c757d",
+            color: "white",
+            padding: "5px 15px",
+            fontSize: "14px",
+            marginBottom: "10px",
+          }}
+        >
+          {filtrosVisiveis ? "Ocultar Filtros" : "Mostrar Filtros"}
+        </Button>
+
+        {filtrosVisiveis && (
+          <>
+            <div style={{ marginBottom: "10px" }}>
+              <Button
+                onClick={handleMostrarTodas}
+                style={{
+                  marginRight: "10px",
+                  backgroundColor: mostrarTodasSalas ? "#28a745" : "#6c757d",
+                  color: "white",
+                  padding: "5px 10px",
+                  fontSize: "14px",
+                }}
+              >
+                Mostrar Todas
+              </Button>
+              <Button
+                onClick={handleLimparFiltros}
+                style={{
+                  backgroundColor: "#dc3545",
+                  color: "white",
+                  padding: "5px 10px",
+                  fontSize: "14px",
+                }}
+              >
+                Limpar Filtros
+              </Button>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "8px",
+                alignItems: "flex-start",
+              }}
+            >
+              {todasSalas.map((sala) => (
+                <label
+                  key={sala}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "8px 12px",
+                    border: "1px solid #ccc",
+                    borderRadius: "4px",
+                    backgroundColor: salasFiltradas.includes(sala)
+                      ? "#007bff"
+                      : "white",
+                    color: salasFiltradas.includes(sala) ? "white" : "black",
+                    cursor: "pointer",
+                    fontSize: "14px",
+                    textAlign: "left",
+                    width: "100%",
+                    boxSizing: "border-box",
+                    minHeight: "38px",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={salasFiltradas.includes(sala)}
+                    onChange={() => handleToggleSala(sala)}
+                    style={{
+                      marginRight: "8px",
+                      flexShrink: 0,
+                      width: "auto",
+                      maxWidth: "10%",
+                    }}
+                  />
+                  <span style={{ flex: 1 }}>{sala}</span>
+                </label>
+              ))}
+            </div>
+            <div
+              style={{ marginTop: "10px", fontSize: "14px", color: "#6c757d" }}
+            >
+              {mostrarTodasSalas
+                ? `Exibindo todas as ${todasSalas.length} salas`
+                : `Exibindo ${salasFiltradas.length} de ${todasSalas.length} salas`}
+            </div>
+          </>
+        )}
+      </div>
+
+      {salasParaExibir.length === 0 && (
+        <div
+          style={{
+            padding: "20px",
+            border: "1px solid #ddd",
+            backgroundColor: "#f8f9fa",
+            color: "#6c757d",
+            textAlign: "center",
+            borderRadius: "5px",
+            marginBottom: "20px",
+          }}
+        >
+          📭 Nenhuma sala selecionada. Use o filtro acima para selecionar as
+          salas que deseja visualizar.
+        </div>
+      )}
+
       {Object.keys(itensPorSala)
         .sort()
+        .filter((sala) => salasParaExibir.includes(sala))
         .map((sala) => (
           <div key={sala} style={{ marginBottom: "30px" }}>
             <h2>Sala: {sala}</h2>
