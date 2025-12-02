@@ -32,6 +32,7 @@ export default function Home() {
   if (status === "unauthenticated") {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-6">
+        <div style={{ height: "500px" }}></div>
         <h1 className="text-3xl font-bold text-gray-800">
           📋 Sistema de Inventário
         </h1>
@@ -66,8 +67,7 @@ export default function Home() {
         <div className="text-center">
           <p className="text-gray-600 mb-2">Pronto para começar?</p>
           <p className="text-sm text-gray-500 mb-4">
-            Use o botão &quot;Entrar com Google&quot; no cabeçalho para fazer
-            login.
+            Use o botão &quot;Fazer login&quot; no cabeçalho para fazer login.
           </p>
         </div>
 

@@ -25,7 +25,7 @@ export default function Cabecalho() {
         )}
 
         {status === "unauthenticated" && (
-          <Button onClick={() => signIn("google")}>Entrar com Google</Button>
+          <Button onClick={() => signIn("google")}>Fazer login</Button>
         )}
       </div>
     </div>
