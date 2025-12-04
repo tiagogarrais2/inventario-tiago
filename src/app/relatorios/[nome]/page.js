@@ -125,6 +125,10 @@ export default function RelatoriosPage({ params }) {
         <Button onClick={() => router.push(`/relatorio/${nome}`)}>
           📊 Relatório Geral
         </Button>
+        {/* Relatório por Carga Atual */}
+        <Button onClick={() => router.push(`/relatorio-por-servidor/${nome}`)}>
+          👥 Relatório por Carga Atual
+        </Button>
         {/* Relatório de Itens Movidos */}
         <Button
           onClick={() => router.push(`/relatorios/${nome}/itens-movidos`)}
