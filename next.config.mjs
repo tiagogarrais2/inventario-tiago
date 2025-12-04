@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Configuração do Turbopack
+  turbopack: {},
+
   // Otimizações para produção
   productionBrowserSourceMaps: false, // Desabilita source maps em produção
 
