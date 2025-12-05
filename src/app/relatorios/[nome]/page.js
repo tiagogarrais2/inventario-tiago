@@ -93,8 +93,8 @@ export default function RelatoriosPage({ params }) {
     <div>
       {/* Cabeçalho */}
       <div>
-        <h1>
-          Relatórios do Inventário:{" "}
+        <h2>
+          Relatórios:{" "}
           <a
             href={`/inventario/${nome}`}
             style={{
@@ -112,22 +112,22 @@ export default function RelatoriosPage({ params }) {
           >
             {nome}
           </a>
-        </h1>
+        </h2>
       </div>
 
       {/* Lista de Relatórios Disponíveis */}
       <div>
         {/* Dashboard */}
         <Button onClick={() => router.push(`/inventario/${nome}/dashboard`)}>
-          📊 Dashboard
+          📊 Painel de Controle
         </Button>
         {/* Relatório Geral */}
         <Button onClick={() => router.push(`/relatorio/${nome}`)}>
-          📊 Relatório Geral
+          🏢  Itens organizados por sala
         </Button>
         {/* Relatório por Carga Atual */}
         <Button onClick={() => router.push(`/relatorio-por-servidor/${nome}`)}>
-          👥 Relatório por Carga Atual
+          👥 Itens organizados por servidor
         </Button>
         {/* Relatório de Itens Movidos */}
         <Button
@@ -136,15 +136,7 @@ export default function RelatoriosPage({ params }) {
           🚚 Itens Movidos
         </Button>
         <hr />
-      </div>
-
-      {/* Rodapé informativo */}
-      <div>
-        <p>
-          <strong>Dica:</strong> Novos tipos de relatórios serão adicionados em
-          breve para oferecer diferentes visões dos dados do inventário.
-        </p>
-      </div>
+      </div>    
     </div>
   );
 }

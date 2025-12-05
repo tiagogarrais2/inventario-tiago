@@ -253,7 +253,7 @@ function InventarioDashboardClient({ nomeInventario }) {
               <Button
                 onClick={() => router.push(`/relatorio/${nomeInventario}`)}
               >
-                📊 Relatório Geral
+                📊 Todos os itens organizados por sala
               </Button>
               <Button onClick={() => router.push("/")}>🏠 Início</Button>
             </div>
