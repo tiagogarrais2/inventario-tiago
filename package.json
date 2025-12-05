@@ -12,21 +12,21 @@
     "ensure-db": "node scripts/ensure-database.mjs"
   },
   "dependencies": {
-    "@prisma/client": "^6.16.2",
+    "@prisma/client": "^6.19.0",
     "csv-parser": "^3.2.0",
-    "next": "^15.6.0-canary.57",
+    "next": "^16.0.7",
     "next-auth": "^4.24.13",
     "pg": "^8.16.3",
-    "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3",
-    "@tailwindcss/postcss": "^4",
-    "eslint": "^9",
-    "eslint-config-next": "^15.5.3",
-    "prettier": "^3.6.2",
-    "prisma": "^6.16.2",
-    "tailwindcss": "^4"
+    "@eslint/eslintrc": "^3.3.3",
+    "@tailwindcss/postcss": "^4.1.17",
+    "eslint": "^9.39.1",
+    "eslint-config-next": "^16.0.7",
+    "prettier": "^3.7.4",
+    "prisma": "^6.19.0",
+    "tailwindcss": "^4.1.17"
   }
 }
