@@ -3,6 +3,9 @@ const nextConfig = {
   // Otimizações para produção
   productionBrowserSourceMaps: false, // Desabilita source maps em produção
 
+  // Configuração Turbopack
+  turbopack: {},
+
   // Headers de segurança
   async headers() {
     return [

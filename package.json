@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npx prisma generate && npx next build --webpack",
+    "build": "npx prisma generate && npx next build",
     "start": "next start",
     "lint": "eslint",
     "postinstall": "npx prisma generate && npx prisma db push --accept-data-loss && node scripts/ensure-database.mjs",
