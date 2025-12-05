@@ -30,8 +30,21 @@ export default function Listar({ atualizar, novoInventario }) {
       >
         {inventarios.length === 0 && (
           <TimerText
-            initialTime={3}
-            finalText="Nenhum inventário disponível."
+            initialTime={4}
+            finalText={
+              <span>
+                Solicite seu acesso ao inventário do IFCE no seguinte{" "}
+                <a
+                  href="https://forms.gle/Vb68rtPgdmfF9BwKA"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "#007bff", textDecoration: "underline" }}
+                >
+                  link
+                </a>
+                .
+              </span>
+            }
           />
         )}
         {inventarios.map((nome) => {
