@@ -9,10 +9,10 @@ export default function Rodape() {
     <footer className="bg-gray-800 text-white py-4 mt-auto">
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0 text-sm">
-          <div className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-4">
+          <div className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-4 text-center">
             <span>
-              <strong>Sistema de Inventário v2.3.0</strong> - Desenvolvido por
-              Tiago das Graças Arrais
+              <strong>Sistema de Inventário v2.3.0</strong> <hr /> Desenvolvido
+              por Tiago das Graças Arrais
             </span>
             <span className="hidden sm:inline">•</span>
             <span>Copyright © {currentYear} - Licença MIT</span>
