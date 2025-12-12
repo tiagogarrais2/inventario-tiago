@@ -489,9 +489,13 @@ export default function InventarioPage({ params }) {
       <Button onClick={() => router.push(`/inventario/${nome}/inventariar`)}>
         📝 Realizar Inventário
       </Button>
-      <Button onClick={() => router.push(`/lote-cadastrar?nome=${nome}`)}>
-        📦 Cadastro em Lote
-      </Button>
+
+      <div>
+        <h3>Opções Avançadas</h3>
+        <Button onClick={() => router.push(`/lote-cadastrar?nome=${nome}`)}>
+          📦 Cadastro em Lote
+        </Button>
+      </div>
     </div>
   );
 }

@@ -169,15 +169,30 @@ export default function LoteCadastrar() {
 
         const result = await response.json();
         if (response.ok) {
-          setProgress((prev) => [...prev, `✅ Item ${numero} cadastrado com sucesso.`]);
-          setFinalMessages((prev) => [...prev, `✅ Item ${numero} cadastrado com sucesso.`]);
+          setProgress((prev) => [
+            ...prev,
+            `✅ Item ${numero} cadastrado com sucesso.`,
+          ]);
+          setFinalMessages((prev) => [
+            ...prev,
+            `✅ Item ${numero} cadastrado com sucesso.`,
+          ]);
         } else {
-          setProgress((prev) => [...prev, `❌ Erro no item ${numero}: ${result.error}`]);
-          setFinalMessages((prev) => [...prev, `❌ Erro no item ${numero}: ${result.error}`]);
+          setProgress((prev) => [
+            ...prev,
+            `❌ Erro no item ${numero}: ${result.error}`,
+          ]);
+          setFinalMessages((prev) => [
+            ...prev,
+            `❌ Erro no item ${numero}: ${result.error}`,
+          ]);
         }
       } catch (err) {
         setProgress((prev) => [...prev, `❌ Erro de rede no item ${numero}.`]);
-        setFinalMessages((prev) => [...prev, `❌ Erro de rede no item ${numero}.`]);
+        setFinalMessages((prev) => [
+          ...prev,
+          `❌ Erro de rede no item ${numero}.`,
+        ]);
       }
 
       // Aguardar 4 segundos antes do próximo, exceto no último
@@ -209,13 +224,26 @@ export default function LoteCadastrar() {
     <div>
       <h2>Cadastro em Lote</h2>
       <div style={{ marginBottom: "20px", fontSize: "14px", color: "#555" }}>
-        <p><strong>Instruções de uso:</strong></p>
+        <p>
+          <strong>Atenção:</strong>
+        </p>
         <ul>
-          <li>Adicione múltiplos números de tombo (tombos) usando o botão "+" ao lado do campo.</li>
-          <li>Preencha os campos comuns (como data, servidor, status, etc.) uma vez, pois serão aplicados a todos os itens.</li>
-          <li>Clique em "Enviar Lote" para iniciar o cadastro sequencial.</li>
-          <li>Cada item será enviado com um intervalo de 4 segundos, e você verá confirmações em tempo real no progresso abaixo.</li>
-          <li>Certifique-se de que todos os campos obrigatórios estejam preenchidos antes de enviar.</li>
+          <li>
+            Esta funcionalidade deve ser utilizada para cadastrar itens iguais
+            que não foram encontrados durante o inventário. Exemplo: carteiras
+            escolares idênticas, na mesma sala e que estão nas mesmas condições
+            de conservação.
+          </li>
+          <li>Utilize o botão "+" para adicionar mais tombos de uma vez.</li>
+          <li>
+            Após o envio, cada item será cadastrado individualmente com um
+            intervalo de 4 segundos entre eles para evitar sobrecarga no
+            sistema.
+          </li>
+          <li>
+            O sistema emitirá mensagens de sucesso ou erro para cada item
+            cadastrado no final da página.
+          </li>
         </ul>
       </div>
       <form onSubmit={handleSubmit}>
@@ -223,7 +251,14 @@ export default function LoteCadastrar() {
         <div>
           <label>Números (Tombos):</label>
           {numeros.map((num, index) => (
-            <div key={index} style={{ display: "flex", alignItems: "center", marginBottom: "5px" }}>
+            <div
+              key={index}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                marginBottom: "5px",
+              }}
+            >
               <input
                 type="text"
                 value={num}
@@ -232,13 +267,19 @@ export default function LoteCadastrar() {
                 required
               />
               {numeros.length > 1 && (
-                <button type="button" onClick={() => removeNumero(index)} style={{ marginLeft: "5px" }}>
+                <button
+                  type="button"
+                  onClick={() => removeNumero(index)}
+                  style={{ marginLeft: "5px" }}
+                >
                   -
                 </button>
               )}
             </div>
           ))}
-          <button type="button" onClick={addNumero}>+</button>
+          <button type="button" onClick={addNumero}>
+            +
+          </button>
         </div>
 
         {/* Campos comuns */}
@@ -271,7 +312,12 @@ export default function LoteCadastrar() {
         </div>
         <div>
           <label>Status:</label>
-          <select name="STATUS" value={formData.STATUS} onChange={handleChange} required>
+          <select
+            name="STATUS"
+            value={formData.STATUS}
+            onChange={handleChange}
+            required
+          >
             <option value="">Selecione</option>
             {STATUS_OPTIONS.map((opt) => (
               <option key={opt} value={opt}>
@@ -308,7 +354,12 @@ export default function LoteCadastrar() {
         </div>
         <div>
           <label>Sala:</label>
-          <select name="SALA" value={formData.SALA} onChange={handleChange} required>
+          <select
+            name="SALA"
+            value={formData.SALA}
+            onChange={handleChange}
+            required
+          >
             <option value="">Selecione</option>
             {salasOptions.map((sala) => (
               <option key={sala} value={sala}>
@@ -339,10 +390,16 @@ export default function LoteCadastrar() {
         </Button>
       </form>
 
-  
       {/* Mensagens Finais */}
       {finalMessages.length > 0 && (
-        <div style={{ marginTop: "20px", padding: "10px", border: "1px solid #ccc", borderRadius: "4px" }}>
+        <div
+          style={{
+            marginTop: "20px",
+            padding: "10px",
+            border: "1px solid #ccc",
+            borderRadius: "4px",
+          }}
+        >
           <h3>Mensagens:</h3>
           <ul>
             {finalMessages.map((msg, idx) => (
