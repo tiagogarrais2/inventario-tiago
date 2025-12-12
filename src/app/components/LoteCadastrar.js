@@ -225,14 +225,15 @@ export default function LoteCadastrar() {
       <h2>Cadastro em Lote</h2>
       <div style={{ marginBottom: "20px", fontSize: "14px", color: "#555" }}>
         <p>
-          <strong>Atenção:</strong>
+          <h2>Atenção:</h2>
         </p>
         <ul>
           <li>
-            Esta funcionalidade deve ser utilizada para cadastrar itens iguais
-            que não foram encontrados durante o inventário. Exemplo: carteiras
-            escolares idênticas, na mesma sala e que estão nas mesmas condições
-            de conservação.
+            Esta funcionalidade deve ser utilizada para{" "}
+            <strong>CADASTRAR</strong> um lote de{" "}
+            <strong>itens idênticos </strong> que estão nas{" "}
+            <strong>mesmas condições de conservação</strong> e na{" "}
+            <strong>mesma sala.</strong> Exemplo: carteiras escolares.
           </li>
           <li>Utilize o botão "+" para adicionar mais tombos de uma vez.</li>
           <li>
