@@ -17,6 +17,40 @@ export default function RelatorioPage({ params }) {
   const [accessLoading, setAccessLoading] = useState(true);
   const [salaSelecionada, setSalaSelecionada] = useState("");
   const [todasSalas, setTodasSalas] = useState([]);
+  const [servidores, setServidores] = useState([]);
+  const [modalAberto, setModalAberto] = useState(false);
+  const [itemSelecionado, setItemSelecionado] = useState(null);
+  const [formData, setFormData] = useState({
+    dataInventario: new Date().toISOString().split("T")[0],
+    inventariante: "",
+    salaEncontrada: "",
+    statusInventario: "",
+    cargaAtual: "",
+    estadoConservacao: "",
+    observacoes: "",
+  });
+
+  // Lista fixa de status
+  const STATUS_OPTIONS = [
+    "Em Uso",
+    "Ativo",
+    "Baixado",
+    "Ocioso",
+    "Em Manutenção",
+    "Recuperável",
+    "Em Desfazimento",
+    "Extraviado/Desaparecido",
+    "Pendente",
+  ];
+
+  // Lista fixa de estados de conservação
+  const ESTADOS_CONSERVACAO = [
+    "Bom",
+    "Regular",
+    "Ocioso",
+    "Recuperável",
+    "Antieconômico",
+  ];
 
   // Verificar permissões de acesso
   useEffect(() => {
@@ -55,12 +89,14 @@ export default function RelatorioPage({ params }) {
 
     async function fetchRelatorio() {
       try {
-        // Buscar todas as salas, itens e correções em paralelo
-        const [salasRes, itensRes, correcoesRes] = await Promise.all([
-          fetch(`/api/salas?inventario=${encodeURIComponent(nome)}`),
-          fetch(`/api/inventario?inventario=${encodeURIComponent(nome)}`),
-          fetch(`/api/correcoes-todas/${encodeURIComponent(nome)}`),
-        ]);
+        // Buscar todas as salas, itens, correções e servidores em paralelo
+        const [salasRes, itensRes, correcoesRes, servidoresRes] =
+          await Promise.all([
+            fetch(`/api/salas?inventario=${encodeURIComponent(nome)}`),
+            fetch(`/api/inventario?inventario=${encodeURIComponent(nome)}`),
+            fetch(`/api/correcoes-todas/${encodeURIComponent(nome)}`),
+            fetch(`/api/servidores?inventario=${encodeURIComponent(nome)}`),
+          ]);
 
         if (!salasRes.ok) {
           const errorData = await salasRes.json();
@@ -75,6 +111,17 @@ export default function RelatorioPage({ params }) {
             "Erro ao carregar correções, continuando sem elas:",
             await correcoesRes.text()
           );
+        }
+
+        if (!servidoresRes.ok) {
+          console.warn(
+            "Erro ao carregar servidores, continuando sem lista de servidores:",
+            await servidoresRes.text()
+          );
+          setServidores([]);
+        } else {
+          const servidoresData = await servidoresRes.json();
+          setServidores(servidoresData);
         }
 
         const salas = await salasRes.json();
@@ -117,6 +164,78 @@ export default function RelatorioPage({ params }) {
     }
     fetchRelatorio();
   }, [nome, hasAccess, accessLoading]);
+
+  // Função para abrir modal de inventário
+  const abrirModalInventario = (item) => {
+    setItemSelecionado(item);
+    setFormData({
+      dataInventario: new Date().toISOString().split("T")[0],
+      inventariante: session?.user?.email || "",
+      salaEncontrada: salaSelecionada,
+      statusInventario: item.statusInventario || "Em Uso",
+      cargaAtual: item.cargaAtual || "",
+      estadoConservacao: item.estadoConservacao || "Bom",
+      observacoes: "",
+    });
+    setModalAberto(true);
+  };
+
+  // Função para enviar dados do inventário
+  const enviarInventario = async () => {
+    if (!itemSelecionado) return;
+
+    // Validação dos campos obrigatórios
+    if (!formData.cargaAtual.trim()) {
+      alert('Campo "Carga Atual" é obrigatório.');
+      return;
+    }
+    if (!formData.estadoConservacao) {
+      alert('Campo "Estado de Conservação" é obrigatório.');
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/update-inventario", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          nome: nome,
+          numero: itemSelecionado.numero,
+          salaEncontrada: formData.salaEncontrada,
+          sala: itemSelecionado.salaEncontrada || itemSelecionado.sala,
+          dataInventario: new Date().toISOString(),
+          status: formData.statusInventario,
+          estadoConservacao: formData.estadoConservacao,
+          cargaAtual: formData.cargaAtual,
+          inventariante: formData.inventariante,
+        }),
+      });
+
+      if (response.ok) {
+        // Atualizar o estado local
+        const novosItensPorSala = { ...itensPorSala };
+        const sala = salaSelecionada;
+
+        novosItensPorSala[sala] = novosItensPorSala[sala].map((item) =>
+          item.numero === itemSelecionado.numero
+            ? { ...item, ...formData, dataInventario: formData.dataInventario }
+            : item
+        );
+
+        setItensPorSala(novosItensPorSala);
+        setModalAberto(false);
+        setItemSelecionado(null);
+        alert("Item inventariado com sucesso!");
+      } else {
+        throw new Error("Erro ao inventariar item");
+      }
+    } catch (error) {
+      console.error("Erro:", error);
+      alert("Erro ao inventariar item. Tente novamente.");
+    }
+  };
 
   // Loading de autenticação
   if (status === "loading" || accessLoading) {
@@ -546,10 +665,311 @@ export default function RelatorioPage({ params }) {
                         )}
                     </>
                   )}
+                  {/* Botão de inventário apenas para itens não inventariados */}
+                  {!item.dataInventario && (
+                    <div style={{ marginTop: "10px" }}>
+                      <Button
+                        onClick={() => abrirModalInventario(item)}
+                        style={{
+                          backgroundColor: "#28a745",
+                          color: "white",
+                          padding: "6px 12px",
+                          border: "none",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                          fontSize: "14px",
+                          fontWeight: "bold",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.backgroundColor = "#218838";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.backgroundColor = "#28a745";
+                        }}
+                      >
+                        📝 Inventariar Item
+                      </Button>
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>
           )}
+        </div>
+      )}
+
+      {/* Modal de Inventário */}
+      {modalAberto && itemSelecionado && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0,0,0,0.5)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "white",
+              padding: "20px",
+              borderRadius: "8px",
+              maxWidth: "500px",
+              width: "90%",
+              maxHeight: "80vh",
+              overflowY: "auto",
+            }}
+          >
+            <h3 style={{ marginTop: 0 }}>
+              Inventariar Item: {itemSelecionado.numero}
+            </h3>
+            <p style={{ marginBottom: "15px" }}>
+              <strong>Descrição:</strong> {itemSelecionado.descricao || "N/A"}
+            </p>
+
+            <div style={{ marginBottom: "15px" }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "5px",
+                  fontWeight: "bold",
+                }}
+              >
+                Data do Inventário:
+                <input
+                  type="date"
+                  value={formData.dataInventario}
+                  readOnly
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    marginTop: "5px",
+                    border: "1px solid #ccc",
+                    borderRadius: "4px",
+                    backgroundColor: "#f8f9fa",
+                  }}
+                />
+              </label>
+
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "5px",
+                  fontWeight: "bold",
+                }}
+              >
+                Inventariante:
+                <input
+                  type="text"
+                  value={formData.inventariante}
+                  readOnly
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    marginTop: "5px",
+                    border: "1px solid #ccc",
+                    borderRadius: "4px",
+                    backgroundColor: "#f8f9fa",
+                  }}
+                />
+              </label>
+
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "5px",
+                  fontWeight: "bold",
+                }}
+              >
+                Sala Encontrada:
+                <input
+                  type="text"
+                  value={formData.salaEncontrada}
+                  readOnly
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    marginTop: "5px",
+                    border: "1px solid #ccc",
+                    borderRadius: "4px",
+                    backgroundColor: "#f8f9fa",
+                  }}
+                />
+              </label>
+
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "5px",
+                  fontWeight: "bold",
+                }}
+              >
+                Status do Inventário:
+                <select
+                  value={formData.statusInventario}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      statusInventario: e.target.value,
+                    })
+                  }
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    marginTop: "5px",
+                    border: "1px solid #ccc",
+                    borderRadius: "4px",
+                  }}
+                >
+                  {STATUS_OPTIONS.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "5px",
+                  fontWeight: "bold",
+                }}
+              >
+                Carga Atual:
+                <select
+                  value={formData.cargaAtual}
+                  onChange={(e) =>
+                    setFormData({ ...formData, cargaAtual: e.target.value })
+                  }
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    marginTop: "5px",
+                    border: "1px solid #ccc",
+                    borderRadius: "4px",
+                  }}
+                >
+                  <option value="">Selecione um servidor</option>
+                  {servidores.map((servidor) => (
+                    <option key={servidor} value={servidor}>
+                      {servidor}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "5px",
+                  fontWeight: "bold",
+                }}
+              >
+                Estado de Conservação:
+                <select
+                  value={formData.estadoConservacao}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      estadoConservacao: e.target.value,
+                    })
+                  }
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    marginTop: "5px",
+                    border: "1px solid #ccc",
+                    borderRadius: "4px",
+                  }}
+                >
+                  {ESTADOS_CONSERVACAO.map((estado) => (
+                    <option key={estado} value={estado}>
+                      {estado}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "5px",
+                  fontWeight: "bold",
+                }}
+              >
+                Observações:
+                <textarea
+                  value={formData.observacoes}
+                  onChange={(e) =>
+                    setFormData({ ...formData, observacoes: e.target.value })
+                  }
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    marginTop: "5px",
+                    border: "1px solid #ccc",
+                    borderRadius: "4px",
+                    minHeight: "60px",
+                  }}
+                />
+              </label>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                gap: "10px",
+                justifyContent: "flex-end",
+              }}
+            >
+              <Button
+                onClick={enviarInventario}
+                style={{
+                  backgroundColor: "#28a745",
+                  color: "white",
+                  padding: "8px 16px",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = "#218838";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = "#28a745";
+                }}
+              >
+                ✅ Confirmar Inventário
+              </Button>
+              <Button
+                onClick={() => setModalAberto(false)}
+                style={{
+                  backgroundColor: "#6c757d",
+                  color: "white",
+                  padding: "8px 16px",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = "#5a6268";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = "#6c757d";
+                }}
+              >
+                ❌ Cancelar
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </div>
