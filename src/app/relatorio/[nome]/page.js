@@ -15,10 +15,8 @@ export default function RelatorioPage({ params }) {
   const [error, setError] = useState("");
   const [hasAccess, setHasAccess] = useState(false);
   const [accessLoading, setAccessLoading] = useState(true);
-  const [salasFiltradas, setSalasFiltradas] = useState([]);
+  const [salaSelecionada, setSalaSelecionada] = useState("");
   const [todasSalas, setTodasSalas] = useState([]);
-  const [mostrarTodasSalas, setMostrarTodasSalas] = useState(true);
-  const [filtrosVisiveis, setFiltrosVisiveis] = useState(true);
 
   // Verificar permissões de acesso
   useEffect(() => {
@@ -86,9 +84,8 @@ export default function RelatorioPage({ params }) {
           : { correcoesPorItem: {} };
         const correcoesPorItem = correcoesData.correcoesPorItem || {};
 
-        // Guardar todas as salas para o filtro
+        // Guardar todas as salas para o dropdown
         setTodasSalas(salas.sort());
-        setSalasFiltradas(salas.sort());
 
         // Agrupar itens por sala
         const agrupado = {};
@@ -163,34 +160,13 @@ export default function RelatorioPage({ params }) {
   if (loading) return <p>Carregando relatório...</p>;
   if (error) return <p style={{ color: "red" }}>{error}</p>;
 
-  const handleToggleSala = (sala) => {
-    if (salasFiltradas.includes(sala)) {
-      setSalasFiltradas(salasFiltradas.filter((s) => s !== sala));
-    } else {
-      setSalasFiltradas([...salasFiltradas, sala]);
-    }
-    setMostrarTodasSalas(false);
+  const handleSalaChange = (sala) => {
+    setSalaSelecionada(sala);
   };
-
-  const handleMostrarTodas = () => {
-    setMostrarTodasSalas(true);
-    setSalasFiltradas([...todasSalas]);
-  };
-
-  const handleLimparFiltros = () => {
-    setMostrarTodasSalas(false);
-    setSalasFiltradas([]);
-  };
-
-  const salasParaExibir = mostrarTodasSalas
-    ? Object.keys(itensPorSala).sort()
-    : Object.keys(itensPorSala)
-        .filter((sala) => salasFiltradas.includes(sala))
-        .sort();
 
   return (
     <div style={{ padding: "20px" }}>
-      <h2>Relatório Geral</h2>
+      <h2>Relatório de Itens organizados por sala</h2>
       <h2>
         <a
           href={`/inventario/${nome}`}
@@ -211,7 +187,7 @@ export default function RelatorioPage({ params }) {
         </a>
       </h2>
 
-      {/* Filtro de Salas */}
+      {/* Seleção de Sala */}
       <div
         style={{
           marginBottom: "20px",
@@ -221,105 +197,36 @@ export default function RelatorioPage({ params }) {
           backgroundColor: "#f8f9fa",
         }}
       >
-        <h3 style={{ margin: 0, marginBottom: "10px" }}>
-          🔍 Filtrar por Salas
-        </h3>
-        <Button
-          onClick={() => setFiltrosVisiveis(!filtrosVisiveis)}
+        <h3 style={{ margin: 0, marginBottom: "10px" }}>🏢 Selecionar Sala</h3>
+        <select
+          value={salaSelecionada}
+          onChange={(e) => setSalaSelecionada(e.target.value)}
           style={{
-            backgroundColor: "#6c757d",
-            color: "white",
-            padding: "5px 15px",
+            padding: "8px 12px",
+            border: "1px solid #ccc",
+            borderRadius: "4px",
             fontSize: "14px",
-            marginBottom: "10px",
+            minWidth: "200px",
+            backgroundColor: "white",
           }}
         >
-          {filtrosVisiveis ? "Ocultar Filtros" : "Mostrar Filtros"}
-        </Button>
-
-        {filtrosVisiveis && (
-          <>
-            <div style={{ marginBottom: "10px" }}>
-              <Button
-                onClick={handleMostrarTodas}
-                style={{
-                  marginRight: "10px",
-                  backgroundColor: mostrarTodasSalas ? "#28a745" : "#6c757d",
-                  color: "white",
-                  padding: "5px 10px",
-                  fontSize: "14px",
-                }}
-              >
-                Mostrar Todas
-              </Button>
-              <Button
-                onClick={handleLimparFiltros}
-                style={{
-                  backgroundColor: "#dc3545",
-                  color: "white",
-                  padding: "5px 10px",
-                  fontSize: "14px",
-                }}
-              >
-                Limpar Filtros
-              </Button>
-            </div>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "8px",
-                alignItems: "flex-start",
-              }}
-            >
-              {todasSalas.map((sala) => (
-                <label
-                  key={sala}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    padding: "8px 12px",
-                    border: "1px solid #ccc",
-                    borderRadius: "4px",
-                    backgroundColor: salasFiltradas.includes(sala)
-                      ? "#007bff"
-                      : "white",
-                    color: salasFiltradas.includes(sala) ? "white" : "black",
-                    cursor: "pointer",
-                    fontSize: "14px",
-                    textAlign: "left",
-                    width: "100%",
-                    boxSizing: "border-box",
-                    minHeight: "38px",
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={salasFiltradas.includes(sala)}
-                    onChange={() => handleToggleSala(sala)}
-                    style={{
-                      marginRight: "8px",
-                      flexShrink: 0,
-                      width: "auto",
-                      maxWidth: "10%",
-                    }}
-                  />
-                  <span style={{ flex: 1 }}>{sala}</span>
-                </label>
-              ))}
-            </div>
-            <div
-              style={{ marginTop: "10px", fontSize: "14px", color: "#6c757d" }}
-            >
-              {mostrarTodasSalas
-                ? `Exibindo todas as ${todasSalas.length} salas`
-                : `Exibindo ${salasFiltradas.length} de ${todasSalas.length} salas`}
-            </div>
-          </>
+          <option value="">Selecione uma sala...</option>
+          {todasSalas.map((sala) => (
+            <option key={sala} value={sala}>
+              {sala} ({itensPorSala[sala]?.length || 0} itens)
+            </option>
+          ))}
+        </select>
+        {salaSelecionada && (
+          <span
+            style={{ marginLeft: "10px", fontSize: "14px", color: "#6c757d" }}
+          >
+            {itensPorSala[salaSelecionada]?.length || 0} itens nesta sala
+          </span>
         )}
       </div>
 
-      {salasParaExibir.length === 0 && (
+      {!salaSelecionada && (
         <div
           style={{
             padding: "20px",
@@ -331,62 +238,127 @@ export default function RelatorioPage({ params }) {
             marginBottom: "20px",
           }}
         >
-          📭 Nenhuma sala selecionada. Use o filtro acima para selecionar as
-          salas que deseja visualizar.
+          🏢 Selecione uma sala no dropdown acima para visualizar os itens.
         </div>
       )}
 
-      {Object.keys(itensPorSala)
-        .sort()
-        .filter((sala) => salasParaExibir.includes(sala))
-        .map((sala) => (
-          <div key={sala} style={{ marginBottom: "30px" }}>
-            <h2>Sala: {sala}</h2>
-            {itensPorSala[sala].length === 0 ? (
-              <div
-                style={{
-                  padding: "20px",
-                  border: "1px solid #ddd",
-                  backgroundColor: "#f8f9fa",
-                  color: "#6c757d",
-                  textAlign: "center",
-                  fontStyle: "italic",
-                  borderRadius: "5px",
-                }}
-              >
-                📦 Nenhum item encontrado nesta sala
-              </div>
-            ) : (
-              <ul>
-                {itensPorSala[sala].map((item, index) => (
-                  <li
-                    key={index}
-                    style={{
-                      marginBottom: "10px",
-                      padding: "10px",
-                      border: item.cadastradoDuranteInventario
-                        ? "2px solid #007bff"
-                        : item.dataInventario
-                          ? "2px solid #28a745"
-                          : item.temCorrecoes
-                            ? "2px solid #ff9800"
-                            : "1px solid #ccc",
-                      backgroundColor: item.dataInventario
-                        ? "#d4edda"
-                        : "#f8d7da", // Verde para inventariado, vermelho para não
-                      color: item.dataInventario ? "#155724" : "#721c24",
-                      borderRadius: "5px",
-                      position: "relative",
-                    }}
-                  >
-                    {/* Badge INVENTARIADO - sempre à direita quando presente */}
-                    {item.dataInventario && (
+      {salaSelecionada && (
+        <div style={{ marginBottom: "30px" }}>
+          <h2>Sala: {salaSelecionada}</h2>
+          {!itensPorSala[salaSelecionada] ||
+          itensPorSala[salaSelecionada].length === 0 ? (
+            <div
+              style={{
+                padding: "20px",
+                border: "1px solid #ddd",
+                backgroundColor: "#f8f9fa",
+                color: "#6c757d",
+                textAlign: "center",
+                fontStyle: "italic",
+                borderRadius: "5px",
+              }}
+            >
+              📦 Nenhum item encontrado nesta sala
+            </div>
+          ) : (
+            <ul>
+              {itensPorSala[salaSelecionada].map((item, index) => (
+                <li
+                  key={index}
+                  style={{
+                    marginBottom: "10px",
+                    padding: "10px",
+                    border: item.cadastradoDuranteInventario
+                      ? "2px solid #007bff"
+                      : item.dataInventario
+                        ? "2px solid #28a745"
+                        : item.temCorrecoes
+                          ? "2px solid #ff9800"
+                          : "1px solid #ccc",
+                    backgroundColor: item.dataInventario
+                      ? "#d4edda"
+                      : "#f8d7da", // Verde para inventariado, vermelho para não
+                    color: item.dataInventario ? "#155724" : "#721c24",
+                    borderRadius: "5px",
+                    position: "relative",
+                  }}
+                >
+                  {/* Badge INVENTARIADO - sempre à direita quando presente */}
+                  {item.dataInventario && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: "-8px",
+                        right: "10px",
+                        backgroundColor: "#28a745",
+                        color: "white",
+                        padding: "2px 8px",
+                        fontSize: "12px",
+                        borderRadius: "10px",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      ✅ INVENTARIADO
+                    </div>
+                  )}
+                  {/* Badge CORRIGIDO - posição depende se tem INVENTARIADO */}
+                  {item.temCorrecoes && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: "-8px",
+                        right: item.dataInventario ? "130px" : "10px",
+                        backgroundColor: "#ff9800",
+                        color: "white",
+                        padding: "2px 8px",
+                        fontSize: "12px",
+                        borderRadius: "10px",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      📋 CORRIGIDO
+                    </div>
+                  )}
+                  {/* Badge CADASTRADO - sempre à esquerda quando presente */}
+                  {item.cadastradoDuranteInventario && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: "-8px",
+                        right:
+                          item.dataInventario && item.temCorrecoes
+                            ? "250px"
+                            : item.dataInventario || item.temCorrecoes
+                              ? "130px"
+                              : "10px",
+                        backgroundColor: "#007bff",
+                        color: "white",
+                        padding: "2px 8px",
+                        fontSize: "12px",
+                        borderRadius: "10px",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      📝 CADASTRADO
+                    </div>
+                  )}
+                  {/* Badge MOVIDO - quando item foi encontrado em sala diferente */}
+                  {item.salaEncontrada &&
+                    item.sala &&
+                    item.salaEncontrada !== item.sala && (
                       <div
                         style={{
                           position: "absolute",
                           top: "-8px",
-                          right: "10px",
-                          backgroundColor: "#28a745",
+                          right: (() => {
+                            let position = 10;
+                            if (item.dataInventario) position += 120;
+                            if (item.temCorrecoes) position += 120;
+                            if (item.cadastradoDuranteInventario)
+                              position += 120;
+                            return position + "px";
+                          })(),
+                          backgroundColor: "#9c27b0",
                           color: "white",
                           padding: "2px 8px",
                           fontSize: "12px",
@@ -394,262 +366,192 @@ export default function RelatorioPage({ params }) {
                           fontWeight: "bold",
                         }}
                       >
-                        ✅ INVENTARIADO
+                        🚚 MOVIDO
                       </div>
                     )}
-                    {/* Badge CORRIGIDO - posição depende se tem INVENTARIADO */}
-                    {item.temCorrecoes && (
-                      <div
-                        style={{
-                          position: "absolute",
-                          top: "-8px",
-                          right: item.dataInventario ? "130px" : "10px",
-                          backgroundColor: "#ff9800",
-                          color: "white",
-                          padding: "2px 8px",
-                          fontSize: "12px",
-                          borderRadius: "10px",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        📋 CORRIGIDO
-                      </div>
+                  <strong>Número:</strong> {item.numero} <br />
+                  <strong>Descrição:</strong> {item.descricao || "N/A"} <br />
+                  <strong>Status:</strong>{" "}
+                  {item.statusInventario || item.status || "N/A"} <br />
+                  <strong>Carga atual:</strong> {item.cargaAtual || "N/A"}{" "}
+                  <br />
+                  <strong>Inventariante:</strong>{" "}
+                  {item.inventariante?.nome || item.inventariante || "N/A"}{" "}
+                  <br />
+                  <strong>Data do Inventário:</strong>{" "}
+                  {item.dataInventario
+                    ? new Date(item.dataInventario).toLocaleDateString()
+                    : "Não inventariado"}
+                  {item.salaEncontrada &&
+                    item.sala &&
+                    item.salaEncontrada !== item.sala && (
+                      <>
+                        <br />
+                        <strong style={{ color: "#9c27b0" }}>
+                          🚚 Item movido - Sala original: {item.sala}
+                        </strong>
+                      </>
                     )}
-                    {/* Badge CADASTRADO - sempre à esquerda quando presente */}
-                    {item.cadastradoDuranteInventario && (
-                      <div
-                        style={{
-                          position: "absolute",
-                          top: "-8px",
-                          right:
-                            item.dataInventario && item.temCorrecoes
-                              ? "250px"
-                              : item.dataInventario || item.temCorrecoes
-                                ? "130px"
-                                : "10px",
-                          backgroundColor: "#007bff",
-                          color: "white",
-                          padding: "2px 8px",
-                          fontSize: "12px",
-                          borderRadius: "10px",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        📝 CADASTRADO
-                      </div>
-                    )}
-                    {/* Badge MOVIDO - quando item foi encontrado em sala diferente */}
-                    {item.salaEncontrada &&
-                      item.sala &&
-                      item.salaEncontrada !== item.sala && (
+                  {item.cadastradoDuranteInventario && (
+                    <>
+                      <br />
+                      <strong style={{ color: "#007bff" }}>
+                        🔖 Item cadastrado durante o inventário
+                      </strong>
+                    </>
+                  )}
+                  {item.temCorrecoes && (
+                    <>
+                      <br />
+                      <strong style={{ color: "#ff9800" }}>
+                        📋 Este item possui {item.totalCorrecoes} correção(ões)
+                        de dados
+                      </strong>
+                      {item.ultimaCorrecao && (
                         <div
                           style={{
-                            position: "absolute",
-                            top: "-8px",
-                            right: (() => {
-                              let position = 10;
-                              if (item.dataInventario) position += 120;
-                              if (item.temCorrecoes) position += 120;
-                              if (item.cadastradoDuranteInventario)
-                                position += 120;
-                              return position + "px";
-                            })(),
-                            backgroundColor: "#9c27b0",
-                            color: "white",
-                            padding: "2px 8px",
                             fontSize: "12px",
-                            borderRadius: "10px",
-                            fontWeight: "bold",
+                            color: "#ff9800",
+                            marginTop: "4px",
                           }}
                         >
-                          🚚 MOVIDO
+                          Última correção:{" "}
+                          {new Date(item.ultimaCorrecao).toLocaleString()}
                         </div>
                       )}
-                    <strong>Número:</strong> {item.numero} <br />
-                    <strong>Descrição:</strong> {item.descricao || "N/A"} <br />
-                    <strong>Status:</strong>{" "}
-                    {item.statusInventario || item.status || "N/A"} <br />
-                    <strong>Inventariante:</strong>{" "}
-                    {item.inventariante?.nome || item.inventariante || "N/A"}{" "}
-                    <br />
-                    <strong>Data do Inventário:</strong>{" "}
-                    {item.dataInventario
-                      ? new Date(item.dataInventario).toLocaleDateString()
-                      : "Não inventariado"}
-                    {item.salaEncontrada &&
-                      item.sala &&
-                      item.salaEncontrada !== item.sala && (
-                        <>
-                          <br />
-                          <strong style={{ color: "#9c27b0" }}>
-                            🚚 Item movido - Sala original: {item.sala}
-                          </strong>
-                        </>
-                      )}
-                    {item.cadastradoDuranteInventario && (
-                      <>
-                        <br />
-                        <strong style={{ color: "#007bff" }}>
-                          🔖 Item cadastrado durante o inventário
-                        </strong>
-                      </>
-                    )}
-                    {item.temCorrecoes && (
-                      <>
-                        <br />
-                        <strong style={{ color: "#ff9800" }}>
-                          📋 Este item possui {item.totalCorrecoes}{" "}
-                          correção(ões) de dados
-                        </strong>
-                        {item.ultimaCorrecao && (
+
+                      {/* Histórico completo de correções para impressão */}
+                      {item.historicoCorrecoes &&
+                        item.historicoCorrecoes.length > 0 && (
                           <div
                             style={{
-                              fontSize: "12px",
-                              color: "#ff9800",
-                              marginTop: "4px",
+                              marginTop: "15px",
+                              padding: "10px",
+                              backgroundColor: "#fff3cd",
+                              border: "1px solid #ffeaa7",
+                              borderRadius: "5px",
+                              fontSize: "13px",
                             }}
                           >
-                            Última correção:{" "}
-                            {new Date(item.ultimaCorrecao).toLocaleString()}
-                          </div>
-                        )}
+                            <strong style={{ color: "#856404" }}>
+                              HISTÓRICO DE CORREÇÕES:
+                            </strong>
+                            {item.historicoCorrecoes.map((correcao, idx) => {
+                              const dataCorrecao = new Date(
+                                correcao.createdAt
+                              ).toLocaleString("pt-BR");
 
-                        {/* Histórico completo de correções para impressão */}
-                        {item.historicoCorrecoes &&
-                          item.historicoCorrecoes.length > 0 && (
-                            <div
-                              style={{
-                                marginTop: "15px",
-                                padding: "10px",
-                                backgroundColor: "#fff3cd",
-                                border: "1px solid #ffeaa7",
-                                borderRadius: "5px",
-                                fontSize: "13px",
-                              }}
-                            >
-                              <strong style={{ color: "#856404" }}>
-                                HISTÓRICO DE CORREÇÕES:
-                              </strong>
-                              {item.historicoCorrecoes.map((correcao, idx) => {
-                                const dataCorrecao = new Date(
-                                  correcao.createdAt
-                                ).toLocaleString("pt-BR");
+                              // Extrair diferenças das observações
+                              let dadosCorrigidos = {};
+                              let observacoesLimpas =
+                                correcao.observacoes || "";
 
-                                // Extrair diferenças das observações
-                                let dadosCorrigidos = {};
-                                let observacoesLimpas =
-                                  correcao.observacoes || "";
+                              const regexCampos = /Campos alterados: (.+)/;
+                              const match =
+                                observacoesLimpas.match(regexCampos);
 
-                                const regexCampos = /Campos alterados: (.+)/;
-                                const match =
-                                  observacoesLimpas.match(regexCampos);
+                              if (match) {
+                                observacoesLimpas = observacoesLimpas
+                                  .replace(/\n\nCampos alterados:.+/, "")
+                                  .trim();
+                                const camposTexto = match[1];
+                                const campos = camposTexto.split(" | ");
 
-                                if (match) {
-                                  observacoesLimpas = observacoesLimpas
-                                    .replace(/\n\nCampos alterados:.+/, "")
-                                    .trim();
-                                  const camposTexto = match[1];
-                                  const campos = camposTexto.split(" | ");
+                                campos.forEach((campo) => {
+                                  const [nome, valores] = campo.split(": ");
+                                  if (valores) {
+                                    const [original, novo] =
+                                      valores.split(" → ");
+                                    dadosCorrigidos[nome] = {
+                                      original:
+                                        original?.replace(/&quot;/g, "") || "",
+                                      novo: novo?.replace(/&quot;/g, "") || "",
+                                    };
+                                  }
+                                });
+                              }
 
-                                  campos.forEach((campo) => {
-                                    const [nome, valores] = campo.split(": ");
-                                    if (valores) {
-                                      const [original, novo] =
-                                        valores.split(" → ");
-                                      dadosCorrigidos[nome] = {
-                                        original:
-                                          original?.replace(/&quot;/g, "") ||
-                                          "",
-                                        novo:
-                                          novo?.replace(/&quot;/g, "") || "",
-                                      };
-                                    }
-                                  });
-                                }
-
-                                return (
+                              return (
+                                <div
+                                  key={idx}
+                                  style={{
+                                    marginTop: "10px",
+                                    paddingTop: "10px",
+                                    borderTop:
+                                      idx > 0 ? "1px solid #ddd" : "none",
+                                  }}
+                                >
                                   <div
-                                    key={idx}
                                     style={{
-                                      marginTop: "10px",
-                                      paddingTop: "10px",
-                                      borderTop:
-                                        idx > 0 ? "1px solid #ddd" : "none",
+                                      fontWeight: "bold",
+                                      color: "#856404",
                                     }}
                                   >
-                                    <div
-                                      style={{
-                                        fontWeight: "bold",
-                                        color: "#856404",
-                                      }}
-                                    >
-                                      Correção #{idx + 1} • {dataCorrecao} •
-                                      Por:{" "}
-                                      {correcao.inventariante?.nome ||
-                                        correcao.inventariante?.email ||
-                                        "Usuário não identificado"}
-                                    </div>
-
-                                    {Object.keys(dadosCorrigidos).length > 0 &&
-                                      Object.entries(dadosCorrigidos).map(
-                                        ([campo, valor]) => (
-                                          <div
-                                            key={campo}
-                                            style={{ marginTop: "5px" }}
-                                          >
-                                            <div
-                                              style={{
-                                                fontWeight: "bold",
-                                                fontSize: "12px",
-                                              }}
-                                            >
-                                              {campo}
-                                            </div>
-                                            <div style={{ fontSize: "12px" }}>
-                                              Valor original: &quot;
-                                              {valor?.original ||
-                                                "Não informado"}
-                                              &quot; → Novo valor: &quot;
-                                              {valor?.novo || "Não informado"}
-                                              &quot;
-                                            </div>
-                                          </div>
-                                        )
-                                      )}
-
-                                    {observacoesLimpas && (
-                                      <div style={{ marginTop: "8px" }}>
-                                        <div
-                                          style={{
-                                            fontWeight: "bold",
-                                            fontSize: "12px",
-                                          }}
-                                        >
-                                          📝 Observações
-                                        </div>
-                                        <div
-                                          style={{
-                                            fontSize: "12px",
-                                            fontStyle: "italic",
-                                          }}
-                                        >
-                                          {observacoesLimpas}
-                                        </div>
-                                      </div>
-                                    )}
+                                    Correção #{idx + 1} • {dataCorrecao} • Por:{" "}
+                                    {correcao.inventariante?.nome ||
+                                      correcao.inventariante?.email ||
+                                      "Usuário não identificado"}
                                   </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                      </>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        ))}
+
+                                  {Object.keys(dadosCorrigidos).length > 0 &&
+                                    Object.entries(dadosCorrigidos).map(
+                                      ([campo, valor]) => (
+                                        <div
+                                          key={campo}
+                                          style={{ marginTop: "5px" }}
+                                        >
+                                          <div
+                                            style={{
+                                              fontWeight: "bold",
+                                              fontSize: "12px",
+                                            }}
+                                          >
+                                            {campo}
+                                          </div>
+                                          <div style={{ fontSize: "12px" }}>
+                                            Valor original: &quot;
+                                            {valor?.original || "Não informado"}
+                                            &quot; → Novo valor: &quot;
+                                            {valor?.novo || "Não informado"}
+                                            &quot;
+                                          </div>
+                                        </div>
+                                      )
+                                    )}
+
+                                  {observacoesLimpas && (
+                                    <div style={{ marginTop: "8px" }}>
+                                      <div
+                                        style={{
+                                          fontWeight: "bold",
+                                          fontSize: "12px",
+                                        }}
+                                      >
+                                        📝 Observações
+                                      </div>
+                                      <div
+                                        style={{
+                                          fontSize: "12px",
+                                          fontStyle: "italic",
+                                        }}
+                                      >
+                                        {observacoesLimpas}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                    </>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
     </div>
   );
 }
