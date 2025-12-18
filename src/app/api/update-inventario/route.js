@@ -32,6 +32,7 @@ export async function POST(request) {
       estadoConservacao,
       cargaAtual,
       inventariante,
+      observacoes,
     } = await request.json();
 
     console.log(`📝 Atualizando item ${numero} no inventário: ${nome}`);
@@ -44,6 +45,7 @@ export async function POST(request) {
       estadoConservacao,
       cargaAtual,
       inventariante,
+      observacoes,
     });
 
     // Verificar se o inventário existe
@@ -90,6 +92,7 @@ export async function POST(request) {
       statusInventario: status || null,
       estadoConservacao: estadoConservacao || null,
       cargaAtual: cargaAtual || null,
+      observacoesInventario: observacoes || null,
     };
 
     console.log(`💾 Atualizando item no banco:`, updateData);

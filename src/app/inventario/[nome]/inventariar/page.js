@@ -51,6 +51,7 @@ export default function InventariarPage({ params }) {
   const [accessLoading, setAccessLoading] = useState(true);
   const [serieValor, setSerieValor] = useState("");
   const [mostrarBuscaSerie, setMostrarBuscaSerie] = useState(false);
+  const [observacoes, setObservacoes] = useState("");
   const inputRef = useRef(null);
 
   // Verificar permissões de acesso
@@ -186,6 +187,7 @@ export default function InventariarPage({ params }) {
       setEstadoConservacaoSelecionado(item.estadoConservacao || "Bom");
       setCargaAtualSelecionada(item.cargaAtual || "");
       setSalaItemSelecionada(item.sala || "");
+      setObservacoes(item.observacoesInventario || "");
     } catch (error) {
       setErro("Erro ao buscar o item.");
       console.error("Erro na busca:", error);
@@ -222,6 +224,7 @@ export default function InventariarPage({ params }) {
       setEstadoConservacaoSelecionado(item.estadoConservacao || "Bom");
       setCargaAtualSelecionada(item.cargaAtual || "");
       setSalaItemSelecionada(item.sala || "");
+      setObservacoes(item.observacoesInventario || "");
     } catch (error) {
       setErro("Erro ao buscar o item por série.");
       console.error("Erro na busca por série:", error);
@@ -257,6 +260,7 @@ export default function InventariarPage({ params }) {
           estadoConservacao: estadoConservacaoSelecionado,
           cargaAtual: cargaAtualSelecionada,
           inventariante,
+          observacoes,
         }),
       });
 
@@ -722,6 +726,32 @@ export default function InventariarPage({ params }) {
               Este item já foi inventariado.
             </p>
           )}
+          {/* Campo de observações */}
+          <div style={{ marginTop: "16px", marginBottom: "16px" }}>
+            <label
+              style={{
+                display: "block",
+                fontWeight: "bold",
+                marginBottom: "4px",
+              }}
+            >
+              📝 Observações:
+            </label>
+            <textarea
+              value={observacoes}
+              onChange={(e) => setObservacoes(e.target.value)}
+              placeholder="Digite observações sobre o item (opcional)"
+              style={{
+                width: "100%",
+                padding: "8px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+                fontSize: "14px",
+                minHeight: "60px",
+                resize: "vertical",
+              }}
+            />
+          </div>
           {/* Campos para confirmação - sempre mostra */}
           <br />
           <Button

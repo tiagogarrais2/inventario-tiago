@@ -82,6 +82,7 @@ model ItemInventario {
   inventarianteId          String?
   salaEncontrada           String?  @map("sala_encontrada")
   statusInventario         String?  @map("status_inventario")
+  observacoesInventario    String?  @map("observacoes_inventario")
   cadastradoDuranteInventario Boolean @default(false) @map("cadastrado_durante_inventario")
   
   createdAt         DateTime @default(now())
