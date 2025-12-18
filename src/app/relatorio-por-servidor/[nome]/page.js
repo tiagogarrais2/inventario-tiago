@@ -20,6 +20,7 @@ export default function RelatorioPorServidorPage({ params }) {
   const [mostrarTodosServidores, setMostrarTodosServidores] = useState(true);
   const [modalAberto, setModalAberto] = useState(false);
   const [itemSelecionado, setItemSelecionado] = useState(null);
+  const [salas, setSalas] = useState([]);
   const [formData, setFormData] = useState({
     dataInventario: new Date().toISOString().split("T")[0],
     inventariante: "",
@@ -89,11 +90,12 @@ export default function RelatorioPorServidorPage({ params }) {
 
     async function fetchRelatorio() {
       try {
-        // Buscar todos os servidores, itens e correções em paralelo
-        const [servidoresRes, itensRes, correcoesRes] = await Promise.all([
+        // Buscar todos os servidores, itens, correções e salas em paralelo
+        const [servidoresRes, itensRes, correcoesRes, salasRes] = await Promise.all([
           fetch(`/api/servidores?inventario=${encodeURIComponent(nome)}`),
           fetch(`/api/inventario?inventario=${encodeURIComponent(nome)}`),
           fetch(`/api/correcoes-todas/${encodeURIComponent(nome)}`),
+          fetch(`/api/salas?inventario=${encodeURIComponent(nome)}`),
         ]);
 
         if (!servidoresRes.ok) {
@@ -110,6 +112,12 @@ export default function RelatorioPorServidorPage({ params }) {
             await correcoesRes.text()
           );
         }
+        if (!salasRes.ok) {
+          console.warn(
+            "Erro ao carregar salas, continuando sem elas:",
+            await salasRes.text()
+          );
+        }
 
         const servidores = await servidoresRes.json();
         const itens = await itensRes.json();
@@ -117,10 +125,24 @@ export default function RelatorioPorServidorPage({ params }) {
           ? await correcoesRes.json()
           : { correcoesPorItem: {} };
         const correcoesPorItem = correcoesData.correcoesPorItem || {};
+        const salasData = salasRes.ok ? await salasRes.json() : [];
+
+        // Coletar salas únicas dos itens
+        const salasSet = new Set();
+        itens.forEach(item => {
+          if (item.sala) salasSet.add(item.sala);
+          if (item.salaEncontrada) salasSet.add(item.salaEncontrada);
+        });
+        // Adicionar salas da API também
+        salasData.forEach(sala => {
+          if (sala.nome) salasSet.add(sala.nome);
+        });
+        const salasFromItems = Array.from(salasSet).filter(s => s).sort();
 
         // Guardar todos os servidores para o filtro
         setTodosServidores(servidores.sort());
         setServidoresFiltrados(servidores.sort());
+        setSalas(salasFromItems);
 
         // Agrupar itens por servidor (cargaAtual)
         const agrupado = {};
@@ -857,8 +879,7 @@ export default function RelatorioPorServidorPage({ params }) {
                 }}
               >
                 Sala Encontrada:
-                <input
-                  type="text"
+                <select
                   value={formData.salaEncontrada}
                   onChange={(e) =>
                     setFormData({ ...formData, salaEncontrada: e.target.value })
@@ -870,7 +891,14 @@ export default function RelatorioPorServidorPage({ params }) {
                     border: "1px solid #ccc",
                     borderRadius: "4px",
                   }}
-                />
+                >
+                  <option value="">Selecione uma sala</option>
+                  {salas.map((sala) => (
+                    <option key={sala} value={sala}>
+                      {sala}
+                    </option>
+                  ))}
+                </select>
               </label>
 
               <label

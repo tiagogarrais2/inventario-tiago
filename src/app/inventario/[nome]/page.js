@@ -49,9 +49,13 @@ export default function InventarioPage({ params }) {
         if (response.ok) {
           setHasAccess(data.hasAccess);
           setIsOwner(data.isOwner);
+          if (!data.hasAccess) {
+            setShowAccessDeniedTimer(true);
+          }
         } else {
           setHasAccess(false);
           setIsOwner(false);
+          setShowAccessDeniedTimer(true);
         }
       } catch (error) {
         console.error("Erro ao verificar permissões:", error);
@@ -60,11 +64,6 @@ export default function InventarioPage({ params }) {
       }
 
       setAccessLoading(false);
-
-      // Se não tem acesso, mostrar timer antes da tela final
-      if (!data?.hasAccess) {
-        setShowAccessDeniedTimer(true);
-      }
     }
 
     verificarPermissoes();
