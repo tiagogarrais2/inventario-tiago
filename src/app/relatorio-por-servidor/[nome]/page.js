@@ -91,12 +91,13 @@ export default function RelatorioPorServidorPage({ params }) {
     async function fetchRelatorio() {
       try {
         // Buscar todos os servidores, itens, correções e salas em paralelo
-        const [servidoresRes, itensRes, correcoesRes, salasRes] = await Promise.all([
-          fetch(`/api/servidores?inventario=${encodeURIComponent(nome)}`),
-          fetch(`/api/inventario?inventario=${encodeURIComponent(nome)}`),
-          fetch(`/api/correcoes-todas/${encodeURIComponent(nome)}`),
-          fetch(`/api/salas?inventario=${encodeURIComponent(nome)}`),
-        ]);
+        const [servidoresRes, itensRes, correcoesRes, salasRes] =
+          await Promise.all([
+            fetch(`/api/servidores?inventario=${encodeURIComponent(nome)}`),
+            fetch(`/api/inventario?inventario=${encodeURIComponent(nome)}`),
+            fetch(`/api/correcoes-todas/${encodeURIComponent(nome)}`),
+            fetch(`/api/salas?inventario=${encodeURIComponent(nome)}`),
+          ]);
 
         if (!servidoresRes.ok) {
           const errorData = await servidoresRes.json();
@@ -129,15 +130,17 @@ export default function RelatorioPorServidorPage({ params }) {
 
         // Coletar salas únicas dos itens
         const salasSet = new Set();
-        itens.forEach(item => {
+        itens.forEach((item) => {
           if (item.sala) salasSet.add(item.sala);
           if (item.salaEncontrada) salasSet.add(item.salaEncontrada);
         });
         // Adicionar salas da API também
-        salasData.forEach(sala => {
+        salasData.forEach((sala) => {
           if (sala.nome) salasSet.add(sala.nome);
         });
-        const salasFromItems = Array.from(salasSet).filter(s => s).sort();
+        const salasFromItems = Array.from(salasSet)
+          .filter((s) => s)
+          .sort();
 
         // Guardar todos os servidores para o filtro
         setTodosServidores(servidores.sort());
@@ -185,7 +188,7 @@ export default function RelatorioPorServidorPage({ params }) {
       statusInventario: item.statusInventario || "Em Uso",
       cargaAtual: item.cargaAtual || "",
       estadoConservacao: item.estadoConservacao || "Bom",
-      observacoes: "",
+      observacoes: item.observacoesInventario || "",
     });
     setModalAberto(true);
   };
@@ -220,6 +223,7 @@ export default function RelatorioPorServidorPage({ params }) {
           estadoConservacao: formData.estadoConservacao,
           cargaAtual: formData.cargaAtual,
           inventariante: formData.inventariante,
+          observacoes: formData.observacoes,
         }),
       });
 
@@ -253,12 +257,14 @@ export default function RelatorioPorServidorPage({ params }) {
             ...novosItensPorServidor[servidor][itemIndex],
             ...formData,
             dataInventario: formData.dataInventario,
+            observacoesInventario: formData.observacoes,
           };
         } else {
           novosItensPorServidor[servidor].push({
             ...itemSelecionado,
             ...formData,
             dataInventario: formData.dataInventario,
+            observacoesInventario: formData.observacoes,
           });
         }
 
@@ -589,6 +595,13 @@ export default function RelatorioPorServidorPage({ params }) {
                     {item.dataInventario
                       ? new Date(item.dataInventario).toLocaleDateString()
                       : "Não inventariado"}
+                    {item.observacoesInventario && (
+                      <>
+                        <br />
+                        <strong>📝 Observações:</strong>{" "}
+                        {item.observacoesInventario}
+                      </>
+                    )}
                     {item.salaEncontrada &&
                       item.sala &&
                       item.salaEncontrada !== item.sala && (

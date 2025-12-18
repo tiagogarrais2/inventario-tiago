@@ -286,6 +286,13 @@ export default function RelatorioItensMovidos({ params }) {
                             "pt-BR"
                           )
                         : "Não inventariado"}
+                      {item.observacoesInventario && (
+                        <>
+                          <br />
+                          <strong>📝 Observações:</strong>{" "}
+                          {item.observacoesInventario}
+                        </>
+                      )}
                     </div>
                   </div>
 

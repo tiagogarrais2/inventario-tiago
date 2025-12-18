@@ -501,6 +501,13 @@ export default function RelatorioPage({ params }) {
                   {item.dataInventario
                     ? new Date(item.dataInventario).toLocaleDateString()
                     : "Não inventariado"}
+                  {item.observacoesInventario && (
+                    <>
+                      <br />
+                      <strong>📝 Observações:</strong>{" "}
+                      {item.observacoesInventario}
+                    </>
+                  )}
                   {item.salaEncontrada &&
                     item.sala &&
                     item.salaEncontrada !== item.sala && (
