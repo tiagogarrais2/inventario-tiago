@@ -330,17 +330,29 @@ export default function RelatorioPage({ params }) {
           }}
         >
           <option value="">Selecione uma sala...</option>
+          <option value="todas">🏢 Todas as salas</option>
           {todasSalas.map((sala) => (
             <option key={sala} value={sala}>
               {sala} ({itensPorSala[sala]?.length || 0} itens)
             </option>
           ))}
         </select>
-        {salaSelecionada && (
+        {salaSelecionada && salaSelecionada !== "todas" && (
           <span
             style={{ marginLeft: "10px", fontSize: "14px", color: "#6c757d" }}
           >
             {itensPorSala[salaSelecionada]?.length || 0} itens nesta sala
+          </span>
+        )}
+        {salaSelecionada === "todas" && (
+          <span
+            style={{ marginLeft: "10px", fontSize: "14px", color: "#6c757d" }}
+          >
+            {todasSalas.reduce(
+              (total, sala) => total + (itensPorSala[sala]?.length || 0),
+              0
+            )}{" "}
+            itens em todas as salas
           </span>
         )}
       </div>
@@ -361,7 +373,7 @@ export default function RelatorioPage({ params }) {
         </div>
       )}
 
-      {salaSelecionada && (
+      {salaSelecionada && salaSelecionada !== "todas" && (
         <div style={{ marginBottom: "30px" }}>
           <h2>Sala: {salaSelecionada}</h2>
           {!itensPorSala[salaSelecionada] ||
@@ -701,6 +713,393 @@ export default function RelatorioPage({ params }) {
                 </li>
               ))}
             </ul>
+          )}
+        </div>
+      )}
+
+      {salaSelecionada === "todas" && (
+        <div style={{ marginBottom: "30px" }}>
+          <h2>🏢 Todas as Salas</h2>
+          {todasSalas.length === 0 ? (
+            <div
+              style={{
+                padding: "20px",
+                border: "1px solid #ddd",
+                backgroundColor: "#f8f9fa",
+                color: "#6c757d",
+                textAlign: "center",
+                fontStyle: "italic",
+                borderRadius: "5px",
+              }}
+            >
+              📦 Nenhuma sala encontrada
+            </div>
+          ) : (
+            todasSalas.sort().map((sala) => (
+              <div key={sala} style={{ marginBottom: "30px" }}>
+                <h3>Sala: {sala}</h3>
+                {!itensPorSala[sala] || itensPorSala[sala].length === 0 ? (
+                  <div
+                    style={{
+                      padding: "20px",
+                      border: "1px solid #ddd",
+                      backgroundColor: "#f8f9fa",
+                      color: "#6c757d",
+                      textAlign: "center",
+                      fontStyle: "italic",
+                      borderRadius: "5px",
+                    }}
+                  >
+                    📦 Nenhum item encontrado nesta sala
+                  </div>
+                ) : (
+                  <ul>
+                    {itensPorSala[sala].map((item, index) => (
+                      <li
+                        key={index}
+                        style={{
+                          marginBottom: "10px",
+                          padding: "10px",
+                          border: item.cadastradoDuranteInventario
+                            ? "2px solid #007bff"
+                            : item.dataInventario
+                              ? "2px solid #28a745"
+                              : item.temCorrecoes
+                                ? "2px solid #ff9800"
+                                : "1px solid #ccc",
+                          backgroundColor: item.dataInventario
+                            ? "#d4edda"
+                            : "#f8d7da", // Verde para inventariado, vermelho para não
+                          color: item.dataInventario ? "#155724" : "#721c24",
+                          borderRadius: "5px",
+                          position: "relative",
+                        }}
+                      >
+                        {/* Badge INVENTARIADO - sempre à direita quando presente */}
+                        {item.dataInventario && (
+                          <div
+                            style={{
+                              position: "absolute",
+                              top: "-8px",
+                              right: "10px",
+                              backgroundColor: "#28a745",
+                              color: "white",
+                              padding: "2px 8px",
+                              fontSize: "12px",
+                              borderRadius: "10px",
+                              fontWeight: "bold",
+                            }}
+                          >
+                            ✅ INVENTARIADO
+                          </div>
+                        )}
+                        {/* Badge CORRIGIDO - posição depende se tem INVENTARIADO */}
+                        {item.temCorrecoes && (
+                          <div
+                            style={{
+                              position: "absolute",
+                              top: "-8px",
+                              right: item.dataInventario ? "130px" : "10px",
+                              backgroundColor: "#ff9800",
+                              color: "white",
+                              padding: "2px 8px",
+                              fontSize: "12px",
+                              borderRadius: "10px",
+                              fontWeight: "bold",
+                            }}
+                          >
+                            📋 CORRIGIDO
+                          </div>
+                        )}
+                        {/* Badge CADASTRADO - sempre à esquerda quando presente */}
+                        {item.cadastradoDuranteInventario && (
+                          <div
+                            style={{
+                              position: "absolute",
+                              top: "-8px",
+                              right:
+                                item.dataInventario && item.temCorrecoes
+                                  ? "250px"
+                                  : item.dataInventario || item.temCorrecoes
+                                    ? "130px"
+                                    : "10px",
+                              backgroundColor: "#007bff",
+                              color: "white",
+                              padding: "2px 8px",
+                              fontSize: "12px",
+                              borderRadius: "10px",
+                              fontWeight: "bold",
+                            }}
+                          >
+                            📝 CADASTRADO
+                          </div>
+                        )}
+                        {/* Badge MOVIDO - quando item foi encontrado em sala diferente */}
+                        {item.salaEncontrada &&
+                          item.sala &&
+                          item.salaEncontrada !== item.sala && (
+                            <div
+                              style={{
+                                position: "absolute",
+                                top: "-8px",
+                                right: (() => {
+                                  let position = 10;
+                                  if (item.dataInventario) position += 120;
+                                  if (item.temCorrecoes) position += 120;
+                                  if (item.cadastradoDuranteInventario)
+                                    position += 120;
+                                  return position + "px";
+                                })(),
+                                backgroundColor: "#9c27b0",
+                                color: "white",
+                                padding: "2px 8px",
+                                fontSize: "12px",
+                                borderRadius: "10px",
+                                fontWeight: "bold",
+                              }}
+                            >
+                              🚚 MOVIDO
+                            </div>
+                          )}
+                        <strong>Número:</strong> {item.numero} <br />
+                        <strong>Descrição:</strong> {item.descricao || "N/A"}{" "}
+                        <br />
+                        <strong>Status:</strong>{" "}
+                        {item.statusInventario || item.status || "N/A"} <br />
+                        <strong>Carga atual:</strong> {item.cargaAtual || "N/A"}{" "}
+                        <br />
+                        <strong>Inventariante:</strong>{" "}
+                        {item.inventariante?.nome ||
+                          item.inventariante ||
+                          "N/A"}{" "}
+                        <br />
+                        <strong>Data do Inventário:</strong>{" "}
+                        {item.dataInventario
+                          ? new Date(item.dataInventario).toLocaleDateString()
+                          : "Não inventariado"}
+                        {item.observacoesInventario && (
+                          <>
+                            <br />
+                            <strong>📝 Observações:</strong>{" "}
+                            {item.observacoesInventario}
+                          </>
+                        )}
+                        {item.salaEncontrada &&
+                          item.sala &&
+                          item.salaEncontrada !== item.sala && (
+                            <>
+                              <br />
+                              <strong style={{ color: "#9c27b0" }}>
+                                🚚 Item movido - Sala original: {item.sala}
+                              </strong>
+                            </>
+                          )}
+                        {item.cadastradoDuranteInventario && (
+                          <>
+                            <br />
+                            <strong style={{ color: "#007bff" }}>
+                              🔖 Item cadastrado durante o inventário
+                            </strong>
+                          </>
+                        )}
+                        {item.temCorrecoes && (
+                          <>
+                            <br />
+                            <strong style={{ color: "#ff9800" }}>
+                              📋 Este item possui {item.totalCorrecoes}{" "}
+                              correção(ões) de dados
+                            </strong>
+                            {item.ultimaCorrecao && (
+                              <div
+                                style={{
+                                  fontSize: "12px",
+                                  color: "#ff9800",
+                                  marginTop: "4px",
+                                }}
+                              >
+                                Última correção:{" "}
+                                {new Date(item.ultimaCorrecao).toLocaleString()}
+                              </div>
+                            )}
+
+                            {/* Histórico completo de correções para impressão */}
+                            {item.historicoCorrecoes &&
+                              item.historicoCorrecoes.length > 0 && (
+                                <div
+                                  style={{
+                                    marginTop: "15px",
+                                    padding: "10px",
+                                    backgroundColor: "#fff3cd",
+                                    border: "1px solid #ffeaa7",
+                                    borderRadius: "5px",
+                                    fontSize: "13px",
+                                  }}
+                                >
+                                  <strong style={{ color: "#856404" }}>
+                                    HISTÓRICO DE CORREÇÕES:
+                                  </strong>
+                                  {item.historicoCorrecoes.map(
+                                    (correcao, idx) => {
+                                      const dataCorrecao = new Date(
+                                        correcao.createdAt
+                                      ).toLocaleString("pt-BR");
+
+                                      // Extrair diferenças das observações
+                                      let dadosCorrigidos = {};
+                                      let observacoesLimpas =
+                                        correcao.observacoes || "";
+
+                                      const regexCampos =
+                                        /Campos alterados: (.+)/;
+                                      const match =
+                                        observacoesLimpas.match(regexCampos);
+
+                                      if (match) {
+                                        observacoesLimpas = observacoesLimpas
+                                          .replace(
+                                            /\n\nCampos alterados:.+/,
+                                            ""
+                                          )
+                                          .trim();
+                                        const camposTexto = match[1];
+                                        const campos = camposTexto.split(" | ");
+
+                                        campos.forEach((campo) => {
+                                          const [nome, valores] =
+                                            campo.split(": ");
+                                          if (valores) {
+                                            const [original, novo] =
+                                              valores.split(" → ");
+                                            dadosCorrigidos[nome] = {
+                                              original:
+                                                original?.replace(
+                                                  /&quot;/g,
+                                                  ""
+                                                ) || "",
+                                              novo:
+                                                novo?.replace(/&quot;/g, "") ||
+                                                "",
+                                            };
+                                          }
+                                        });
+                                      }
+
+                                      return (
+                                        <div
+                                          key={idx}
+                                          style={{
+                                            marginTop: "10px",
+                                            paddingTop: "10px",
+                                            borderTop:
+                                              idx > 0
+                                                ? "1px solid #ddd"
+                                                : "none",
+                                          }}
+                                        >
+                                          <div
+                                            style={{
+                                              fontWeight: "bold",
+                                              color: "#856404",
+                                            }}
+                                          >
+                                            Correção #{idx + 1} • {dataCorrecao}{" "}
+                                            • Por:{" "}
+                                            {correcao.inventariante?.nome ||
+                                              correcao.inventariante?.email ||
+                                              "Usuário não identificado"}
+                                          </div>
+
+                                          {Object.keys(dadosCorrigidos).length >
+                                            0 &&
+                                            Object.entries(dadosCorrigidos).map(
+                                              ([campo, valor]) => (
+                                                <div
+                                                  key={campo}
+                                                  style={{ marginTop: "5px" }}
+                                                >
+                                                  <div
+                                                    style={{
+                                                      fontWeight: "bold",
+                                                      fontSize: "12px",
+                                                    }}
+                                                  >
+                                                    {campo}
+                                                  </div>
+                                                  <div
+                                                    style={{ fontSize: "12px" }}
+                                                  >
+                                                    Valor original: &quot;
+                                                    {valor?.original ||
+                                                      "Não informado"}
+                                                    &quot; → Novo valor: &quot;
+                                                    {valor?.novo ||
+                                                      "Não informado"}
+                                                    &quot;
+                                                  </div>
+                                                </div>
+                                              )
+                                            )}
+
+                                          {observacoesLimpas && (
+                                            <div style={{ marginTop: "8px" }}>
+                                              <div
+                                                style={{
+                                                  fontWeight: "bold",
+                                                  fontSize: "12px",
+                                                }}
+                                              >
+                                                📝 Observações
+                                              </div>
+                                              <div
+                                                style={{
+                                                  fontSize: "12px",
+                                                  fontStyle: "italic",
+                                                }}
+                                              >
+                                                {observacoesLimpas}
+                                              </div>
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    }
+                                  )}
+                                </div>
+                              )}
+                          </>
+                        )}
+                        {/* Botão de inventário apenas para itens não inventariados */}
+                        {!item.dataInventario && (
+                          <div style={{ marginTop: "10px" }}>
+                            <Button
+                              onClick={() => abrirModalInventario(item)}
+                              style={{
+                                backgroundColor: "#28a745",
+                                color: "white",
+                                padding: "6px 12px",
+                                border: "none",
+                                borderRadius: "4px",
+                                cursor: "pointer",
+                                fontSize: "14px",
+                                fontWeight: "bold",
+                              }}
+                              onMouseEnter={(e) => {
+                                e.target.style.backgroundColor = "#218838";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.target.style.backgroundColor = "#28a745";
+                              }}
+                            >
+                              📝 Inventariar Item
+                            </Button>
+                          </div>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ))
           )}
         </div>
       )}

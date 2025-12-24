@@ -430,14 +430,17 @@ Se tiver qualquer dúvida ou problema:
 - **Interface consistente** entre todas as formas de inventário
 
 ---
+
 ## 📋 Novidades da Versão 2.4.0
 
 ### 🚀 **Em Preparação**
+
 - **Novas funcionalidades** em desenvolvimento para a versão 2.4.0
 - **Melhorias de performance** e usabilidade
 - **Novos recursos** serão anunciados em breve
 
 ---
+
 ## �📝 Resumo Rápido - Passo a Passo
 
 1. **Login** → Conta do Gmail
