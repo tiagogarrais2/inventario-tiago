@@ -168,16 +168,19 @@ Quando terminar uma sala:
 O sistema oferece **3 tipos de relatório** para visualizar os dados de diferentes formas:
 
 #### 🏢 **Relatório por Sala** (Padrão)
+
 - Organiza os itens por localização física
 - Ideal para conferência em campo
 - URL: `/relatorio/nome-do-inventario`
 
 #### 👥 **Relatório por Servidor** (NOVO v2.3.0!)
+
 - Organiza os itens por carga atual/servidor responsável
 - Útil para verificar responsabilidade por bens
 - URL: `/relatorio-por-servidor/nome-do-inventario`
 
 #### 🚚 **Relatório de Itens Movidos**
+
 - Mostra apenas itens que mudaram de sala
 - Para acompanhar mudanças de localização
 - URL: `/relatorios/nome-do-inventario/itens-movidos`
@@ -402,28 +405,39 @@ Se tiver qualquer dúvida ou problema:
 ## � Novidades da Versão 2.3.0
 
 ### 🎯 **Inventário Direto dos Relatórios**
+
 - **Botão "📝 Inventariar Item"** para itens não inventariados diretamente nos relatórios
 - **Formulário completo** igual ao da página de inventário
 - **Atualização instantânea** - item fica verde imediatamente
 - **Não precisa navegar** entre páginas durante o trabalho
 
 ### 👥 **Novo Relatório por Servidor**
+
 - **Organização por carga atual** - agrupa itens por servidor responsável
 - **URL**: `/relatorio-por-servidor/nome-do-inventario`
 - **Útil para verificar** responsabilidade por bens patrimoniais
 
 ### 📝 **Campo de Observações**
+
 - **Adicione notas** durante o inventário de cada item
 - **Aparece nos relatórios** quando preenchido
 - **Ajuda na documentação** de condições especiais dos itens
 
 ### 🔧 **Melhorias Gerais**
+
 - **Sala Encontrada** agora é um menu suspenso inteligente
 - **Observações existentes** são carregadas automaticamente para edição
 - **Interface consistente** entre todas as formas de inventário
 
 ---
+## 📋 Novidades da Versão 2.4.0
 
+### 🚀 **Em Preparação**
+- **Novas funcionalidades** em desenvolvimento para a versão 2.4.0
+- **Melhorias de performance** e usabilidade
+- **Novos recursos** serão anunciados em breve
+
+---
 ## �📝 Resumo Rápido - Passo a Passo
 
 1. **Login** → Conta do Gmail
@@ -442,4 +456,4 @@ Se tiver qualquer dúvida ou problema:
 
 **🎯 Pronto! Agora você está preparado para fazer um inventário eficiente e organizado!**
 
-_Sistema de Inventário v2.3.0 - Criado para facilitar o trabalho das comissões inventariantes_ 📋✨
+_Sistema de Inventário v2.4.0 - Criado para facilitar o trabalho das comissões inventariantes_ 📋✨

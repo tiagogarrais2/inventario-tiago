@@ -11,7 +11,7 @@ export default function Rodape() {
         <div className="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0 text-sm">
           <div className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-4 text-center">
             <span>
-              <strong>Sistema de Inventário v2.3.0</strong> <hr /> Desenvolvido
+              <strong>Sistema de Inventário v2.4.0</strong> <hr /> Desenvolvido
               por Tiago das Graças Arrais
             </span>
             <span className="hidden sm:inline">•</span>
