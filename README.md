@@ -98,6 +98,7 @@ Sistema completo para gerenciamento de inventários com banco de dados PostgreSQ
 - **Controle de status**: Atualização do estado de conservação
 - **Validação de salas**: Alertas para mudanças de localização
 - **Interface otimizada**: Foco automático e UX aprimorada
+- **Campo de observações**: Possibilidade de adicionar notas durante o inventário
 - **Marcação especial**: Itens cadastrados durante inventário são identificados
 
 ### 🔧 **Sistema de Correções v2.1.0**
@@ -142,6 +143,7 @@ Sistema completo para gerenciamento de inventários com banco de dados PostgreSQ
 
 - **Relatórios dinâmicos**: Dados em tempo real do PostgreSQL
 - **Organização por sala**: Visualização completa incluindo salas vazias
+- **Organização por servidor**: Novo relatório que agrupa itens por carga atual/servidor responsável
 - **Status visual**: Indicação clara de itens inventariados vs não inventariados
 - **Sistema de badges**: Indicadores visuais para diferentes status dos itens:
   - 🟢 **Badge INVENTARIADO** - Para itens confirmados durante inventário
@@ -152,6 +154,20 @@ Sistema completo para gerenciamento de inventários com banco de dados PostgreSQ
 - **Navegação integrada**: Links diretos entre relatório, inventário e correções
 - **Dados do inventariante**: Exibição correta do nome real dos usuários
 - **Histórico inline**: Informações de correções diretamente no relatório
+- **Campo de observações**: Possibilidade de adicionar notas durante o inventário
+- **Inventário direto**: Botão para inventariar itens não inventariados diretamente do relatório
+
+### 📝 **Inventário Direto dos Relatórios v2.3.0 (NOVO!)**
+
+- **Botão "Inventariar Item"**: Aparece automaticamente para itens não inventariados
+- **Modal completo**: Formulário idêntico ao da página de inventário
+- **Campos obrigatórios**: Carga atual e estado de conservação sempre obrigatórios
+- **Campo Sala Encontrada**: Dropdown inteligente com todas as salas disponíveis
+- **Campo de observações**: Permite adicionar notas específicas durante o inventário
+- **Atualização instantânea**: Estado do relatório atualizado imediatamente após inventário
+- **API consistente**: Usa a mesma API `/update-inventario` sem modificações
+- **Validação completa**: Mesmas regras de negócio da página de inventário
+- **Feedback visual**: Notificações de sucesso/erro idênticas ao sistema principal
 
 ### 🧪 **Demonstração e Testes**
 
@@ -199,6 +215,9 @@ itens_inventario {
   inventarianteId: String? -> usuarios.id
   salaEncontrada: String?
   statusInventario: String?
+  estadoConservacao: String?
+  cargaAtual: String?
+  observacoesInventario: String?  -- NOVO v2.3.0: Campo para observações durante inventário
   cadastradoDuranteInventario: Boolean
 }
 
@@ -631,7 +650,18 @@ npx prisma migrate deploy
 - ✅ **Histórico de alterações**: Rastreamento cronológico completo
 - ✅ **Interface aprimorada**: Badges visuais e navegação integrada
 - ✅ **API robusta**: Endpoints especializados para correções
+### **v2.3.0** - 24/12/2025
 
+- 📝 **NEW**: Campo `observacoesInventario` no schema Prisma para anotações durante inventário
+- 📊 **NEW**: Relatório por servidor/carga atual (`/relatorio-por-servidor/nome`)
+- 🎯 **NEW**: Inventário direto dos relatórios com botão "Inventariar Item"
+- 📋 **NEW**: Modal completo de inventário nos relatórios (igual à página de inventário)
+- 🔽 **ENHANCED**: Campo "Sala Encontrada" transformado em dropdown com salas disponíveis
+- 📝 **ENHANCED**: Campo de observações adicionado aos formulários de inventário
+- 📊 **ENHANCED**: Observações aparecem nos relatórios quando presentes
+- 🔄 **ENHANCED**: Atualização instantânea do estado dos relatórios após inventário
+- ✅ **ENHANCED**: Pré-preenchimento de observações existentes nos formulários
+- 🎨 **ENHANCED**: Interface consistente entre página de inventário e modal dos relatórios
 ### **v2.0.0** - 28/09/2025
 
 - 🗄️ **BREAKING**: Migração completa para PostgreSQL com Prisma ORM

@@ -1,6 +1,6 @@
 # 📋 Guia do Usuário - Sistema de Inventário
 
-**Versão 2.2.0 | Para Membros de Comissões Inventariantes**
+**Versão 2.3.0 | Para Membros de Comissões Inventariantes**
 
 ---
 
@@ -36,6 +36,9 @@ Este guia foi criado especialmente para **você que faz parte de uma comissão i
 - ✅ **Excluir** inventários completos se você for proprietário (NOVO v2.2.0!)
 - ✅ **Visualizar histórico** de todas as correções realizadas
 - ✅ **Gerar relatórios** organizados por sala com indicadores visuais
+- ✅ **Gerar relatórios** organizados por servidor/carga atual (NOVO v2.3.0!)
+- ✅ **Adicionar observações** durante o inventário (NOVO v2.3.0!)
+- ✅ **Inventariar diretamente** dos relatórios (NOVO v2.3.0!)
 - ✅ **Trabalhar em equipe** com outros membros da comissão
 
 ## 🚀 Como Começar
@@ -130,6 +133,7 @@ Quando clicar em "Cadastrar item", abrirá um formulário:
   - `Recuperável` - Item com defeito, mas pode ser consertado
   - `Antieconômico` - Item muito danificado
 - 📝 **Status**: Escolha entre "Em Uso", "Ocioso", etc.
+- 📝 **Observações**: Campo opcional para adicionar notas sobre o item (NOVO v2.3.0!)
 - 📝 **Outros campos**: Preencha o que souber (marca, modelo, etc.)
 
 **Dica importante:** 🔖 Itens cadastrados por você ganham uma **marcação especial azul** nos relatórios!
@@ -159,7 +163,26 @@ Quando terminar uma sala:
 1. Na página do inventário, procure por **"Ver Relatório"** ou similar
 2. **Ou** substitua `/inventario/nome-do-inventario` por `/relatorio/nome-do-inventario` na URL
 
-### 📋 **Entendendo o Relatório**
+### � **Tipos de Relatório Disponíveis**
+
+O sistema oferece **3 tipos de relatório** para visualizar os dados de diferentes formas:
+
+#### 🏢 **Relatório por Sala** (Padrão)
+- Organiza os itens por localização física
+- Ideal para conferência em campo
+- URL: `/relatorio/nome-do-inventario`
+
+#### 👥 **Relatório por Servidor** (NOVO v2.3.0!)
+- Organiza os itens por carga atual/servidor responsável
+- Útil para verificar responsabilidade por bens
+- URL: `/relatorio-por-servidor/nome-do-inventario`
+
+#### 🚚 **Relatório de Itens Movidos**
+- Mostra apenas itens que mudaram de sala
+- Para acompanhar mudanças de localização
+- URL: `/relatorios/nome-do-inventario/itens-movidos`
+
+### �📋 **Entendendo o Relatório**
 
 O relatório mostra **todas as salas** organizadamente:
 
@@ -167,6 +190,7 @@ O relatório mostra **todas as salas** organizadamente:
 
 - Item foi conferido e está OK
 - Mostra quem fez o inventário e quando
+- **📝 Observações**: Se foram adicionadas durante o inventário, aparecem após a data
 
 **🔴 Itens Não Inventariados (fundo vermelho):**
 
@@ -199,7 +223,35 @@ Os itens podem ter diferentes badges que indicam seu status:
 
 **💡 Dica**: Um item pode ter múltiplos badges se foi cadastrado E corrigido, por exemplo!
 
-## 🔧 Corrigindo Dados de Itens (NOVO v2.1.0!)
+## � Inventário Direto dos Relatórios (NOVO v2.3.0!)
+
+### 🎯 **Quando Usar**
+
+Para itens que ainda não foram inventariados (fundo vermelho), você pode fazer o inventário diretamente do relatório sem precisar voltar para a página de inventário!
+
+### ✅ **Como Inventariar do Relatório**
+
+1. **Abra qualquer relatório** (por sala ou por servidor)
+2. **Procure itens vermelhos** (não inventariados)
+3. **Clique no botão "📝 Inventariar Item"** que aparece automaticamente
+4. **Preencha o formulário** igual ao da página de inventário:
+   - **Carga Atual**: Obrigatório - selecione o servidor responsável
+   - **Estado de Conservação**: Obrigatório - escolha o estado do item
+   - **Status**: Como "Em Uso", "Ocioso", etc.
+   - **Sala Encontrada**: Selecione no menu suspenso (opcional)
+   - **Observações**: Adicione notas sobre o item (opcional)
+5. **Clique em "✅ Confirmar Inventário"**
+6. **O item fica verde** imediatamente no relatório!
+
+### 💡 **Vantagens**
+
+- **Não precisa navegar** entre páginas
+- **Formulário completo** com todos os campos
+- **Atualização instantânea** do relatório
+- **Mesmo sistema de validação** da página de inventário
+- **Observações disponíveis** para adicionar notas específicas
+
+## �🔧 Corrigindo Dados de Itens (NOVO v2.1.0!)
 
 ### 📝 **Quando Usar Correções**
 
@@ -347,7 +399,32 @@ Se tiver qualquer dúvida ou problema:
 
 ---
 
-## 📝 Resumo Rápido - Passo a Passo
+## � Novidades da Versão 2.3.0
+
+### 🎯 **Inventário Direto dos Relatórios**
+- **Botão "📝 Inventariar Item"** para itens não inventariados diretamente nos relatórios
+- **Formulário completo** igual ao da página de inventário
+- **Atualização instantânea** - item fica verde imediatamente
+- **Não precisa navegar** entre páginas durante o trabalho
+
+### 👥 **Novo Relatório por Servidor**
+- **Organização por carga atual** - agrupa itens por servidor responsável
+- **URL**: `/relatorio-por-servidor/nome-do-inventario`
+- **Útil para verificar** responsabilidade por bens patrimoniais
+
+### 📝 **Campo de Observações**
+- **Adicione notas** durante o inventário de cada item
+- **Aparece nos relatórios** quando preenchido
+- **Ajuda na documentação** de condições especiais dos itens
+
+### 🔧 **Melhorias Gerais**
+- **Sala Encontrada** agora é um menu suspenso inteligente
+- **Observações existentes** são carregadas automaticamente para edição
+- **Interface consistente** entre todas as formas de inventário
+
+---
+
+## �📝 Resumo Rápido - Passo a Passo
 
 1. **Login** → Conta do Gmail
 2. **Escolher inventário** → Clicar no nome
@@ -365,4 +442,4 @@ Se tiver qualquer dúvida ou problema:
 
 **🎯 Pronto! Agora você está preparado para fazer um inventário eficiente e organizado!**
 
-_Sistema de Inventário v2.1.2 - Criado para facilitar o trabalho das comissões inventariantes_ 📋✨
+_Sistema de Inventário v2.3.0 - Criado para facilitar o trabalho das comissões inventariantes_ 📋✨
