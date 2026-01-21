@@ -123,7 +123,7 @@ export default function RelatoriosPage({ params }) {
         </Button>
         {/* Relatório Geral */}
         <Button onClick={() => router.push(`/relatorio/${nome}`)}>
-          🏢  Itens organizados por sala
+          🏢 Itens organizados por sala
         </Button>
         {/* Relatório por Carga Atual */}
         <Button onClick={() => router.push(`/relatorio-por-servidor/${nome}`)}>
@@ -135,8 +135,14 @@ export default function RelatoriosPage({ params }) {
         >
           🚚 Itens Movidos
         </Button>
+        {/* Relatório por Valor Financeiro */}
+        <Button
+          onClick={() => router.push(`/relatorios/${nome}/itens-por-valor`)}
+        >
+          💰 Itens ordenados por valor
+        </Button>
         <hr />
-      </div>    
+      </div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 # 📋 Guia do Usuário - Sistema de Inventário
 
-**Versão 2.3.0 | Para Membros de Comissões Inventariantes**
+**Versão 2.4.1 | Para Membros de Comissões Inventariantes**
 
 ---
 
@@ -37,6 +37,7 @@ Este guia foi criado especialmente para **você que faz parte de uma comissão i
 - ✅ **Visualizar histórico** de todas as correções realizadas
 - ✅ **Gerar relatórios** organizados por sala com indicadores visuais
 - ✅ **Gerar relatórios** organizados por servidor/carga atual (NOVO v2.3.0!)
+- ✅ **Gerar relatórios** organizados por valor financeiro (NOVO v2.4.1!)
 - ✅ **Adicionar observações** durante o inventário (NOVO v2.3.0!)
 - ✅ **Inventariar diretamente** dos relatórios (NOVO v2.3.0!)
 - ✅ **Trabalhar em equipe** com outros membros da comissão
@@ -165,7 +166,7 @@ Quando terminar uma sala:
 
 ### � **Tipos de Relatório Disponíveis**
 
-O sistema oferece **3 tipos de relatório** para visualizar os dados de diferentes formas:
+O sistema oferece **4 tipos de relatório** para visualizar os dados de diferentes formas:
 
 #### 🏢 **Relatório por Sala** (Padrão)
 
@@ -178,6 +179,13 @@ O sistema oferece **3 tipos de relatório** para visualizar os dados de diferent
 - Organiza os itens por carga atual/servidor responsável
 - Útil para verificar responsabilidade por bens
 - URL: `/relatorio-por-servidor/nome-do-inventario`
+
+#### 💰 **Relatório por Valor Financeiro** (NOVO v2.4.1!)
+
+- Lista todos os itens ordenados por valor depreciado (maior → menor)
+- Mostra valores formatados em R$ e total geral
+- Útil para análises financeiras e priorização
+- URL: `/relatorios/nome-do-inventario/itens-por-valor`
 
 #### 🚚 **Relatório de Itens Movidos**
 

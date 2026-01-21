@@ -1,4 +1,4 @@
-# 📋 Sistema de Inventário Tiago v2.4.0
+# 📋 Sistema de Inventário Tiago v2.4.1
 
 Sistema completo para gerenciamento de inventários com banco de dados PostgreSQL, autenticação, controle de acesso, auditoria, **sistema de correções avançado** e **funcionalidade de exclusão de inventários**. Desenvolvido em Next.js 15 com NextAuth para autenticação segura via Google OAuth e Prisma ORM para persistência de dados.
 
@@ -144,6 +144,7 @@ Sistema completo para gerenciamento de inventários com banco de dados PostgreSQ
 - **Relatórios dinâmicos**: Dados em tempo real do PostgreSQL
 - **Organização por sala**: Visualização completa incluindo salas vazias
 - **Organização por servidor**: Novo relatório que agrupa itens por carga atual/servidor responsável
+- **Organização por valor**: Novo relatório que lista itens ordenados por valor depreciado (maior para menor)
 - **Status visual**: Indicação clara de itens inventariados vs não inventariados
 - **Sistema de badges**: Indicadores visuais para diferentes status dos itens:
   - 🟢 **Badge INVENTARIADO** - Para itens confirmados durante inventário
@@ -311,8 +312,10 @@ Auditoria completa no banco de dados PostgreSQL:
 ### **4. Relatórios e Análise**
 
 1. Geração de relatórios organizados por sala
-2. Visualização do progresso do inventário
-3. Acesso protegido aos dados sensíveis
+2. Geração de relatórios organizados por servidor/carga
+3. Geração de relatórios organizados por valor financeiro
+4. Visualização do progresso do inventário
+5. Acesso protegido aos dados sensíveis
 
 ## ⚙️ Configuração e Instalação
 
@@ -650,6 +653,17 @@ npx prisma migrate deploy
 - ✅ **Histórico de alterações**: Rastreamento cronológico completo
 - ✅ **Interface aprimorada**: Badges visuais e navegação integrada
 - ✅ **API robusta**: Endpoints especializados para correções
+
+### **v2.4.1** - 20/01/2026
+
+- 💰 **NEW**: Relatório de itens ordenados por valor financeiro (`/relatorios/nome/itens-por-valor`)
+- 📊 **NEW**: Lista corrida de todos os itens organizados do maior para menor valor depreciado
+- 💱 **NEW**: Formatação automática de valores em moeda brasileira (R$)
+- 📈 **NEW**: Informações agregadas no relatório: total de itens e valor total depreciado
+- 🔄 **NEW**: Conversão inteligente de strings de valor para ordenação numérica
+- 🎯 **NEW**: Botão "💰 Itens ordenados por valor" na página de relatórios
+- ✅ **ENHANCED**: Modal de inventário no relatório por valor com dropdown de salas
+- 📋 **ENHANCED**: Mantém todas as funcionalidades dos outros relatórios (badges, correções, inventário direto)
 
 ### **v2.4.0** - 24/12/2025
 
