@@ -4,6 +4,39 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Button from "../../../components/Button";
 
+// Estilos para impressão
+const printStyles = `
+  @media print {
+    .page-break-before {
+      page-break-before: always !important;
+      break-before: page !important;
+    }
+    
+    .page-break-after {
+      page-break-after: always !important;
+      break-after: page !important;
+    }
+    
+    .no-break-inside {
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+    
+    /* Evitar quebra de página dentro dos itens de sala */
+    .sala-item {
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+  }
+`;
+
+// Adicionar estilos ao documento
+if (typeof document !== "undefined") {
+  const styleSheet = document.createElement("style");
+  styleSheet.innerHTML = printStyles;
+  document.head.appendChild(styleSheet);
+}
+
 export default function InventarioDashboard({ params }) {
   // Aguarda os params serem resolvidos (Next.js 15+)
   const resolvedParams = React.use(params);
@@ -18,6 +51,7 @@ function InventarioDashboardClient({ nomeInventario }) {
   const [dados, setDados] = useState(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState(null);
+  const [ordenacaoSala, setOrdenacaoSala] = useState("nome-asc");
 
   const buscarDadosDashboard = useCallback(async () => {
     try {
@@ -87,6 +121,37 @@ function InventarioDashboardClient({ nomeInventario }) {
     if (percentual >= 70) return "var(--warning-color)";
     if (percentual >= 50) return "var(--primary-color)";
     return "var(--danger-color)";
+  };
+
+  const ordenarSalas = (salas) => {
+    if (!salas || salas.length === 0) return salas;
+
+    const salasOrdenadas = [...salas];
+
+    switch (ordenacaoSala) {
+      case "nome-asc":
+        return salasOrdenadas.sort((a, b) => a.nome.localeCompare(b.nome));
+      case "nome-desc":
+        return salasOrdenadas.sort((a, b) => b.nome.localeCompare(a.nome));
+      case "progresso-asc":
+        return salasOrdenadas.sort((a, b) => a.percentual - b.percentual);
+      case "progresso-desc":
+        return salasOrdenadas.sort((a, b) => b.percentual - a.percentual);
+      case "total-itens-asc":
+        return salasOrdenadas.sort((a, b) => a.totalItens - b.totalItens);
+      case "total-itens-desc":
+        return salasOrdenadas.sort((a, b) => b.totalItens - a.totalItens);
+      case "inventariados-asc":
+        return salasOrdenadas.sort(
+          (a, b) => a.itensInventariados - b.itensInventariados
+        );
+      case "inventariados-desc":
+        return salasOrdenadas.sort(
+          (a, b) => b.itensInventariados - a.itensInventariados
+        );
+      default:
+        return salasOrdenadas.sort((a, b) => a.nome.localeCompare(b.nome));
+    }
   };
 
   // Loading state
@@ -482,11 +547,14 @@ function InventarioDashboardClient({ nomeInventario }) {
 
         {/* Progresso por Sala */}
         <div
+          className="page-break-before no-break-inside"
           style={{
             backgroundColor: "white",
             borderRadius: "8px",
             boxShadow: "var(--shadow)",
             marginBottom: "32px",
+            pageBreakBefore: "always",
+            breakBefore: "page",
           }}
         >
           <div
@@ -495,15 +563,109 @@ function InventarioDashboardClient({ nomeInventario }) {
               borderBottom: "1px solid var(--border-color)",
             }}
           >
-            <h3
+            <div
               style={{
-                fontSize: "18px",
-                fontWeight: "500",
-                color: "var(--text-color)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: "16px",
               }}
             >
-              Progresso por Sala
-            </h3>
+              <h2
+                style={{
+                  fontSize: "24px",
+                  fontWeight: "700",
+                  color: "var(--primary-color)",
+                  margin: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                }}
+              >
+                <span style={{ fontSize: "28px" }}>📊</span>
+                Progresso por Sala
+                {dados?.salas && dados.salas.length > 0 && (
+                  <span
+                    style={{
+                      marginLeft: "8px",
+                      fontSize: "14px",
+                      fontWeight: "400",
+                      color: "var(--text-color)",
+                      opacity: 0.6,
+                      backgroundColor: "var(--light-bg)",
+                      padding: "2px 8px",
+                      borderRadius: "12px",
+                    }}
+                  >
+                    {dados.salas.length}{" "}
+                    {dados.salas.length === 1 ? "sala" : "salas"}
+                  </span>
+                )}
+              </h2>
+
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+              >
+                <label
+                  style={{
+                    fontSize: "14px",
+                    fontWeight: "500",
+                    color: "var(--text-color)",
+                    opacity: 0.7,
+                  }}
+                >
+                  Ordenar por:
+                </label>
+                <select
+                  value={ordenacaoSala}
+                  onChange={(e) => setOrdenacaoSala(e.target.value)}
+                  style={{
+                    padding: "6px 12px",
+                    borderRadius: "4px",
+                    border: "1px solid var(--border-color)",
+                    backgroundColor: "white",
+                    color: "var(--text-color)",
+                    fontSize: "14px",
+                    minWidth: "200px",
+                    cursor: "pointer",
+                    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+                    outline: "none",
+                    transition: "border-color 0.2s, box-shadow 0.2s",
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = "var(--primary-color)";
+                    e.target.style.boxShadow =
+                      "0 0 0 2px rgba(59, 130, 246, 0.1)";
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = "var(--border-color)";
+                    e.target.style.boxShadow = "0 1px 3px rgba(0, 0, 0, 0.1)";
+                  }}
+                >
+                  <option value="nome-asc">Nome (A → Z)</option>
+                  <option value="nome-desc">Nome (Z → A)</option>
+                  <option value="progresso-desc">
+                    Progresso (Maior → Menor)
+                  </option>
+                  <option value="progresso-asc">
+                    Progresso (Menor → Maior)
+                  </option>
+                  <option value="total-itens-desc">
+                    Total de Itens (Maior → Menor)
+                  </option>
+                  <option value="total-itens-asc">
+                    Total de Itens (Menor → Maior)
+                  </option>
+                  <option value="inventariados-desc">
+                    Inventariados (Maior → Menor)
+                  </option>
+                  <option value="inventariados-asc">
+                    Inventariados (Menor → Maior)
+                  </option>
+                </select>
+              </div>
+            </div>
           </div>
           <div style={{ padding: "24px" }}>
             {dados?.salas && dados.salas.length > 0 ? (
@@ -514,9 +676,10 @@ function InventarioDashboardClient({ nomeInventario }) {
                   gap: "16px",
                 }}
               >
-                {dados.salas.map((sala, index) => (
+                {ordenarSalas(dados.salas).map((sala, index) => (
                   <div
                     key={index}
+                    className="sala-item"
                     style={{
                       display: "flex",
                       alignItems: "center",
@@ -600,6 +763,13 @@ function InventarioDashboardClient({ nomeInventario }) {
               </p>
             )}
           </div>
+          <div
+            className="page-break-after"
+            style={{
+              pageBreakAfter: "always",
+              breakAfter: "page",
+            }}
+          ></div>
         </div>
 
         {/* Estatísticas Detalhadas */}
