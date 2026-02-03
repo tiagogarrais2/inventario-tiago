@@ -1193,19 +1193,26 @@ export default function RelatorioPage({ params }) {
                 }}
               >
                 Sala Encontrada:
-                <input
-                  type="text"
+                <select
                   value={formData.salaEncontrada}
-                  readOnly
+                  onChange={(e) =>
+                    setFormData({ ...formData, salaEncontrada: e.target.value })
+                  }
                   style={{
                     width: "100%",
                     padding: "8px",
                     marginTop: "5px",
                     border: "1px solid #ccc",
                     borderRadius: "4px",
-                    backgroundColor: "#f8f9fa",
                   }}
-                />
+                >
+                  <option value="">Selecione uma sala</option>
+                  {todasSalas.map((sala) => (
+                    <option key={sala} value={sala}>
+                      {sala}
+                    </option>
+                  ))}
+                </select>
               </label>
 
               <label
