@@ -21,6 +21,9 @@ export default function RelatorioPorServidorPage({ params }) {
   const [modalAberto, setModalAberto] = useState(false);
   const [itemSelecionado, setItemSelecionado] = useState(null);
   const [salas, setSalas] = useState([]);
+  const [filtroInventario, setFiltroInventario] = useState("todos");
+  const [ordenacao, setOrdenacao] = useState("alfabetica");
+  const [ordenacaoDropdown, setOrdenacaoDropdown] = useState("alfabetica");
   const [formData, setFormData] = useState({
     dataInventario: new Date().toISOString().split("T")[0],
     inventariante: "",
@@ -342,11 +345,69 @@ export default function RelatorioPorServidorPage({ params }) {
     setServidoresFiltrados([]);
   };
 
-  const servidoresParaExibir = mostrarTodosServidores
-    ? Object.keys(itensPorServidor).sort()
-    : Object.keys(itensPorServidor)
-        .filter((servidor) => servidoresFiltrados.includes(servidor))
-        .sort();
+  // Função para filtrar itens por status de inventário
+  const filtrarItens = (itens) => {
+    if (filtroInventario === "inventariados")
+      return itens.filter((i) => i.dataInventario);
+    if (filtroInventario === "naoInventariados")
+      return itens.filter((i) => !i.dataInventario);
+    return itens;
+  };
+
+  // Contadores gerais
+  const totalGeral = Object.values(itensPorServidor).flat();
+  const totalInventariados = totalGeral.filter((i) => i.dataInventario).length;
+  const totalNaoInventariados = totalGeral.length - totalInventariados;
+
+  const servidoresParaExibir = (() => {
+    let lista = mostrarTodosServidores
+      ? Object.keys(itensPorServidor)
+      : Object.keys(itensPorServidor).filter((servidor) =>
+          servidoresFiltrados.includes(servidor)
+        );
+
+    // Ocultar servidores sem itens após a filtragem
+    if (filtroInventario !== "todos") {
+      lista = lista.filter(
+        (servidor) => filtrarItens(itensPorServidor[servidor] || []).length > 0
+      );
+    }
+
+    // Ordenação
+    if (ordenacao === "maisNaoInventariados") {
+      lista.sort((a, b) => {
+        const naoInvA = (itensPorServidor[a] || []).filter(
+          (i) => !i.dataInventario
+        ).length;
+        const naoInvB = (itensPorServidor[b] || []).filter(
+          (i) => !i.dataInventario
+        ).length;
+        if (naoInvB !== naoInvA) return naoInvB - naoInvA;
+        return a.localeCompare(b);
+      });
+    } else if (ordenacao === "maiorPorcentagem") {
+      lista.sort((a, b) => {
+        const totalA = (itensPorServidor[a] || []).length;
+        const totalB = (itensPorServidor[b] || []).length;
+        const pctA =
+          totalA > 0
+            ? (itensPorServidor[a] || []).filter((i) => !i.dataInventario)
+                .length / totalA
+            : 0;
+        const pctB =
+          totalB > 0
+            ? (itensPorServidor[b] || []).filter((i) => !i.dataInventario)
+                .length / totalB
+            : 0;
+        if (pctB !== pctA) return pctB - pctA;
+        return a.localeCompare(b);
+      });
+    } else {
+      lista.sort();
+    }
+
+    return lista;
+  })();
 
   return (
     <div style={{ padding: "20px" }}>
@@ -370,6 +431,74 @@ export default function RelatorioPorServidorPage({ params }) {
           {nome}
         </a>
       </h2>
+
+      {/* Resumo Geral */}
+      <div
+        style={{
+          marginBottom: "20px",
+          padding: "15px",
+          border: "1px solid #ddd",
+          borderRadius: "8px",
+          backgroundColor: "#e9ecef",
+          display: "flex",
+          gap: "20px",
+          flexWrap: "wrap",
+          alignItems: "center",
+        }}
+      >
+        <div style={{ fontWeight: "bold", fontSize: "16px" }}>
+          📊 Resumo Geral:
+        </div>
+        <div style={{ display: "flex", gap: "15px", flexWrap: "wrap" }}>
+          <span
+            style={{
+              padding: "4px 10px",
+              backgroundColor: "#6c757d",
+              color: "white",
+              borderRadius: "12px",
+              fontSize: "14px",
+            }}
+          >
+            📦 {totalGeral.length} bens
+          </span>
+          <span
+            style={{
+              padding: "4px 10px",
+              backgroundColor: "#28a745",
+              color: "white",
+              borderRadius: "12px",
+              fontSize: "14px",
+            }}
+          >
+            ✅ {totalInventariados} inventariados
+          </span>
+          <span
+            style={{
+              padding: "4px 10px",
+              backgroundColor: "#dc3545",
+              color: "white",
+              borderRadius: "12px",
+              fontSize: "14px",
+            }}
+          >
+            ⏳ {totalNaoInventariados} pendentes
+          </span>
+          <span
+            style={{
+              padding: "4px 10px",
+              backgroundColor: "#007bff",
+              color: "white",
+              borderRadius: "12px",
+              fontSize: "14px",
+            }}
+          >
+            {totalGeral.length > 0
+              ? Math.round((totalInventariados / totalGeral.length) * 100)
+              : 0}
+            % concluído
+          </span>
+        </div>
+      </div>
 
       {/* Filtro de Servidores */}
       <div
@@ -422,19 +551,166 @@ export default function RelatorioPorServidorPage({ params }) {
             }}
           >
             <option value="">Mostrar todos os servidores</option>
-            {todosServidores.map((servidor) => (
-              <option key={servidor} value={servidor}>
-                {servidor}
-              </option>
-            ))}
+            {[...todosServidores]
+              .sort((a, b) => {
+                if (ordenacaoDropdown === "maisNaoInventariados") {
+                  const naoInvA = (itensPorServidor[a] || []).filter(
+                    (i) => !i.dataInventario
+                  ).length;
+                  const naoInvB = (itensPorServidor[b] || []).filter(
+                    (i) => !i.dataInventario
+                  ).length;
+                  if (naoInvB !== naoInvA) return naoInvB - naoInvA;
+                } else if (ordenacaoDropdown === "maiorPorcentagem") {
+                  const totalA = (itensPorServidor[a] || []).length;
+                  const totalB = (itensPorServidor[b] || []).length;
+                  const pctA =
+                    totalA > 0
+                      ? (itensPorServidor[a] || []).filter(
+                          (i) => !i.dataInventario
+                        ).length / totalA
+                      : 0;
+                  const pctB =
+                    totalB > 0
+                      ? (itensPorServidor[b] || []).filter(
+                          (i) => !i.dataInventario
+                        ).length / totalB
+                      : 0;
+                  if (pctB !== pctA) return pctB - pctA;
+                }
+                return a.localeCompare(b);
+              })
+              .map((servidor) => {
+                const pendentes = (itensPorServidor[servidor] || []).filter(
+                  (i) => !i.dataInventario
+                ).length;
+                const total = (itensPorServidor[servidor] || []).length;
+                const pct =
+                  total > 0 ? Math.round((pendentes / total) * 100) : 0;
+                return (
+                  <option key={servidor} value={servidor}>
+                    {servidor} ({pendentes} pendente{pendentes !== 1 ? "s" : ""}{" "}
+                    de {total} — {pct}%)
+                  </option>
+                );
+              })}
           </select>
         </div>
-        <div style={{ marginTop: "10px", fontSize: "14px", color: "#6c757d" }}>
-          {mostrarTodosServidores
-            ? `Exibindo todos os ${todosServidores.length} cargas atuais`
-            : servidoresFiltrados.length === 1
-              ? `Exibindo apenas: ${servidoresFiltrados[0]}`
-              : `Exibindo todos os ${todosServidores.length} cargas atuais`}
+        <div
+          style={{
+            marginTop: "10px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "8px",
+          }}
+        >
+          <div style={{ fontSize: "14px", color: "#6c757d" }}>
+            {mostrarTodosServidores
+              ? `Exibindo todos os ${todosServidores.length} cargas atuais`
+              : servidoresFiltrados.length === 1
+                ? `Exibindo apenas: ${servidoresFiltrados[0]}`
+                : `Exibindo todos os ${todosServidores.length} cargas atuais`}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <span style={{ fontSize: "13px", color: "#6c757d" }}>
+              Ordenar lista:
+            </span>
+            <select
+              value={ordenacaoDropdown}
+              onChange={(e) => setOrdenacaoDropdown(e.target.value)}
+              style={{
+                padding: "4px 10px",
+                fontSize: "13px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+                backgroundColor: "white",
+                cursor: "pointer",
+              }}
+            >
+              <option value="alfabetica">🔤 Alfabética</option>
+              <option value="maisNaoInventariados">⏳ Mais pendentes</option>
+              <option value="maiorPorcentagem">📊 Maior % pendente</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Filtro de Status do Inventário e Ordenação */}
+      <div
+        style={{
+          marginBottom: "20px",
+          padding: "15px",
+          border: "1px solid #ddd",
+          borderRadius: "5px",
+          backgroundColor: "#f8f9fa",
+        }}
+      >
+        <h3 style={{ margin: 0, marginBottom: "10px" }}>
+          🎯 Filtro e Ordenação
+        </h3>
+        <div style={{ display: "flex", gap: "15px", flexWrap: "wrap" }}>
+          <div style={{ flex: "1", minWidth: "200px" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "5px",
+                fontWeight: "bold",
+              }}
+            >
+              Status do Inventário:
+            </label>
+            <select
+              value={filtroInventario}
+              onChange={(e) => setFiltroInventario(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "8px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+                fontSize: "14px",
+                backgroundColor: "white",
+              }}
+            >
+              <option value="todos">Mostrar todos os bens</option>
+              <option value="inventariados">Apenas inventariados ✅</option>
+              <option value="naoInventariados">
+                Apenas não inventariados ⏳
+              </option>
+            </select>
+          </div>
+          <div style={{ flex: "1", minWidth: "200px" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "5px",
+                fontWeight: "bold",
+              }}
+            >
+              Ordenar servidores por:
+            </label>
+            <select
+              value={ordenacao}
+              onChange={(e) => setOrdenacao(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "8px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+                fontSize: "14px",
+                backgroundColor: "white",
+              }}
+            >
+              <option value="alfabetica">Ordem alfabética (A → Z)</option>
+              <option value="maisNaoInventariados">
+                Mais bens não inventariados primeiro
+              </option>
+              <option value="maiorPorcentagem">
+                Maior % de não inventariados primeiro
+              </option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -455,13 +731,39 @@ export default function RelatorioPorServidorPage({ params }) {
         </div>
       )}
 
-      {Object.keys(itensPorServidor)
-        .sort()
-        .filter((servidor) => servidoresParaExibir.includes(servidor))
-        .map((servidor) => (
+      {servidoresParaExibir.map((servidor) => {
+        const itensDoServidor = itensPorServidor[servidor] || [];
+        const itensFiltrados = filtrarItens(itensDoServidor);
+        const totalServidor = itensDoServidor.length;
+        const invServidor = itensDoServidor.filter(
+          (i) => i.dataInventario
+        ).length;
+        const pendServidor = totalServidor - invServidor;
+
+        return (
           <div key={servidor} style={{ marginBottom: "30px" }}>
-            <h2>Carga Atual: {servidor}</h2>
-            {itensPorServidor[servidor].length === 0 ? (
+            <h2>
+              Carga Atual: {servidor}{" "}
+              <span
+                style={{
+                  fontSize: "14px",
+                  fontWeight: "normal",
+                  color: "#6c757d",
+                }}
+              >
+                ({totalServidor} {totalServidor === 1 ? "bem" : "bens"} —{" "}
+                <span style={{ color: "#28a745" }}>
+                  {invServidor}{" "}
+                  {invServidor === 1 ? "inventariado" : "inventariados"}
+                </span>
+                ,{" "}
+                <span style={{ color: "#dc3545" }}>
+                  {pendServidor} {pendServidor === 1 ? "pendente" : "pendentes"}
+                </span>
+                )
+              </span>
+            </h2>
+            {itensFiltrados.length === 0 ? (
               <div
                 style={{
                   padding: "20px",
@@ -474,10 +776,13 @@ export default function RelatorioPorServidorPage({ params }) {
                 }}
               >
                 📦 Nenhum item encontrado para esta carga atual
+                {filtroInventario !== "todos"
+                  ? " com o filtro selecionado"
+                  : ""}
               </div>
             ) : (
               <ul>
-                {itensPorServidor[servidor].map((item, index) => (
+                {itensFiltrados.map((item, index) => (
                   <li
                     key={index}
                     style={{
@@ -586,6 +891,7 @@ export default function RelatorioPorServidorPage({ params }) {
                       )}
                     <strong>Número:</strong> {item.numero} <br />
                     <strong>Descrição:</strong> {item.descricao || "N/A"} <br />
+                    <strong>Sala:</strong> {item.sala || "N/A"} <br />
                     <strong>Status:</strong>{" "}
                     {item.statusInventario || item.status || "N/A"} <br />
                     <strong>Inventariante:</strong>{" "}
@@ -801,7 +1107,8 @@ export default function RelatorioPorServidorPage({ params }) {
               </ul>
             )}
           </div>
-        ))}
+        );
+      })}
 
       {/* Modal de Inventário */}
       {modalAberto && itemSelecionado && (
