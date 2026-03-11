@@ -6,6 +6,9 @@ const nextConfig = {
   // Configuração Turbopack
   turbopack: {},
 
+  // Configuração para Docker
+  output: "standalone",
+
   // Headers de segurança
   async headers() {
     return [
