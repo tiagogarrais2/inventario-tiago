@@ -1,4 +1,5 @@
 import prisma from "./db.js";
+import nodemailer from "nodemailer";
 
 // Service para gerenciar usuários
 class UsuarioService {
@@ -817,6 +818,51 @@ class ServidorService {
   static async listByInventario(nomeInventario) {
     return await this.findByInventario(nomeInventario);
   }
+
+  static async listByInventarioComEmail(nomeInventario) {
+    const inventario = await InventarioService.findByName(nomeInventario);
+    if (!inventario) return [];
+
+    return await prisma.servidor.findMany({
+      where: { inventarioId: inventario.id },
+      select: { nome: true, email: true },
+      orderBy: { nome: "asc" },
+    });
+  }
+
+  static async updateEmail(nomeInventario, servidorNome, email) {
+    const inventario = await InventarioService.findByName(nomeInventario);
+    if (!inventario) throw new Error("Inventário não encontrado");
+
+    return await prisma.servidor.update({
+      where: {
+        inventarioId_nome: {
+          inventarioId: inventario.id,
+          nome: servidorNome,
+        },
+      },
+      data: { email: email || null },
+    });
+  }
+
+  static async updateEmailsBatch(nomeInventario, emailsMap) {
+    const inventario = await InventarioService.findByName(nomeInventario);
+    if (!inventario) throw new Error("Inventário não encontrado");
+
+    const operations = Object.entries(emailsMap).map(([nome, email]) =>
+      prisma.servidor.update({
+        where: {
+          inventarioId_nome: {
+            inventarioId: inventario.id,
+            nome,
+          },
+        },
+        data: { email: email || null },
+      })
+    );
+
+    return await prisma.$transaction(operations);
+  }
 }
 
 // Service para gerenciar cabeçalhos
@@ -1134,6 +1180,80 @@ class CorrecaoService {
   }
 }
 
+// Service para envio e registro de emails
+class EmailService {
+  static getTransporter() {
+    return nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: parseInt(process.env.SMTP_PORT || "587"),
+      secure: false,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+  }
+
+  static async sendBCC(bccList, subject, html) {
+    const BATCH_SIZE = 50;
+    const transporter = this.getTransporter();
+    const resultados = [];
+
+    for (let i = 0; i < bccList.length; i += BATCH_SIZE) {
+      const lote = bccList.slice(i, i + BATCH_SIZE);
+
+      const mailOptions = {
+        from: `"Comissão de Inventário Limoeiro do Norte" <${process.env.SMTP_USER}>`,
+        to: process.env.SMTP_USER,
+        bcc: lote.join(", "),
+        subject,
+        html,
+      };
+
+      const resultado = await transporter.sendMail(mailOptions);
+      resultados.push(resultado);
+    }
+
+    return resultados;
+  }
+
+  static async logEnvio(inventarioNome, remetenteEmail, dados) {
+    const inventario = await InventarioService.findByName(inventarioNome);
+    if (!inventario) throw new Error("Inventário não encontrado");
+
+    const usuario = await UsuarioService.findByEmail(remetenteEmail);
+    if (!usuario) throw new Error("Usuário não encontrado");
+
+    return await prisma.emailLog.create({
+      data: {
+        inventarioId: inventario.id,
+        remetenteId: usuario.id,
+        assunto: dados.assunto,
+        mensagem: dados.mensagem,
+        destinatarios: dados.destinatarios,
+        filtroMin: dados.filtroMin,
+        filtroMax: dados.filtroMax,
+        totalEnviados: dados.totalEnviados,
+        status: dados.status || "enviado",
+        erroDetalhes: dados.erroDetalhes || null,
+      },
+    });
+  }
+
+  static async listarEnvios(inventarioNome) {
+    const inventario = await InventarioService.findByName(inventarioNome);
+    if (!inventario) return [];
+
+    return await prisma.emailLog.findMany({
+      where: { inventarioId: inventario.id },
+      include: {
+        remetente: { select: { nome: true, email: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  }
+}
+
 export {
   UsuarioService,
   InventarioService,
@@ -1144,4 +1264,5 @@ export {
   PermissaoService,
   AuditoriaService,
   CorrecaoService,
+  EmailService,
 };

@@ -26,6 +26,7 @@ model Usuario {
   auditorias              AuditLog[]
   itensInventariados      ItemInventario[] @relation("InventarianteItem")
   correcoesFeitas         CorrecaoItem[] @relation("CorrecaoInventariante")
+  emailsEnviados          EmailLog[]     @relation("EmailRemetente")
 
   @@map("usuarios")
 }
@@ -47,6 +48,7 @@ model Inventario {
   permissoes      Permissao[]
   auditorias      AuditLog[]
   correcoes       CorrecaoItem[]
+  emailLogs       EmailLog[]
 
   @@map("inventarios")
 }
@@ -113,6 +115,7 @@ model Servidor {
   id           String @id @default(cuid())
   inventarioId String
   nome         String
+  email        String?
   createdAt    DateTime @default(now())
 
   // Relacionamentos
@@ -211,4 +214,25 @@ model CorrecaoItem {
   inventariante     Usuario    @relation("CorrecaoInventariante", fields: [inventarianteId], references: [id])
 
   @@map("correcoes_item")
+}
+
+model EmailLog {
+  id              String   @id @default(cuid())
+  inventarioId    String
+  remetenteId     String
+  assunto         String
+  mensagem        String
+  destinatarios   Json     // Array de {nome, email, pendenciaPct}
+  filtroMin       Float    // % mínima usada no filtro
+  filtroMax       Float    // % máxima usada no filtro
+  totalEnviados   Int
+  status          String   @default("enviado") // enviado, erro
+  erroDetalhes    String?
+  createdAt       DateTime @default(now())
+
+  // Relacionamentos
+  inventario      Inventario @relation(fields: [inventarioId], references: [id])
+  remetente       Usuario    @relation("EmailRemetente", fields: [remetenteId], references: [id])
+
+  @@map("email_logs")
 }
