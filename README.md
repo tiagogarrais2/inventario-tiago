@@ -494,6 +494,41 @@ GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 ```
 
+### **Deploy com Docker**
+
+O projeto inclui um Dockerfile multi-stage otimizado para produção:
+
+```bash
+# Build da imagem
+docker build -t gitlab.ifce.edu.br:5050/projetos/inventario-tiago:1.0.0 .
+
+# Executar localmente
+docker run -p 3000:3000 --env-file .env gitlab.ifce.edu.br:5050/projetos/inventario-tiago:1.0.0
+
+# Push para o GitLab Container Registry
+docker push gitlab.ifce.edu.br:5050/projetos/inventario-tiago:1.0.0
+```
+
+### **Repositórios Remotos (GitHub + GitLab)**
+
+O projeto está configurado com dois remotes Git para manter os repositórios sincronizados:
+
+| Remote   | URL                                                        |
+| -------- | ---------------------------------------------------------- |
+| `origin` | `git@github.com:tiagogarrais2/inventario-tiago.git`       |
+| `gitlab` | `git@gitlab.ifce.edu.br:projetos/inventario-tiago.git`    |
+
+```bash
+# Push para o GitHub
+git push origin main
+
+# Push para o GitLab
+git push gitlab main
+
+# Push para ambos
+git push origin main && git push gitlab main
+```
+
 ### **Comandos Úteis**
 
 ```bash
