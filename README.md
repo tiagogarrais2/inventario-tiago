@@ -513,10 +513,10 @@ docker push gitlab.ifce.edu.br:5050/projetos/inventario-tiago:1.0.0
 
 O projeto está configurado com dois remotes Git para manter os repositórios sincronizados:
 
-| Remote   | URL                                                        |
-| -------- | ---------------------------------------------------------- |
-| `origin` | `git@github.com:tiagogarrais2/inventario-tiago.git`       |
-| `gitlab` | `git@gitlab.ifce.edu.br:projetos/inventario-tiago.git`    |
+| Remote   | URL                                                    |
+| -------- | ------------------------------------------------------ |
+| `origin` | `git@github.com:tiagogarrais2/inventario-tiago.git`    |
+| `gitlab` | `git@gitlab.ifce.edu.br:projetos/inventario-tiago.git` |
 
 ```bash
 # Push para o GitHub
