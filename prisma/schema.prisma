@@ -27,6 +27,7 @@ model Usuario {
   itensInventariados      ItemInventario[] @relation("InventarianteItem")
   correcoesFeitas         CorrecaoItem[] @relation("CorrecaoInventariante")
   emailsEnviados          EmailLog[]     @relation("EmailRemetente")
+  emailTemplates          EmailTemplate[] @relation("TemplateAutor")
 
   @@map("usuarios")
 }
@@ -49,6 +50,7 @@ model Inventario {
   auditorias      AuditLog[]
   correcoes       CorrecaoItem[]
   emailLogs       EmailLog[]
+  emailTemplates  EmailTemplate[]
 
   @@map("inventarios")
 }
@@ -235,4 +237,23 @@ model EmailLog {
   remetente       Usuario    @relation("EmailRemetente", fields: [remetenteId], references: [id])
 
   @@map("email_logs")
+}
+
+model EmailTemplate {
+  id           String   @id @default(cuid())
+  inventarioId String
+  autorId      String
+  titulo       String
+  assunto      String
+  mensagem     String
+  tipo         String   @default("template") // "template" ou "rascunho"
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relacionamentos
+  inventario   Inventario @relation(fields: [inventarioId], references: [id])
+  autor        Usuario    @relation("TemplateAutor", fields: [autorId], references: [id])
+
+  @@unique([inventarioId, titulo])
+  @@map("email_templates")
 }
