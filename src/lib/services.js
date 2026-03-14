@@ -1254,6 +1254,69 @@ class EmailService {
   }
 }
 
+class EmailTemplateService {
+  static async listarPorInventario(inventarioNome, tipo = null) {
+    const inventario = await InventarioService.findByName(inventarioNome);
+    if (!inventario) return [];
+
+    const where = { inventarioId: inventario.id };
+    if (tipo) where.tipo = tipo;
+
+    return await prisma.emailTemplate.findMany({
+      where,
+      include: {
+        autor: { select: { nome: true, email: true } },
+      },
+      orderBy: { updatedAt: "desc" },
+    });
+  }
+
+  static async criar(inventarioNome, autorEmail, dados) {
+    const inventario = await InventarioService.findByName(inventarioNome);
+    if (!inventario) throw new Error("Inventário não encontrado");
+
+    const usuario = await UsuarioService.findByEmail(autorEmail);
+    if (!usuario) throw new Error("Usuário não encontrado");
+
+    return await prisma.emailTemplate.create({
+      data: {
+        inventarioId: inventario.id,
+        autorId: usuario.id,
+        titulo: dados.titulo,
+        assunto: dados.assunto,
+        mensagem: dados.mensagem,
+        tipo: dados.tipo || "template",
+      },
+    });
+  }
+
+  static async atualizar(id, dados) {
+    return await prisma.emailTemplate.update({
+      where: { id },
+      data: {
+        titulo: dados.titulo,
+        assunto: dados.assunto,
+        mensagem: dados.mensagem,
+        tipo: dados.tipo,
+      },
+    });
+  }
+
+  static async excluir(id) {
+    return await prisma.emailTemplate.delete({ where: { id } });
+  }
+
+  static async buscarPorId(id) {
+    return await prisma.emailTemplate.findUnique({
+      where: { id },
+      include: {
+        inventario: { select: { nome: true } },
+        autor: { select: { nome: true, email: true } },
+      },
+    });
+  }
+}
+
 export {
   UsuarioService,
   InventarioService,
@@ -1265,4 +1328,5 @@ export {
   AuditoriaService,
   CorrecaoService,
   EmailService,
+  EmailTemplateService,
 };

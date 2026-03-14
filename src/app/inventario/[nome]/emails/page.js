@@ -28,8 +28,27 @@ export default function EmailsPage({ params }) {
   const [assunto, setAssunto] = useState("");
   const [mensagem, setMensagem] = useState("");
 
+  // Teste de configuração
+  const [testando, setTestando] = useState(false);
+  const [resultadoTeste, setResultadoTeste] = useState(null);
+
+  // Templates / Textos salvos
+  const [templates, setTemplates] = useState([]);
+  const [templateSelecionado, setTemplateSelecionado] = useState("");
+  const [editandoTemplate, setEditandoTemplate] = useState(null);
+  const [novoTemplate, setNovoTemplate] = useState({
+    titulo: "",
+    assunto: "",
+    mensagem: "",
+    tipo: "template",
+  });
+  const [criandoTemplate, setCriandoTemplate] = useState(false);
+  const [salvandoTemplate, setSalvandoTemplate] = useState(false);
+  const [mostrarSalvarTemplate, setMostrarSalvarTemplate] = useState(false);
+  const [tituloSalvarTemplate, setTituloSalvarTemplate] = useState("");
+
   // Abas
-  const [abaAtiva, setAbaAtiva] = useState("compor"); // "compor", "emails", "historico"
+  const [abaAtiva, setAbaAtiva] = useState("compor"); // "compor", "emails", "historico", "textos"
 
   // Verificar se é proprietário
   useEffect(() => {
@@ -118,6 +137,107 @@ export default function EmailsPage({ params }) {
     if (abaAtiva === "historico") carregarHistorico();
   }, [abaAtiva, carregarHistorico]);
 
+  // Carregar templates
+  const carregarTemplates = useCallback(async () => {
+    if (!isOwner) return;
+    try {
+      const res = await fetch(
+        `/api/emails/templates?inventario=${encodeURIComponent(nome)}`
+      );
+      if (res.ok) {
+        setTemplates(await res.json());
+      }
+    } catch (error) {
+      console.error("Erro ao carregar templates:", error);
+    }
+  }, [nome, isOwner]);
+
+  useEffect(() => {
+    if (abaAtiva === "textos" || abaAtiva === "compor") carregarTemplates();
+  }, [abaAtiva, carregarTemplates]);
+
+  // Criar template
+  const criarTemplate = async (dados) => {
+    setSalvandoTemplate(true);
+    try {
+      const res = await fetch("/api/emails/templates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ inventario: nome, ...dados }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert("Texto salvo com sucesso!");
+        setNovoTemplate({
+          titulo: "",
+          assunto: "",
+          mensagem: "",
+          tipo: "template",
+        });
+        setCriandoTemplate(false);
+        carregarTemplates();
+        return true;
+      } else {
+        alert(data.error || "Erro ao salvar texto.");
+        return false;
+      }
+    } catch {
+      alert("Erro ao salvar texto.");
+      return false;
+    } finally {
+      setSalvandoTemplate(false);
+    }
+  };
+
+  // Atualizar template
+  const atualizarTemplate = async (id, dados) => {
+    setSalvandoTemplate(true);
+    try {
+      const res = await fetch(`/api/emails/templates/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(dados),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert("Texto atualizado com sucesso!");
+        setEditandoTemplate(null);
+        carregarTemplates();
+      } else {
+        alert(data.error || "Erro ao atualizar texto.");
+      }
+    } catch {
+      alert("Erro ao atualizar texto.");
+    }
+    setSalvandoTemplate(false);
+  };
+
+  // Excluir template
+  const excluirTemplate = async (id) => {
+    if (!confirm("Tem certeza que deseja excluir este texto salvo?")) return;
+    try {
+      const res = await fetch(`/api/emails/templates/${id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        carregarTemplates();
+      } else {
+        const data = await res.json();
+        alert(data.error || "Erro ao excluir texto.");
+      }
+    } catch {
+      alert("Erro ao excluir texto.");
+    }
+  };
+
+  // Carregar template na composição
+  const carregarTextoNaComposicao = (template) => {
+    setAssunto(template.assunto);
+    setMensagem(template.mensagem);
+    setTemplateSelecionado(template.id);
+    setAbaAtiva("compor");
+  };
+
   // Salvar emails
   const salvarEmails = async () => {
     setSalvando(true);
@@ -138,6 +258,37 @@ export default function EmailsPage({ params }) {
       alert("Erro ao salvar emails.");
     }
     setSalvando(false);
+  };
+
+  // Testar configuração de email
+  const testarEmail = async () => {
+    setTestando(true);
+    setResultadoTeste(null);
+    try {
+      const res = await fetch("/api/emails/testar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ inventario: nome }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setResultadoTeste({
+          tipo: "sucesso",
+          mensagem: `Email de teste enviado com sucesso para ${data.email}. Verifique sua caixa de entrada.`,
+        });
+      } else {
+        setResultadoTeste({
+          tipo: "erro",
+          mensagem: data.error || "Erro ao testar configuração de email.",
+        });
+      }
+    } catch {
+      setResultadoTeste({
+        tipo: "erro",
+        mensagem: "Erro de conexão. Não foi possível testar o envio de email.",
+      });
+    }
+    setTestando(false);
   };
 
   // Calcular servidores filtrados
@@ -193,8 +344,7 @@ export default function EmailsPage({ params }) {
         alert(
           `Emails enviados com sucesso para ${data.totalEnviados} servidor(es)!`
         );
-        setAssunto("");
-        setMensagem("");
+        setMostrarSalvarTemplate(true);
         carregarHistorico();
       } else {
         alert(data.error || "Erro ao enviar emails.");
@@ -243,6 +393,9 @@ export default function EmailsPage({ params }) {
         <div style={abaStyle("compor")} onClick={() => setAbaAtiva("compor")}>
           ✉️ Compor Email
         </div>
+        <div style={abaStyle("textos")} onClick={() => setAbaAtiva("textos")}>
+          📝 Textos Salvos ({templates.length})
+        </div>
         <div style={abaStyle("emails")} onClick={() => setAbaAtiva("emails")}>
           👥 Gerenciar Emails ({servidores.filter((s) => s.email).length}/
           {servidores.length})
@@ -266,6 +419,85 @@ export default function EmailsPage({ params }) {
         {/* Aba: Compor Email */}
         {abaAtiva === "compor" && (
           <div>
+            {/* Testar Configuração */}
+            <div
+              style={{
+                padding: "15px",
+                border: "1px solid #ddd",
+                borderRadius: "5px",
+                backgroundColor: "#f8f9fa",
+                marginBottom: "20px",
+                display: "flex",
+                alignItems: "center",
+                gap: "15px",
+                flexWrap: "wrap",
+              }}
+            >
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "10px" }}
+              >
+                <span style={{ fontSize: "14px", fontWeight: "bold" }}>
+                  🔧 Configuração SMTP
+                </span>
+                <Button
+                  onClick={testarEmail}
+                  disabled={testando}
+                  disableTime={3000}
+                  style={{
+                    backgroundColor: "#17a2b8",
+                    color: "white",
+                    padding: "6px 14px",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    fontWeight: "bold",
+                    fontSize: "13px",
+                  }}
+                >
+                  {testando
+                    ? "⏳ Testando..."
+                    : "📨 Testar Configuração de Email"}
+                </Button>
+              </div>
+              {resultadoTeste && (
+                <div
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: "4px",
+                    fontSize: "13px",
+                    backgroundColor:
+                      resultadoTeste.tipo === "sucesso" ? "#d4edda" : "#f8d7da",
+                    color:
+                      resultadoTeste.tipo === "sucesso" ? "#155724" : "#721c24",
+                    border: `1px solid ${resultadoTeste.tipo === "sucesso" ? "#c3e6cb" : "#f5c6cb"}`,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    flex: 1,
+                  }}
+                >
+                  <span>
+                    {resultadoTeste.tipo === "sucesso" ? "✅" : "❌"}{" "}
+                    {resultadoTeste.mensagem}
+                  </span>
+                  <button
+                    onClick={() => setResultadoTeste(null)}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      fontSize: "16px",
+                      color: "inherit",
+                      marginLeft: "auto",
+                      padding: "0 4px",
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+            </div>
+
             {/* Filtro de % */}
             <div
               style={{
@@ -373,6 +605,7 @@ export default function EmailsPage({ params }) {
                     borderRadius: "3px",
                     cursor: "pointer",
                     backgroundColor: "#fff3cd",
+                    color: "black",
                   }}
                 >
                   100% pendentes
@@ -389,6 +622,7 @@ export default function EmailsPage({ params }) {
                     borderRadius: "3px",
                     cursor: "pointer",
                     backgroundColor: "#f8d7da",
+                    color: "black",
                   }}
                 >
                   50%+ pendentes
@@ -405,6 +639,7 @@ export default function EmailsPage({ params }) {
                     borderRadius: "3px",
                     cursor: "pointer",
                     backgroundColor: "#d4edda",
+                    color: "black",
                   }}
                 >
                   30% a 60%
@@ -421,6 +656,7 @@ export default function EmailsPage({ params }) {
                     borderRadius: "3px",
                     cursor: "pointer",
                     backgroundColor: "#d1ecf1",
+                    color: "black",
                   }}
                 >
                   Qualquer pendência
@@ -437,6 +673,7 @@ export default function EmailsPage({ params }) {
                     borderRadius: "3px",
                     cursor: "pointer",
                     backgroundColor: "#e9ecef",
+                    color: "black",
                   }}
                 >
                   Todos
@@ -521,6 +758,69 @@ export default function EmailsPage({ params }) {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            )}
+
+            {/* Carregar texto salvo */}
+            {templates.length > 0 && (
+              <div
+                style={{
+                  padding: "12px 15px",
+                  border: "1px solid #ddd",
+                  borderRadius: "5px",
+                  backgroundColor: "#f8f9fa",
+                  marginBottom: "20px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  flexWrap: "wrap",
+                }}
+              >
+                <label style={{ fontWeight: "bold", fontSize: "14px" }}>
+                  📝 Carregar texto salvo:
+                </label>
+                <select
+                  value={templateSelecionado}
+                  onChange={(e) => {
+                    const t = templates.find((t) => t.id === e.target.value);
+                    if (t) carregarTextoNaComposicao(t);
+                    else setTemplateSelecionado("");
+                  }}
+                  style={{
+                    padding: "6px 10px",
+                    border: "1px solid #ccc",
+                    borderRadius: "4px",
+                    fontSize: "13px",
+                    flex: 1,
+                    minWidth: "200px",
+                  }}
+                >
+                  <option value="">-- Selecionar --</option>
+                  {templates.filter((t) => t.tipo === "template").length >
+                    0 && (
+                    <optgroup label="Templates">
+                      {templates
+                        .filter((t) => t.tipo === "template")
+                        .map((t) => (
+                          <option key={t.id} value={t.id}>
+                            {t.titulo} — {t.assunto}
+                          </option>
+                        ))}
+                    </optgroup>
+                  )}
+                  {templates.filter((t) => t.tipo === "rascunho").length >
+                    0 && (
+                    <optgroup label="Rascunhos">
+                      {templates
+                        .filter((t) => t.tipo === "rascunho")
+                        .map((t) => (
+                          <option key={t.id} value={t.id}>
+                            {t.titulo} — {t.assunto}
+                          </option>
+                        ))}
+                    </optgroup>
+                  )}
+                </select>
               </div>
             )}
 
@@ -610,7 +910,109 @@ export default function EmailsPage({ params }) {
                   </span>
                 </span>
               )}
+              {(assunto.trim() || mensagem.trim()) && (
+                <Button
+                  onClick={() => {
+                    setTituloSalvarTemplate("");
+                    setMostrarSalvarTemplate(true);
+                  }}
+                  style={{
+                    backgroundColor: "#6f42c1",
+                    color: "white",
+                    padding: "10px 20px",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    fontWeight: "bold",
+                    fontSize: "15px",
+                  }}
+                >
+                  💾 Salvar como Rascunho
+                </Button>
+              )}
             </div>
+
+            {/* Salvar como template após envio */}
+            {mostrarSalvarTemplate && (
+              <div
+                style={{
+                  marginTop: "15px",
+                  padding: "15px",
+                  border: "1px solid #b8daff",
+                  borderRadius: "5px",
+                  backgroundColor: "#e7f1ff",
+                }}
+              >
+                <h4 style={{ margin: "0 0 10px 0" }}>
+                  💾 Salvar texto como template reutilizável
+                </h4>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "10px",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <input
+                    type="text"
+                    value={tituloSalvarTemplate}
+                    onChange={(e) => setTituloSalvarTemplate(e.target.value)}
+                    placeholder="Nome do template (ex: Cobrança Padrão)"
+                    style={{
+                      padding: "8px",
+                      border: "1px solid #ccc",
+                      borderRadius: "4px",
+                      fontSize: "14px",
+                      flex: 1,
+                      minWidth: "200px",
+                    }}
+                  />
+                  <Button
+                    onClick={async () => {
+                      if (!tituloSalvarTemplate.trim()) {
+                        alert("Informe um nome para o template.");
+                        return;
+                      }
+                      const ok = await criarTemplate({
+                        titulo: tituloSalvarTemplate,
+                        assunto,
+                        mensagem,
+                        tipo: "template",
+                      });
+                      if (ok) {
+                        setMostrarSalvarTemplate(false);
+                        setTituloSalvarTemplate("");
+                      }
+                    }}
+                    disabled={salvandoTemplate}
+                    style={{
+                      backgroundColor: "#28a745",
+                      color: "white",
+                      padding: "8px 16px",
+                      border: "none",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {salvandoTemplate ? "Salvando..." : "✅ Salvar Template"}
+                  </Button>
+                  <button
+                    onClick={() => setMostrarSalvarTemplate(false)}
+                    style={{
+                      padding: "8px 16px",
+                      border: "1px solid #ccc",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                      backgroundColor: "white",
+                    }}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -764,6 +1166,423 @@ export default function EmailsPage({ params }) {
                 {salvando ? "Salvando..." : "💾 Salvar Emails"}
               </Button>
             </div>
+          </div>
+        )}
+
+        {/* Aba: Textos Salvos */}
+        {abaAtiva === "textos" && (
+          <div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "15px",
+              }}
+            >
+              <h4 style={{ margin: 0 }}>Banco de Textos de Email</h4>
+              <Button
+                onClick={() => {
+                  setCriandoTemplate(true);
+                  setNovoTemplate({
+                    titulo: "",
+                    assunto: "",
+                    mensagem: "",
+                    tipo: "template",
+                  });
+                }}
+                style={{
+                  backgroundColor: "#28a745",
+                  color: "white",
+                  padding: "8px 16px",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                }}
+              >
+                ➕ Novo Texto
+              </Button>
+            </div>
+
+            {/* Formulário criar/editar */}
+            {(criandoTemplate || editandoTemplate) && (
+              <div
+                style={{
+                  padding: "15px",
+                  border: "1px solid #007bff",
+                  borderRadius: "5px",
+                  backgroundColor: "#e7f1ff",
+                  marginBottom: "20px",
+                }}
+              >
+                <h4 style={{ margin: "0 0 12px 0" }}>
+                  {editandoTemplate ? "✏️ Editar Texto" : "➕ Novo Texto"}
+                </h4>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "10px",
+                    marginBottom: "10px",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <div style={{ flex: 1, minWidth: "200px" }}>
+                    <label
+                      style={{
+                        display: "block",
+                        marginBottom: "4px",
+                        fontWeight: "bold",
+                        fontSize: "13px",
+                      }}
+                    >
+                      Título:
+                    </label>
+                    <input
+                      type="text"
+                      value={
+                        editandoTemplate
+                          ? editandoTemplate.titulo
+                          : novoTemplate.titulo
+                      }
+                      onChange={(e) => {
+                        if (editandoTemplate)
+                          setEditandoTemplate({
+                            ...editandoTemplate,
+                            titulo: e.target.value,
+                          });
+                        else
+                          setNovoTemplate({
+                            ...novoTemplate,
+                            titulo: e.target.value,
+                          });
+                      }}
+                      placeholder="Ex: Cobrança de Inventário"
+                      style={{
+                        width: "100%",
+                        padding: "6px",
+                        border: "1px solid #ccc",
+                        borderRadius: "4px",
+                        fontSize: "13px",
+                      }}
+                    />
+                  </div>
+                  <div style={{ width: "150px" }}>
+                    <label
+                      style={{
+                        display: "block",
+                        marginBottom: "4px",
+                        fontWeight: "bold",
+                        fontSize: "13px",
+                      }}
+                    >
+                      Tipo:
+                    </label>
+                    <select
+                      value={
+                        editandoTemplate
+                          ? editandoTemplate.tipo
+                          : novoTemplate.tipo
+                      }
+                      onChange={(e) => {
+                        if (editandoTemplate)
+                          setEditandoTemplate({
+                            ...editandoTemplate,
+                            tipo: e.target.value,
+                          });
+                        else
+                          setNovoTemplate({
+                            ...novoTemplate,
+                            tipo: e.target.value,
+                          });
+                      }}
+                      style={{
+                        width: "100%",
+                        padding: "6px",
+                        border: "1px solid #ccc",
+                        borderRadius: "4px",
+                        fontSize: "13px",
+                      }}
+                    >
+                      <option value="template">Template</option>
+                      <option value="rascunho">Rascunho</option>
+                    </select>
+                  </div>
+                </div>
+                <div style={{ marginBottom: "10px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "4px",
+                      fontWeight: "bold",
+                      fontSize: "13px",
+                    }}
+                  >
+                    Assunto:
+                  </label>
+                  <input
+                    type="text"
+                    value={
+                      editandoTemplate
+                        ? editandoTemplate.assunto
+                        : novoTemplate.assunto
+                    }
+                    onChange={(e) => {
+                      if (editandoTemplate)
+                        setEditandoTemplate({
+                          ...editandoTemplate,
+                          assunto: e.target.value,
+                        });
+                      else
+                        setNovoTemplate({
+                          ...novoTemplate,
+                          assunto: e.target.value,
+                        });
+                    }}
+                    placeholder="Assunto do email"
+                    style={{
+                      width: "100%",
+                      padding: "6px",
+                      border: "1px solid #ccc",
+                      borderRadius: "4px",
+                      fontSize: "13px",
+                    }}
+                  />
+                </div>
+                <div style={{ marginBottom: "10px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "4px",
+                      fontWeight: "bold",
+                      fontSize: "13px",
+                    }}
+                  >
+                    Mensagem (HTML permitido):
+                  </label>
+                  <textarea
+                    value={
+                      editandoTemplate
+                        ? editandoTemplate.mensagem
+                        : novoTemplate.mensagem
+                    }
+                    onChange={(e) => {
+                      if (editandoTemplate)
+                        setEditandoTemplate({
+                          ...editandoTemplate,
+                          mensagem: e.target.value,
+                        });
+                      else
+                        setNovoTemplate({
+                          ...novoTemplate,
+                          mensagem: e.target.value,
+                        });
+                    }}
+                    placeholder="Corpo do email..."
+                    style={{
+                      width: "100%",
+                      padding: "6px",
+                      border: "1px solid #ccc",
+                      borderRadius: "4px",
+                      fontSize: "13px",
+                      minHeight: "120px",
+                      fontFamily: "inherit",
+                    }}
+                  />
+                </div>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <Button
+                    onClick={() => {
+                      if (editandoTemplate) {
+                        atualizarTemplate(
+                          editandoTemplate.id,
+                          editandoTemplate
+                        );
+                      } else {
+                        if (
+                          !novoTemplate.titulo.trim() ||
+                          !novoTemplate.assunto.trim() ||
+                          !novoTemplate.mensagem.trim()
+                        ) {
+                          alert("Preencha todos os campos.");
+                          return;
+                        }
+                        criarTemplate(novoTemplate);
+                      }
+                    }}
+                    disabled={salvandoTemplate}
+                    style={{
+                      backgroundColor: "#007bff",
+                      color: "white",
+                      padding: "8px 16px",
+                      border: "none",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {salvandoTemplate ? "Salvando..." : "💾 Salvar"}
+                  </Button>
+                  <button
+                    onClick={() => {
+                      setCriandoTemplate(false);
+                      setEditandoTemplate(null);
+                    }}
+                    style={{
+                      padding: "8px 16px",
+                      border: "1px solid #ccc",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                      backgroundColor: "white",
+                    }}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Lista de templates */}
+            {["template", "rascunho"].map((tipo) => {
+              const lista = templates.filter((t) => t.tipo === tipo);
+              if (lista.length === 0) return null;
+              return (
+                <div key={tipo} style={{ marginBottom: "20px" }}>
+                  <h4
+                    style={{
+                      margin: "0 0 10px 0",
+                      color: tipo === "template" ? "#007bff" : "#6f42c1",
+                    }}
+                  >
+                    {tipo === "template" ? "📋 Templates" : "📝 Rascunhos"} (
+                    {lista.length})
+                  </h4>
+                  {lista.map((t) => (
+                    <div
+                      key={t.id}
+                      style={{
+                        padding: "12px 15px",
+                        border: "1px solid #ddd",
+                        borderRadius: "5px",
+                        marginBottom: "8px",
+                        backgroundColor: "white",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "flex-start",
+                          marginBottom: "6px",
+                        }}
+                      >
+                        <div>
+                          <strong style={{ fontSize: "15px" }}>
+                            {t.titulo}
+                          </strong>
+                          <span
+                            style={{
+                              marginLeft: "8px",
+                              padding: "2px 8px",
+                              borderRadius: "10px",
+                              fontSize: "11px",
+                              backgroundColor:
+                                tipo === "template" ? "#cce5ff" : "#e2d9f3",
+                              color:
+                                tipo === "template" ? "#004085" : "#4a235a",
+                            }}
+                          >
+                            {tipo}
+                          </span>
+                        </div>
+                        <span style={{ fontSize: "12px", color: "#6c757d" }}>
+                          {new Date(t.updatedAt).toLocaleString("pt-BR")}
+                        </span>
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "13px",
+                          color: "#555",
+                          marginBottom: "4px",
+                        }}
+                      >
+                        <strong>Assunto:</strong> {t.assunto}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "12px",
+                          color: "#888",
+                          marginBottom: "8px",
+                          maxHeight: "40px",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {t.mensagem.replace(/<[^>]*>/g, "").substring(0, 150)}
+                        {t.mensagem.length > 150 ? "..." : ""}
+                      </div>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "6px",
+                          fontSize: "12px",
+                        }}
+                      >
+                        <button
+                          onClick={() => carregarTextoNaComposicao(t)}
+                          style={{
+                            padding: "4px 10px",
+                            border: "1px solid #28a745",
+                            borderRadius: "3px",
+                            cursor: "pointer",
+                            backgroundColor: "#d4edda",
+                            color: "#155724",
+                          }}
+                        >
+                          ✉️ Usar
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditandoTemplate({ ...t });
+                            setCriandoTemplate(false);
+                          }}
+                          style={{
+                            padding: "4px 10px",
+                            border: "1px solid #007bff",
+                            borderRadius: "3px",
+                            cursor: "pointer",
+                            backgroundColor: "#cce5ff",
+                            color: "#004085",
+                          }}
+                        >
+                          ✏️ Editar
+                        </button>
+                        <button
+                          onClick={() => excluirTemplate(t.id)}
+                          style={{
+                            padding: "4px 10px",
+                            border: "1px solid #dc3545",
+                            borderRadius: "3px",
+                            cursor: "pointer",
+                            backgroundColor: "#f8d7da",
+                            color: "#721c24",
+                          }}
+                        >
+                          🗑️ Excluir
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
+
+            {templates.length === 0 && !criandoTemplate && (
+              <p style={{ color: "#6c757d", fontStyle: "italic" }}>
+                Nenhum texto salvo ainda. Clique em "➕ Novo Texto" para criar
+                um template ou rascunho.
+              </p>
+            )}
           </div>
         )}
 
