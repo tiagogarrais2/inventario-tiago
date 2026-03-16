@@ -1,0 +1,5 @@
+include:
+  - project: dgti/devops/pipeline
+    ref: main
+    file: 
+      - template-deploy-campus.yaml
