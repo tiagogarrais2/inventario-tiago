@@ -36,9 +36,10 @@ model Inventario {
   id              String   @id @default(cuid())
   nome            String   @unique // Ex: "inventario-1758232868005-tiago"
   nomeExibicao    String   // Nome para exibir na interface
-  proprietarioId  String
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  proprietarioId    String
+  cargoProprietario String  @default("Servidor(a)") @map("cargo_proprietario")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   // Relacionamentos
   proprietario    Usuario           @relation("InventarioProprietario", fields: [proprietarioId], references: [id])
@@ -146,6 +147,7 @@ model Permissao {
   inventarioId String
   usuarioId    String
   ativa        Boolean @default(true)
+  cargo        String  @default("Servidor(a)")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

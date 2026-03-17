@@ -141,6 +141,10 @@ export default function RelatoriosPage({ params }) {
         >
           💰 Itens ordenados por valor
         </Button>
+        {/* Relatório Final */}
+        <Button onClick={() => router.push(`/relatorio-final/${nome}`)}>
+          📄 Relatório Final
+        </Button>
         <hr />
       </div>
     </div>
