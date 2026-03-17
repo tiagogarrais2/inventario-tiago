@@ -1,4 +1,4 @@
-# 📋 Sistema de Inventário Tiago v2.4.1
+# 📋 Sistema de Inventário Tiago v3.1.0
 
 Sistema completo para gerenciamento de inventários com banco de dados PostgreSQL, autenticação, controle de acesso, auditoria, **sistema de correções avançado** e **funcionalidade de exclusão de inventários**. Desenvolvido em Next.js 15 com NextAuth para autenticação segura via Google OAuth e Prisma ORM para persistência de dados.
 
@@ -144,6 +144,7 @@ Sistema completo para gerenciamento de inventários com banco de dados PostgreSQ
 - **Relatórios dinâmicos**: Dados em tempo real do PostgreSQL
 - **Organização por sala**: Visualização completa incluindo salas vazias
 - **Organização por servidor**: Novo relatório que agrupa itens por carga atual/servidor responsável
+- **Minhas Pendências**: Filtro automático que mostra apenas os itens vinculados ao usuário logado
 - **Organização por valor**: Novo relatório que lista itens ordenados por valor depreciado (maior para menor)
 - **Status visual**: Indicação clara de itens inventariados vs não inventariados
 - **Sistema de badges**: Indicadores visuais para diferentes status dos itens:
@@ -688,6 +689,15 @@ npx prisma migrate deploy
 - ✅ **Histórico de alterações**: Rastreamento cronológico completo
 - ✅ **Interface aprimorada**: Badges visuais e navegação integrada
 - ✅ **API robusta**: Endpoints especializados para correções
+
+### **v3.1.0** - 17/03/2026
+
+- 📋 **NEW**: Botão "Minhas Pendências" na página do inventário (`/inventario/[nome]`)
+- 🔍 **NEW**: Filtro automático por carga atual do usuário logado no relatório por servidor (`?meus=true`)
+- 🔗 **NEW**: API `/api/servidores/meu` retorna servidores vinculados ao email do usuário logado
+- 🎯 **NEW**: Banner informativo exibindo cargas atuais filtradas do usuário
+- ⚠️ **NEW**: Aviso quando nenhum servidor está vinculado ao email do usuário
+- 🔒 **SECURITY**: API não expõe emails de outros servidores
 
 ### **v2.4.1** - 20/01/2026
 
