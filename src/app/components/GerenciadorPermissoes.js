@@ -4,6 +4,13 @@ import { useSession } from "next-auth/react";
 import Button from "./Button";
 import { useNotifications } from "./Notifications";
 
+const CARGOS_DISPONIVEIS = [
+  "Presidente",
+  "Vice-Presidente",
+  "Membro",
+  "Servidor(a)",
+];
+
 export default function GerenciadorPermissoes({
   inventarioNome,
   isOwner,
@@ -13,6 +20,8 @@ export default function GerenciadorPermissoes({
   const { showSuccess, showError, showConfirmation } = useNotifications();
   const [permissoes, setPermissoes] = useState([]);
   const [novoEmail, setNovoEmail] = useState("");
+  const [novoCargo, setNovoCargo] = useState("Servidor(a)");
+  const [cargoProprietario, setCargoProprietario] = useState("Servidor(a)");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -24,6 +33,9 @@ export default function GerenciadorPermissoes({
       if (response.ok) {
         const data = await response.json();
         setPermissoes(data.permissoes);
+        if (data.cargoProprietario) {
+          setCargoProprietario(data.cargoProprietario);
+        }
       }
     } catch (error) {
       console.error("Erro ao carregar permissões:", error);
@@ -52,6 +64,7 @@ export default function GerenciadorPermissoes({
         body: JSON.stringify({
           inventarioNome,
           emailUsuario: novoEmail.trim(),
+          cargo: novoCargo,
         }),
       });
 
@@ -60,6 +73,7 @@ export default function GerenciadorPermissoes({
       if (response.ok) {
         setMessage("Permissão concedida com sucesso!");
         setNovoEmail("");
+        setNovoCargo("Servidor(a)");
         carregarPermissoes();
       } else {
         setMessage(`Erro: ${data.error}`);
@@ -69,6 +83,31 @@ export default function GerenciadorPermissoes({
     }
 
     setLoading(false);
+  };
+
+  const atualizarCargo = async (email, cargo) => {
+    try {
+      const response = await fetch("/api/permissoes", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          inventarioNome,
+          emailUsuario: email,
+          cargo,
+        }),
+      });
+
+      if (response.ok) {
+        showSuccess(`Cargo de ${email} atualizado para ${cargo}!`);
+        carregarPermissoes();
+      } else {
+        const data = await response.json();
+        showError(data.error || "Erro ao atualizar cargo");
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar cargo:", error);
+      showError("Erro ao atualizar cargo");
+    }
   };
 
   const removerPermissao = async (email) => {
@@ -162,6 +201,19 @@ export default function GerenciadorPermissoes({
               disabled={loading}
               required
             />
+            <select
+              value={novoCargo}
+              onChange={(e) => setNovoCargo(e.target.value)}
+              className="modal-input"
+              style={{ maxWidth: "180px" }}
+              disabled={loading}
+            >
+              {CARGOS_DISPONIVEIS.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
             <Button
               type="submit"
               disabled={loading}
@@ -174,14 +226,46 @@ export default function GerenciadorPermissoes({
 
         {/* Lista de usuários com acesso */}
         <div className="modal-section">
-          <h3 className="modal-section-title">Usuários com Acesso</h3>
+          <h3 className="modal-section-title">Comissão de Inventário</h3>
 
           {/* Proprietário */}
           <div className="modal-owner-item">
             <div className="modal-list-item-content">
-              <div>
+              <div style={{ flex: 1 }}>
                 <span className="modal-user-email">{session?.user?.email}</span>
                 <span className="modal-owner-badge"> - Proprietário</span>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    marginTop: "4px",
+                  }}
+                >
+                  <label style={{ fontSize: "12px", color: "#6b7280" }}>
+                    Cargo:
+                  </label>
+                  <select
+                    value={cargoProprietario}
+                    onChange={(e) => {
+                      setCargoProprietario(e.target.value);
+                      atualizarCargo(session?.user?.email, e.target.value);
+                    }}
+                    style={{
+                      padding: "2px 8px",
+                      fontSize: "12px",
+                      borderRadius: "4px",
+                      border: "1px solid #d1d5db",
+                      background: "#fff",
+                    }}
+                  >
+                    {CARGOS_DISPONIVEIS.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <hr />
               </div>
             </div>
@@ -190,16 +274,50 @@ export default function GerenciadorPermissoes({
           {/* Usuários com permissão */}
           {permissoes.length === 0 ? (
             <p className="modal-empty-message">
-              Nenhum usuário adicional tem acesso.
+              Nenhum membro adicional na comissão.
             </p>
           ) : (
             permissoes.map((permissao, index) => (
               <div key={index} className="modal-list-item">
                 <div className="modal-list-item-content">
-                  <div>
+                  <div style={{ flex: 1 }}>
                     <span className="modal-user-email">
                       {permissao.usuario.email}
                     </span>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        marginTop: "4px",
+                      }}
+                    >
+                      <label style={{ fontSize: "12px", color: "#6b7280" }}>
+                        Cargo:
+                      </label>
+                      <select
+                        value={permissao.cargo || "Servidor(a)"}
+                        onChange={(e) =>
+                          atualizarCargo(
+                            permissao.usuario.email,
+                            e.target.value
+                          )
+                        }
+                        style={{
+                          padding: "2px 8px",
+                          fontSize: "12px",
+                          borderRadius: "4px",
+                          border: "1px solid #d1d5db",
+                          background: "#fff",
+                        }}
+                      >
+                        {CARGOS_DISPONIVEIS.map((c) => (
+                          <option key={c} value={c}>
+                            {c}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                     <div className="modal-user-date">
                       Concedido em:{" "}
                       {new Date(permissao.createdAt).toLocaleString("pt-BR")}

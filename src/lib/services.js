@@ -494,6 +494,13 @@ class InventarioService {
       throw error;
     }
   }
+
+  static async updateCargoProprietario(nomeInventario, cargo) {
+    return await prisma.inventario.update({
+      where: { nome: nomeInventario },
+      data: { cargoProprietario: cargo },
+    });
+  }
 }
 
 // Service para gerenciar itens de inventário
@@ -979,7 +986,15 @@ class PermissaoService {
         inventarioId: data.inventarioId,
         usuarioId: data.usuarioId,
         ativa: true,
+        cargo: data.cargo || "Servidor(a)",
       },
+    });
+  }
+
+  static async updateCargo(permissaoId, cargo) {
+    return await prisma.permissao.update({
+      where: { id: permissaoId },
+      data: { cargo },
     });
   }
 

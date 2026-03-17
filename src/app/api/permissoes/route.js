@@ -63,7 +63,10 @@ export async function GET(request) {
       inventario
     );
 
-    return NextResponse.json({ permissoes });
+    return NextResponse.json({
+      permissoes,
+      cargoProprietario: inventarioData.cargoProprietario || "Servidor(a)",
+    });
   } catch (error) {
     console.error("Erro ao listar permissões:", error);
 
@@ -89,7 +92,7 @@ export async function POST(request) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
 
-  const { inventarioNome, emailUsuario } = await request.json();
+  const { inventarioNome, emailUsuario, cargo } = await request.json();
 
   if (!inventarioNome || !emailUsuario) {
     return NextResponse.json(
@@ -159,6 +162,7 @@ export async function POST(request) {
     const novaPermissao = await PermissaoService.create({
       usuarioId: usuarioAlvo.id,
       inventarioId: inventarioData.id,
+      cargo: cargo || "Servidor(a)",
     });
 
     await AuditoriaService.log(
@@ -283,6 +287,112 @@ export async function DELETE(request) {
       inventarioNome
     );
 
+    return NextResponse.json(
+      { error: "Erro interno do servidor" },
+      { status: 500 }
+    );
+  }
+}
+
+// PATCH - Atualizar cargo de um membro da comissão
+export async function PATCH(request) {
+  const session = await getServerSession(authOptions);
+
+  if (!session) {
+    return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+  }
+
+  const { inventarioNome, emailUsuario, cargo } = await request.json();
+
+  if (!inventarioNome || !emailUsuario || !cargo) {
+    return NextResponse.json(
+      { error: "Nome do inventário, email e cargo são obrigatórios" },
+      { status: 400 }
+    );
+  }
+
+  const cargosValidos = [
+    "Presidente",
+    "Vice-Presidente",
+    "Membro",
+    "Servidor(a)",
+  ];
+  if (!cargosValidos.includes(cargo)) {
+    return NextResponse.json(
+      { error: `Cargo inválido. Use: ${cargosValidos.join(", ")}` },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const inventarioData = await InventarioService.findByName(inventarioNome);
+    if (!inventarioData) {
+      return NextResponse.json(
+        { error: "Inventário não encontrado" },
+        { status: 404 }
+      );
+    }
+
+    const usuario = await UsuarioService.findByEmail(session.user.email);
+    if (!usuario || inventarioData.proprietarioId !== usuario.id) {
+      return NextResponse.json(
+        { error: "Apenas o proprietário pode alterar cargos" },
+        { status: 403 }
+      );
+    }
+
+    // Se o email é do proprietário, atualizar cargoProprietario no inventário
+    if (emailUsuario === session.user.email) {
+      await InventarioService.updateCargoProprietario(inventarioNome, cargo);
+
+      await AuditoriaService.log(
+        "CARGO_PROPRIETARIO_ATUALIZADO",
+        session.user,
+        { cargo },
+        inventarioNome
+      );
+
+      return NextResponse.json({
+        message: "Cargo do proprietário atualizado com sucesso",
+        cargo,
+      });
+    }
+
+    const usuarioAlvo = await UsuarioService.findByEmail(emailUsuario);
+    if (!usuarioAlvo) {
+      return NextResponse.json(
+        { error: "Usuário não encontrado" },
+        { status: 404 }
+      );
+    }
+
+    const permissao = await PermissaoService.findByUserAndInventario(
+      usuarioAlvo.id,
+      inventarioData.id
+    );
+
+    if (!permissao) {
+      return NextResponse.json(
+        { error: "Usuário não possui acesso a este inventário" },
+        { status: 404 }
+      );
+    }
+
+    await PermissaoService.updateCargo(permissao.id, cargo);
+
+    await AuditoriaService.log(
+      "CARGO_ATUALIZADO",
+      session.user,
+      { emailAlvo: emailUsuario, cargo },
+      inventarioNome
+    );
+
+    return NextResponse.json({
+      message: "Cargo atualizado com sucesso",
+      cargo,
+    });
+  } catch (error) {
+    console.error("Erro ao atualizar cargo:", error);
     return NextResponse.json(
       { error: "Erro interno do servidor" },
       { status: 500 }
