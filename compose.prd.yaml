@@ -55,18 +55,15 @@ services:
     # configuração de Docker Secret (https://docs.docker.com/engine/swarm/secrets/), para aplicações que usam banco de dados
     secrets:
       # A secret com o namespace da sua aplicação será criada pela DGTI e deve ser referenciada em cada container que fará uso da mesma
-      - pg_ 
+      - mysql_inventario_pass 
     # rede Docker padrão para projetos hospedados no cluster
     networks:
       - rede_projetos
  
 secrets:
-  # nome do Docker Secret criado pela DGTI contendo a senha do banco PostgreSQL 16
-  pg_exemplo_pass:
+  mysql_inventario_pass:
     external: true
-  # nome do Docker Secret criado pela DGTI contendo a senha do banco MariaDB
-  mdb_exemplo_pass:
-    external: true
+  
 
 networks:
   rede_projetos:
