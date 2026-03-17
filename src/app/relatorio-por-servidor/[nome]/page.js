@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Button from "../../components/Button";
 
 export default function RelatorioPorServidorPage({ params }) {
@@ -10,6 +10,8 @@ export default function RelatorioPorServidorPage({ params }) {
 
   const { data: session, status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const filtrarMeus = searchParams.get("meus") === "true";
   const [itensPorServidor, setItensPorServidor] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -18,7 +20,10 @@ export default function RelatorioPorServidorPage({ params }) {
   const [accessLoading, setAccessLoading] = useState(true);
   const [servidoresFiltrados, setServidoresFiltrados] = useState([]);
   const [todosServidores, setTodosServidores] = useState([]);
-  const [mostrarTodosServidores, setMostrarTodosServidores] = useState(true);
+  const [mostrarTodosServidores, setMostrarTodosServidores] =
+    useState(!filtrarMeus);
+  const [meusServidoresNomes, setMeusServidoresNomes] = useState([]);
+  const [avisoSemServidor, setAvisoSemServidor] = useState(false);
   const [modalAberto, setModalAberto] = useState(false);
   const [itemSelecionado, setItemSelecionado] = useState(null);
   const [salas, setSalas] = useState([]);
@@ -150,8 +155,36 @@ export default function RelatorioPorServidorPage({ params }) {
 
         // Guardar todos os servidores para o filtro
         setTodosServidores(servidores.sort());
-        setServidoresFiltrados(servidores.sort());
         setSalas(salasFromItems);
+
+        // Se ?meus=true, buscar servidores do usuário logado e pré-filtrar
+        if (filtrarMeus) {
+          try {
+            const meusRes = await fetch(
+              `/api/servidores/meu?inventario=${encodeURIComponent(nome)}`
+            );
+            if (meusRes.ok) {
+              const meusNomes = await meusRes.json();
+              setMeusServidoresNomes(meusNomes);
+              if (meusNomes.length > 0) {
+                setServidoresFiltrados(meusNomes);
+                setMostrarTodosServidores(false);
+              } else {
+                setServidoresFiltrados(servidores.sort());
+                setMostrarTodosServidores(true);
+                setAvisoSemServidor(true);
+              }
+            } else {
+              setServidoresFiltrados(servidores.sort());
+              setMostrarTodosServidores(true);
+            }
+          } catch {
+            setServidoresFiltrados(servidores.sort());
+            setMostrarTodosServidores(true);
+          }
+        } else {
+          setServidoresFiltrados(servidores.sort());
+        }
 
         // Agrupar itens por servidor (cargaAtual)
         const agrupado = {};
@@ -414,6 +447,46 @@ export default function RelatorioPorServidorPage({ params }) {
 
   return (
     <div style={{ padding: "20px" }}>
+      {avisoSemServidor && (
+        <div
+          style={{
+            marginBottom: "20px",
+            padding: "15px",
+            border: "1px solid #ffc107",
+            borderRadius: "8px",
+            backgroundColor: "#fff3cd",
+            color: "#856404",
+          }}
+        >
+          <strong>⚠️ Nenhum servidor vinculado ao seu email.</strong>
+          <p style={{ margin: "5px 0 0 0" }}>
+            Seu email ({session?.user?.email}) não está associado a nenhuma
+            carga atual neste inventário. Entre em contato com o administrador
+            para vincular seu email.
+          </p>
+        </div>
+      )}
+      {filtrarMeus && meusServidoresNomes.length > 0 && (
+        <div
+          style={{
+            marginBottom: "20px",
+            padding: "15px",
+            border: "1px solid #007bff",
+            borderRadius: "8px",
+            backgroundColor: "#cce5ff",
+            color: "#004085",
+          }}
+        >
+          <strong>📋 Exibindo seu inventário</strong>
+          <p style={{ margin: "5px 0 0 0" }}>
+            Filtrado por{" "}
+            {meusServidoresNomes.length === 1
+              ? "sua carga atual"
+              : "suas cargas atuais"}
+            : <strong>{meusServidoresNomes.join(", ")}</strong>
+          </p>
+        </div>
+      )}
       <h2>Relatório por Carga Atual</h2>
       <h2>
         <a

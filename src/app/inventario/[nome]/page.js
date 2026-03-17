@@ -488,6 +488,11 @@ export default function InventarioPage({ params }) {
       <Button onClick={() => router.push(`/inventario/${nome}/inventariar`)}>
         📝 Realizar Inventário
       </Button>
+      <Button
+        onClick={() => router.push(`/relatorio-por-servidor/${nome}?meus=true`)}
+      >
+        📋 Meu inventário
+      </Button>
       {isOwner && (
         <Button onClick={() => router.push(`/inventario/${nome}/emails`)}>
           📧 Disparar Emails
