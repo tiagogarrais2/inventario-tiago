@@ -286,6 +286,348 @@ export default function RelatorioFinalPage({ params }) {
   const temComunicacoes = comunicacoes.total > 0;
   const secaoConsideracoes = temComunicacoes ? "6" : "5";
 
+  // ======== ANEXOS (ABNT) =========
+  // Tabelas grandes (tbody > THRESHOLD) são movidas para a seção final
+  // e no corpo fica apenas uma referência do tipo "Tabela A.1 no Anexo A".
+  const THRESHOLD = 30;
+
+  const annexLetterFromIndex = (index) => {
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    let n = index;
+    let s = "";
+    // Converte 0->A ... 25->Z ... 26->AA etc.
+    while (true) {
+      const rem = n % 26;
+      s = letters[rem] + s;
+      n = Math.floor(n / 26) - 1;
+      if (n < 0) break;
+    }
+    return s;
+  };
+
+  const statusEntries = Object.entries(itensPorStatus);
+  const servidoresOrdenados = Object.entries(itensPorServidor).sort(
+    (a, b) => b[1].total - a[1].total
+  );
+  const timelineRows = timeline.slice(0, 50);
+  const itensMovidosListaRows = itensMovidos.lista || [];
+  const itensCadastradosListaRows = itensCadastrados.lista || [];
+  const comunicacoesListaRows = comunicacoes.lista || [];
+  const correcoesPorUsuarioRows = correcoesRealizadas.porUsuario || [];
+  const correcoesListaRows = correcoesRealizadas.lista || [];
+
+  const tableDistribuicaoStatus = (
+    <table>
+      <thead>
+        <tr>
+          <th>Status</th>
+          <th>Quantidade</th>
+        </tr>
+      </thead>
+      <tbody>
+        {statusEntries.map(([st, qtd]) => (
+          <tr key={st}>
+            <td>{st}</td>
+            <td>{qtd.toLocaleString("pt-BR")}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+
+  const tableDistribuicaoSala = (
+    <table>
+      <thead>
+        <tr>
+          <th>Sala</th>
+          <th>Total</th>
+          <th>Inventariados</th>
+          <th>Pendentes</th>
+          <th>% Concluído</th>
+        </tr>
+      </thead>
+      <tbody>
+        {estatisticasPorSala.map((sala, i) => (
+          <tr key={i}>
+            <td>{sala.nome}</td>
+            <td>{sala.totalItens}</td>
+            <td>{sala.itensInventariados}</td>
+            <td>{sala.itensNaoInventariados}</td>
+            <td>{sala.percentual}%</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+
+  const tableDistribuicaoServidor = (
+    <table>
+      <thead>
+        <tr>
+          <th>Servidor / Carga</th>
+          <th>Total</th>
+          <th>Inventariados</th>
+          <th>Pendentes</th>
+        </tr>
+      </thead>
+      <tbody>
+        {servidoresOrdenados.map(([nomeServ, v], i) => (
+          <tr key={i}>
+            <td>{nomeServ}</td>
+            <td>{v.total}</td>
+            <td>{v.inventariados}</td>
+            <td>{v.pendentes}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+
+  const tableMovimentacao = (
+    <table>
+      <thead>
+        <tr>
+          <th>Nº Tombo</th>
+          <th>Descrição</th>
+          <th>Sala Original</th>
+          <th>Sala Encontrada</th>
+        </tr>
+      </thead>
+      <tbody>
+        {itensMovidosListaRows.map((item, i) => (
+          <tr key={i}>
+            <td>{item.numero}</td>
+            <td>{item.descricao}</td>
+            <td>{item.salaOriginal}</td>
+            <td>{item.salaEncontrada}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+
+  const tableItensCadastrados = (
+    <table>
+      <thead>
+        <tr>
+          <th>Nº Tombo</th>
+          <th>Descrição</th>
+          <th>Sala</th>
+        </tr>
+      </thead>
+      <tbody>
+        {itensCadastradosListaRows.map((item, i) => (
+          <tr key={i}>
+            <td>{item.numero}</td>
+            <td>{item.descricao}</td>
+            <td>{item.sala}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+
+  const tableCorrecoesPorUsuario = (
+    <table>
+      <thead>
+        <tr>
+          <th>Membro</th>
+          <th>Correções Realizadas</th>
+        </tr>
+      </thead>
+      <tbody>
+        {correcoesPorUsuarioRows.map((c, i) => (
+          <tr key={i}>
+            <td>{c.nome}</td>
+            <td>{c.total}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+
+  const tableDetalhamentoCorrecoes = (
+    <table>
+      <thead>
+        <tr>
+          <th>Nº Tombo</th>
+          <th>Descrição</th>
+          <th>Observações</th>
+          <th>Responsável</th>
+          <th>Data</th>
+        </tr>
+      </thead>
+      <tbody>
+        {correcoesListaRows.map((c, i) => (
+          <tr key={i}>
+            <td>{c.numero}</td>
+            <td>{c.descricao}</td>
+            <td>{c.observacoes}</td>
+            <td>{c.responsavel}</td>
+            <td style={{ whiteSpace: "nowrap" }}>
+              {c.data
+                ? new Date(c.data).toLocaleDateString("pt-BR", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "2-digit",
+                  })
+                : "—"}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+
+  const tableEstadoConservacao = (
+    <table>
+      <thead>
+        <tr>
+          <th>Estado</th>
+          <th>Quantidade</th>
+        </tr>
+      </thead>
+      <tbody>
+        {estadoEntriesOrdenados.map(([estado, qtd]) => (
+          <tr key={estado}>
+            <td>{estado}</td>
+            <td>{qtd.toLocaleString("pt-BR")}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+
+  const tableCronologia = (
+    <table>
+      <thead>
+        <tr>
+          <th>Data/Hora</th>
+          <th>Ação</th>
+          <th>Usuário</th>
+        </tr>
+      </thead>
+      <tbody>
+        {timelineRows.map((t, i) => (
+          <tr key={i}>
+            <td style={{ whiteSpace: "nowrap" }}>
+              {new Date(t.data).toLocaleString("pt-BR")}
+            </td>
+            <td>{t.acao}</td>
+            <td>{t.usuario}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+
+  const tableComunicacoes = (
+    <table>
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Assunto</th>
+          <th>Remetente</th>
+          <th>Destinatários</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {comunicacoesListaRows.map((c, i) => (
+          <tr key={i}>
+            <td style={{ whiteSpace: "nowrap" }}>{formatarData(c.data)}</td>
+            <td>{c.assunto}</td>
+            <td>{c.remetente}</td>
+            <td>{c.totalEnviados}</td>
+            <td>{c.status}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+
+  const tableCandidates = [
+    {
+      key: "status",
+      title: "Distribuição por Status",
+      shouldRenderInBody: true,
+      rowCount: statusEntries.length,
+      table: tableDistribuicaoStatus,
+    },
+    {
+      key: "sala",
+      title: "Distribuição por Sala",
+      shouldRenderInBody: true,
+      rowCount: estatisticasPorSala.length,
+      table: tableDistribuicaoSala,
+    },
+    {
+      key: "servidor",
+      title: "Distribuição por Servidor / Carga Atual",
+      shouldRenderInBody: true,
+      rowCount: servidoresOrdenados.length,
+      table: tableDistribuicaoServidor,
+    },
+    {
+      key: "movimentacao",
+      title: "Movimentação Patrimonial",
+      shouldRenderInBody: itensMovidos.total > 0,
+      rowCount: itensMovidosListaRows.length,
+      table: tableMovimentacao,
+    },
+    {
+      key: "itensCadastrados",
+      title: "Itens Cadastrados Durante o Inventário",
+      shouldRenderInBody: itensCadastrados.total > 0,
+      rowCount: itensCadastradosListaRows.length,
+      table: tableItensCadastrados,
+    },
+    {
+      key: "correcoesPorUsuario",
+      title: "Correções por membro da comissão",
+      shouldRenderInBody: correcoesPorUsuarioRows.length > 0,
+      rowCount: correcoesPorUsuarioRows.length,
+      table: tableCorrecoesPorUsuario,
+    },
+    {
+      key: "correcoesDetalhamento",
+      title: "Detalhamento das correções",
+      shouldRenderInBody: correcoesListaRows.length > 0,
+      rowCount: correcoesListaRows.length,
+      table: tableDetalhamentoCorrecoes,
+    },
+    {
+      key: "estadoConservacao",
+      title: "Distribuição por estado de conservação",
+      shouldRenderInBody: estadoLabels.length > 0,
+      rowCount: estadoEntriesOrdenados.length,
+      table: tableEstadoConservacao,
+    },
+    {
+      key: "cronologia",
+      title: "Cronologia do Inventário",
+      shouldRenderInBody: timeline.length > 0,
+      rowCount: timelineRows.length,
+      table: tableCronologia,
+    },
+    {
+      key: "comunicacoes",
+      title: "Comunicações Realizadas",
+      shouldRenderInBody: temComunicacoes,
+      rowCount: comunicacoesListaRows.length,
+      table: tableComunicacoes,
+    },
+  ];
+
+  const movedCandidates = tableCandidates.filter(
+    (c) => c.shouldRenderInBody && c.rowCount > THRESHOLD
+  );
+
+  const annexRefByKey = {};
+  movedCandidates.forEach((c, idx) => {
+    annexRefByKey[c.key] = { annexLetter: annexLetterFromIndex(idx) };
+  });
+
   return (
     <>
       <style jsx global>{`
@@ -688,22 +1030,14 @@ export default function RelatorioFinalPage({ params }) {
             Os itens do inventário foram classificados conforme seu status de
             processamento. A seguir, apresenta-se a distribuição:
           </p>
-          <table>
-            <thead>
-              <tr>
-                <th>Status</th>
-                <th>Quantidade</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.entries(itensPorStatus).map(([st, qtd]) => (
-                <tr key={st}>
-                  <td>{st}</td>
-                  <td>{qtd.toLocaleString("pt-BR")}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {annexRefByKey["status"] ? (
+            <p className="no-indent">
+              Os dados da Tabela {annexRefByKey["status"].annexLetter}.1
+              encontram-se no Anexo {annexRefByKey["status"].annexLetter}.
+            </p>
+          ) : (
+            tableDistribuicaoStatus
+          )}
           <p
             className="no-indent"
             style={{
@@ -724,30 +1058,17 @@ export default function RelatorioFinalPage({ params }) {
           <h3>3.4 Distribuição por Sala</h3>
           <p>
             Os bens patrimoniais encontram-se distribuídos em {totalSalas}{" "}
-            salas. A tabela a seguir apresenta o detalhamento por sala:
+            salas.{" "}
+            {annexRefByKey["sala"] ? (
+              <>
+                Os dados da Tabela {annexRefByKey["sala"].annexLetter}.1
+                encontram-se no Anexo {annexRefByKey["sala"].annexLetter}.
+              </>
+            ) : (
+              <>A tabela a seguir apresenta o detalhamento por sala:</>
+            )}
           </p>
-          <table>
-            <thead>
-              <tr>
-                <th>Sala</th>
-                <th>Total</th>
-                <th>Inventariados</th>
-                <th>Pendentes</th>
-                <th>% Concluído</th>
-              </tr>
-            </thead>
-            <tbody>
-              {estatisticasPorSala.map((sala, i) => (
-                <tr key={i}>
-                  <td>{sala.nome}</td>
-                  <td>{sala.totalItens}</td>
-                  <td>{sala.itensInventariados}</td>
-                  <td>{sala.itensNaoInventariados}</td>
-                  <td>{sala.percentual}%</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {annexRefByKey["sala"] ? null : tableDistribuicaoSala}
           {salasTop10.length > 0 && (
             <>
               <p
@@ -772,30 +1093,17 @@ export default function RelatorioFinalPage({ params }) {
           <h3>3.5 Distribuição por Servidor / Carga Atual</h3>
           <p>
             Os bens estão vinculados a {totalServidores} servidores (cargas
-            atuais). A tabela a seguir apresenta o detalhamento:
+            atuais).{" "}
+            {annexRefByKey["servidor"] ? (
+              <>
+                Os dados da Tabela {annexRefByKey["servidor"].annexLetter}.1
+                encontram-se no Anexo {annexRefByKey["servidor"].annexLetter}.
+              </>
+            ) : (
+              <>A tabela a seguir apresenta o detalhamento:</>
+            )}
           </p>
-          <table>
-            <thead>
-              <tr>
-                <th>Servidor / Carga</th>
-                <th>Total</th>
-                <th>Inventariados</th>
-                <th>Pendentes</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.entries(itensPorServidor)
-                .sort((a, b) => b[1].total - a[1].total)
-                .map(([nomeServ, v], i) => (
-                  <tr key={i}>
-                    <td>{nomeServ}</td>
-                    <td>{v.total}</td>
-                    <td>{v.inventariados}</td>
-                    <td>{v.pendentes}</td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
+          {annexRefByKey["servidor"] ? null : tableDistribuicaoServidor}
           {servidoresEntries.length > 0 && (
             <>
               <p
@@ -824,26 +1132,17 @@ export default function RelatorioFinalPage({ params }) {
             registrada, caracterizando movimentação patrimonial.
           </p>
           {itensMovidos.total > 0 && (
-            <table>
-              <thead>
-                <tr>
-                  <th>Nº Tombo</th>
-                  <th>Descrição</th>
-                  <th>Sala Original</th>
-                  <th>Sala Encontrada</th>
-                </tr>
-              </thead>
-              <tbody>
-                {itensMovidos.lista.map((item, i) => (
-                  <tr key={i}>
-                    <td>{item.numero}</td>
-                    <td>{item.descricao}</td>
-                    <td>{item.salaOriginal}</td>
-                    <td>{item.salaEncontrada}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <>
+              {annexRefByKey["movimentacao"] ? (
+                <p className="no-indent">
+                  Os dados da Tabela{" "}
+                  {annexRefByKey["movimentacao"].annexLetter}.1 encontram-se no
+                  Anexo {annexRefByKey["movimentacao"].annexLetter}.
+                </p>
+              ) : (
+                tableMovimentacao
+              )}
+            </>
           )}
         </div>
 
@@ -855,24 +1154,17 @@ export default function RelatorioFinalPage({ params }) {
           constavam na carga inicial de dados.
         </p>
         {itensCadastrados.total > 0 && (
-          <table>
-            <thead>
-              <tr>
-                <th>Nº Tombo</th>
-                <th>Descrição</th>
-                <th>Sala</th>
-              </tr>
-            </thead>
-            <tbody>
-              {itensCadastrados.lista.map((item, i) => (
-                <tr key={i}>
-                  <td>{item.numero}</td>
-                  <td>{item.descricao}</td>
-                  <td>{item.sala}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <>
+            {annexRefByKey["itensCadastrados"] ? (
+              <p className="no-indent">
+                Os dados da Tabela{" "}
+                {annexRefByKey["itensCadastrados"].annexLetter}.1 encontram-se
+                no Anexo {annexRefByKey["itensCadastrados"].annexLetter}.
+              </p>
+            ) : (
+              tableItensCadastrados
+            )}
+          </>
         )}
 
         {/* 3.8 Correções Realizadas */}
@@ -888,22 +1180,16 @@ export default function RelatorioFinalPage({ params }) {
               <p className="no-indent">
                 <strong>Correções por membro da comissão:</strong>
               </p>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Membro</th>
-                    <th>Correções Realizadas</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {correcoesRealizadas.porUsuario.map((c, i) => (
-                    <tr key={i}>
-                      <td>{c.nome}</td>
-                      <td>{c.total}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              {annexRefByKey["correcoesPorUsuario"] ? (
+                <p className="no-indent">
+                  Os dados da Tabela{" "}
+                  {annexRefByKey["correcoesPorUsuario"].annexLetter}.1
+                  encontram-se no Anexo{" "}
+                  {annexRefByKey["correcoesPorUsuario"].annexLetter}.
+                </p>
+              ) : (
+                tableCorrecoesPorUsuario
+              )}
             </>
           )}
           {correcoesRealizadas.lista && correcoesRealizadas.lista.length > 0 && (
@@ -911,36 +1197,16 @@ export default function RelatorioFinalPage({ params }) {
               <p className="no-indent">
                 <strong>Detalhamento das correções:</strong>
               </p>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Nº Tombo</th>
-                    <th>Descrição</th>
-                    <th>Observações</th>
-                    <th>Responsável</th>
-                    <th>Data</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {correcoesRealizadas.lista.map((c, i) => (
-                    <tr key={i}>
-                      <td>{c.numero}</td>
-                      <td>{c.descricao}</td>
-                      <td>{c.observacoes}</td>
-                      <td>{c.responsavel}</td>
-                      <td style={{ whiteSpace: "nowrap" }}>
-                        {c.data
-                          ? new Date(c.data).toLocaleDateString("pt-BR", {
-                              day: "2-digit",
-                              month: "2-digit",
-                              year: "2-digit",
-                            })
-                          : "—"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              {annexRefByKey["correcoesDetalhamento"] ? (
+                <p className="no-indent">
+                  Os dados da Tabela{" "}
+                  {annexRefByKey["correcoesDetalhamento"].annexLetter}.1
+                  encontram-se no Anexo{" "}
+                  {annexRefByKey["correcoesDetalhamento"].annexLetter}.
+                </p>
+              ) : (
+                tableDetalhamentoCorrecoes
+              )}
             </>
           )}
         </div>
@@ -953,22 +1219,16 @@ export default function RelatorioFinalPage({ params }) {
         </p>
         {estadoLabels.length > 0 ? (
           <>
-            <table>
-              <thead>
-                <tr>
-                  <th>Estado</th>
-                  <th>Quantidade</th>
-                </tr>
-              </thead>
-              <tbody>
-                {estadoEntriesOrdenados.map(([estado, qtd]) => (
-                  <tr key={estado}>
-                    <td>{estado}</td>
-                    <td>{qtd.toLocaleString("pt-BR")}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            {annexRefByKey["estadoConservacao"] ? (
+              <p className="no-indent">
+                Os dados da Tabela{" "}
+                {annexRefByKey["estadoConservacao"].annexLetter}.1 encontram-se
+                no Anexo{" "}
+                {annexRefByKey["estadoConservacao"].annexLetter}.
+              </p>
+            ) : (
+              tableEstadoConservacao
+            )}
             <p
               className="no-indent"
               style={{
@@ -1055,26 +1315,15 @@ export default function RelatorioFinalPage({ params }) {
             eventos registrados:
           </p>
           {timeline.length > 0 ? (
-            <table>
-              <thead>
-                <tr>
-                  <th>Data/Hora</th>
-                  <th>Ação</th>
-                  <th>Usuário</th>
-                </tr>
-              </thead>
-              <tbody>
-                {timeline.slice(0, 50).map((t, i) => (
-                  <tr key={i}>
-                    <td style={{ whiteSpace: "nowrap" }}>
-                      {new Date(t.data).toLocaleString("pt-BR")}
-                    </td>
-                    <td>{t.acao}</td>
-                    <td>{t.usuario}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            annexRefByKey["cronologia"] ? (
+              <p className="no-indent">
+                Os dados da Tabela {annexRefByKey["cronologia"].annexLetter}.1
+                encontram-se no Anexo{" "}
+                {annexRefByKey["cronologia"].annexLetter}.
+              </p>
+            ) : (
+              tableCronologia
+            )
           ) : (
             <p>Nenhum registro de atividade encontrado.</p>
           )}
@@ -1095,30 +1344,15 @@ export default function RelatorioFinalPage({ params }) {
               comunicação(ões) por e-mail para servidores e membros relacionados
               ao processo:
             </p>
-            <table>
-              <thead>
-                <tr>
-                  <th>Data</th>
-                  <th>Assunto</th>
-                  <th>Remetente</th>
-                  <th>Destinatários</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {comunicacoes.lista.map((c, i) => (
-                  <tr key={i}>
-                    <td style={{ whiteSpace: "nowrap" }}>
-                      {formatarData(c.data)}
-                    </td>
-                    <td>{c.assunto}</td>
-                    <td>{c.remetente}</td>
-                    <td>{c.totalEnviados}</td>
-                    <td>{c.status}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            {annexRefByKey["comunicacoes"] ? (
+              <p className="no-indent">
+                Os dados da Tabela {annexRefByKey["comunicacoes"].annexLetter}.1
+                encontram-se no Anexo{" "}
+                {annexRefByKey["comunicacoes"].annexLetter}.
+              </p>
+            ) : (
+              tableComunicacoes
+            )}
           </div>
         )}
 
@@ -1161,6 +1395,32 @@ export default function RelatorioFinalPage({ params }) {
             .
           </p>
         </div>
+
+        {/* ============= ANEXOS ============= */}
+        {movedCandidates.length > 0 && (
+          <div className="page-break">
+            <h2>ANEXOS</h2>
+            {movedCandidates.map((c, idx) => {
+              const ref = annexRefByKey[c.key];
+              return (
+                <div key={c.key} className={idx === 0 ? "" : "page-break"}>
+                  <h3>ANEXO {ref.annexLetter}</h3>
+                  <p
+                    className="no-indent"
+                    style={{
+                      textAlign: "center",
+                      fontWeight: "bold",
+                      fontSize: "11pt",
+                    }}
+                  >
+                    Tabela {ref.annexLetter}.1 — {c.title}
+                  </p>
+                  {c.table}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </>
   );
