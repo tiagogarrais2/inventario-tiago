@@ -687,6 +687,34 @@ class ItemInventarioService {
   static async listByInventario(nomeInventario) {
     return await this.findByInventario(nomeInventario);
   }
+
+  // Busca o próximo número sequencial para bens sem etiqueta (prefixo 99999)
+  static async findProximoNumeroSemEtiqueta(nomeInventario) {
+    const inventario = await InventarioService.findByName(nomeInventario);
+    if (!inventario) throw new Error("Inventário não encontrado");
+
+    const itensSemEtiqueta = await prisma.itemInventario.findMany({
+      where: {
+        inventarioId: inventario.id,
+        numero: { startsWith: "99999" },
+      },
+      select: { numero: true },
+    });
+
+    if (itensSemEtiqueta.length === 0) {
+      return "999991";
+    }
+
+    let maxSufixo = 0;
+    for (const item of itensSemEtiqueta) {
+      const sufixo = parseInt(item.numero.slice(5), 10);
+      if (!isNaN(sufixo) && sufixo > maxSufixo) {
+        maxSufixo = sufixo;
+      }
+    }
+
+    return "99999" + (maxSufixo + 1);
+  }
 }
 
 // Service para gerenciar salas

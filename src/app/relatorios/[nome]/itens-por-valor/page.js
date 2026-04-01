@@ -459,6 +459,24 @@ export default function RelatorioItensPorValorPage({ params }) {
                   📝 CADASTRADO
                 </div>
               )}
+              {/* Badge SEM ETIQUETA - quando número começa com 99999 */}
+              {item.numero?.startsWith("99999") && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "-8px",
+                    left: "10px",
+                    backgroundColor: "#e67e22",
+                    color: "white",
+                    padding: "2px 8px",
+                    fontSize: "12px",
+                    borderRadius: "10px",
+                    fontWeight: "bold",
+                  }}
+                >
+                  🏷️ SEM ETIQUETA
+                </div>
+              )}
               {/* Badge MOVIDO - quando item foi encontrado em sala diferente */}
               {item.salaEncontrada &&
                 item.sala &&
@@ -532,6 +550,14 @@ export default function RelatorioItensPorValorPage({ params }) {
                   <br />
                   <strong style={{ color: "#007bff" }}>
                     🔖 Item cadastrado durante o inventário
+                  </strong>
+                </>
+              )}
+              {item.numero?.startsWith("99999") && (
+                <>
+                  <br />
+                  <strong style={{ color: "#e67e22" }}>
+                    🏷️ Sobra de inventário — Bem sem etiqueta
                   </strong>
                 </>
               )}
