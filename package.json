@@ -1,6 +1,8 @@
 {
-  "name": "inventario-tiago",
-  "version": "3.2.0",
+  "name": "sistema-informatizado-de-inventario-patrimonial",
+  "version": "3.3.0",
+  "author": "Tiago das Graças Arrais <tiago.arrais@ifce.edu.br>",
+  "description": "Sistema Informatizado de Inventário Patrimonial",
   "private": true,
   "scripts": {
     "dev": "next dev",

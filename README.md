@@ -1,6 +1,6 @@
-# 📋 Sistema de Inventário Tiago v3.2.0
+# 📋 Sistema de Inventário Tiago v3.3.0
 
-Sistema completo para gerenciamento de inventários com banco de dados PostgreSQL, autenticação, controle de acesso, auditoria, **sistema de correções avançado** e **funcionalidade de exclusão de inventários**. Desenvolvido em Next.js 15 com NextAuth para autenticação segura via Google OAuth e Prisma ORM para persistência de dados.
+Sistema completo para gerenciamento de inventários com banco de dados PostgreSQL, autenticação, controle de acesso, auditoria, **sistema de correções avançado**, **funcionalidade de exclusão de inventários** e **cadastro de bens sem etiqueta (sobra de inventário)**. Desenvolvido em Next.js 15 com NextAuth para autenticação segura via Google OAuth e Prisma ORM para persistência de dados.
 
 ---
 
@@ -151,6 +151,7 @@ Sistema completo para gerenciamento de inventários com banco de dados PostgreSQ
   - 🟢 **Badge INVENTARIADO** - Para itens confirmados durante inventário
   - 🟠 **Badge CORRIGIDO** - Para itens que sofreram correções
   - 🔵 **Badge CADASTRADO** - Para itens adicionados durante o inventário
+  - 🟠 **Badge SEM ETIQUETA** - Para bens sem etiqueta patrimonial (sobra de inventário)
 - **Bordas coloridas**: Sistema de prioridade visual por status
 - **Posicionamento inteligente**: Badges sem sobreposições para impressão
 - **Navegação integrada**: Links diretos entre relatório, inventário e correções
@@ -430,6 +431,7 @@ src/app/
 │   ├── verificar-acesso/  # Verificação de permissões
 │   ├── listar/            # Listagem de inventários
 │   ├── add-inventario/    # Adição de itens
+│   ├── proximo-numero-sem-etiqueta/ # API de numeração automática para bens sem etiqueta
 │   ├── update-inventario/ # Atualização de itens
 │   ├── correcao-inventario/ # API de correções v2.1.0
 │   ├── correcoes/         # Histórico de correções v2.1.0
@@ -583,6 +585,7 @@ npx prisma migrate deploy
 - 🟢 **Badge INVENTARIADO**: Para itens confirmados durante inventário
 - 🟠 **Badge CORRIGIDO**: Para itens que sofreram correções
 - 🔵 **Badge CADASTRADO**: Para itens adicionados durante o inventário
+- 🟠 **Badge SEM ETIQUETA**: Para bens sem etiqueta patrimonial (prefixo 99999)
 - **Bordas Coloridas**: Sistema de prioridade visual por status
 - **Posicionamento Inteligente**: Badges sem sobreposições para impressão perfeita
 
@@ -689,6 +692,19 @@ npx prisma migrate deploy
 - ✅ **Histórico de alterações**: Rastreamento cronológico completo
 - ✅ **Interface aprimorada**: Badges visuais e navegação integrada
 - ✅ **API robusta**: Endpoints especializados para correções
+
+### **v3.3.0** - 01/04/2026
+
+- 🏷️ **NEW**: Sobra de Inventário — Fluxo institucionalizado para cadastro de bens sem etiqueta (prefixo 99999)
+- 🔢 **NEW**: API `/api/proximo-numero-sem-etiqueta` com numeração automática sequencial
+- 🆕 **NEW**: Botão "🏷️ Cadastrar Bem Sem Etiqueta" na página do inventário e na tela de inventariar
+- 🎨 **NEW**: Badge laranja "SEM ETIQUETA" nos relatórios por sala, por servidor e por valor
+- 📋 **NEW**: Seção 3.8 "Sobra de Inventário" no relatório final com tabela detalhada
+- 📊 **NEW**: Status "SEM ETIQUETA" no gráfico de distribuição por status do relatório final
+- 📝 **NEW**: Menção automática de bens sem etiqueta nas considerações finais do relatório
+- 🔢 **NEW**: Visão geral do relatório final agora exibe contagem de bens sem etiqueta
+- ♻️ **ENHANCED**: Renumeração das seções do relatório final (3.8→3.9 Correções, 3.9→3.10 Conservação, 3.10→3.11 Marcas)
+- 🔒 **SECURITY**: Proteção contra duplicatas via constraint de unicidade existente
 
 ### **v3.2.0** - 17/03/2026
 

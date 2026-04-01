@@ -303,6 +303,28 @@ export default function InventariarPage({ params }) {
     router.push(`/cadastrar?${params.toString()}`);
   }
 
+  async function handleCadastrarSemEtiqueta() {
+    try {
+      const res = await fetch(
+        `/api/proximo-numero-sem-etiqueta?inventario=${encodeURIComponent(nome)}`
+      );
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Erro ao buscar próximo número.");
+      }
+      const { proximoNumero } = await res.json();
+      const params = new URLSearchParams({
+        nome: nome,
+        numero: proximoNumero,
+        sala: salaSelecionada,
+        from: "inventariar",
+      });
+      router.push(`/cadastrar?${params.toString()}`);
+    } catch (error) {
+      alert(`Erro ao cadastrar bem sem etiqueta: ${error.message}`);
+    }
+  }
+
   function handleDadosIncorretos() {
     if (!resultado) return;
 
@@ -524,9 +546,23 @@ export default function InventariarPage({ params }) {
       )}
       {(erro === "Item não encontrado." ||
         erro === "Item não encontrado pelo número de série.") && (
-        <Button onClick={handleCadastrar} style={{ marginTop: 10 }}>
-          Cadastrar item
-        </Button>
+        <div
+          style={{
+            display: "flex",
+            gap: "10px",
+            justifyContent: "center",
+            flexWrap: "wrap",
+            marginTop: 10,
+          }}
+        >
+          <Button onClick={handleCadastrar}>Cadastrar item</Button>
+          <Button
+            onClick={handleCadastrarSemEtiqueta}
+            style={{ backgroundColor: "#e67e22", borderColor: "#e67e22" }}
+          >
+            🏷️ Cadastrar Bem Sem Etiqueta
+          </Button>
+        </div>
       )}
 
       {resultado && (

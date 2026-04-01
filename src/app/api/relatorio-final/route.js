@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
 import prisma from "../../../lib/db.js";
-import { InventarioService, AuditoriaService } from "../../../lib/services.js";
+import { InventarioService } from "../../../lib/services.js";
 
 export async function GET(request) {
   const session = await getServerSession(authOptions);
@@ -29,6 +29,7 @@ export async function GET(request) {
       return NextResponse.json({ error: "Acesso negado." }, { status: 403 });
     }
 
+    // Buscar inventário (checkPermissions já validou existência)
     const inventario = await InventarioService.findByName(nomeInventario);
     if (!inventario) {
       return NextResponse.json(
@@ -37,14 +38,12 @@ export async function GET(request) {
       );
     }
 
-    // Buscar todos os dados em paralelo
+    // Buscar todos os dados em paralelo — apenas queries essenciais
+    // Estatísticas são calculadas em memória a partir dos itens já carregados
     const [
       itens,
       salas,
       servidores,
-      estatisticas,
-      estatisticasPorSala,
-      resumoCorrecoes,
       permissoesInventario,
       auditLogs,
       emailLogs,
@@ -64,9 +63,6 @@ export async function GET(request) {
         where: { inventarioId: inventario.id },
         orderBy: { nome: "asc" },
       }),
-      InventarioService.getEstatisticasInventario(inventario.id),
-      InventarioService.getEstatisticasPorSala(inventario.id),
-      InventarioService.getResumoCorrecoes(inventario.id),
       prisma.permissao.findMany({
         where: { inventarioId: inventario.id, ativa: true },
         include: { usuario: { select: { nome: true, email: true } } },
@@ -90,9 +86,28 @@ export async function GET(request) {
       }),
     ]);
 
+    // === Calcular estatísticas em memória (evita dezenas de queries extras) ===
+
+    const totalItens = itens.length;
+    const itensInventariadosList = itens.filter((i) => i.dataInventario);
+    const itensInventariadosCount = itensInventariadosList.length;
+    const itensNaoInventariados = totalItens - itensInventariadosCount;
+    const percentualConcluido =
+      totalItens > 0
+        ? Math.round((itensInventariadosCount / totalItens) * 100)
+        : 0;
+
+    const estatisticas = {
+      totalItens,
+      itensInventariados: itensInventariadosCount,
+      itensNaoInventariados,
+      totalCorrecoes: listaCorrecoes.length,
+      totalSalas: salas.length,
+      percentualConcluido,
+    };
+
     // Datas do inventário (primeiro e último item inventariado)
-    const itensInventariados = itens.filter((i) => i.dataInventario);
-    const datasInventario = itensInventariados
+    const datasInventario = itensInventariadosList
       .map((i) => new Date(i.dataInventario))
       .sort((a, b) => a - b);
 
@@ -109,6 +124,8 @@ export async function GET(request) {
       let status;
       if (!item.dataInventario) {
         status = "PENDENTE";
+      } else if (item.numero?.startsWith("99999")) {
+        status = "SEM ETIQUETA";
       } else if (item.cadastradoDuranteInventario) {
         status = "CADASTRADO";
       } else if (item.salaEncontrada && item.salaEncontrada !== item.sala) {
@@ -120,9 +137,34 @@ export async function GET(request) {
     });
 
     // Adicionar contagem de itens corrigidos
-    if (resumoCorrecoes.total > 0) {
-      itensPorStatus["CORRIGIDO"] = resumoCorrecoes.total;
+    if (listaCorrecoes.length > 0) {
+      itensPorStatus["CORRIGIDO"] = listaCorrecoes.length;
     }
+
+    // Estatísticas por sala — calculado em memória (substituiu N*2 queries)
+    const salaPorNome = {};
+    itens.forEach((item) => {
+      const sala = item.sala || "Sem sala";
+      if (!salaPorNome[sala]) {
+        salaPorNome[sala] = { totalItens: 0, itensInventariados: 0 };
+      }
+      salaPorNome[sala].totalItens++;
+      if (item.dataInventario) {
+        salaPorNome[sala].itensInventariados++;
+      }
+    });
+    const estatisticasPorSala = Object.entries(salaPorNome)
+      .map(([nome, stats]) => ({
+        nome,
+        totalItens: stats.totalItens,
+        itensInventariados: stats.itensInventariados,
+        itensNaoInventariados: stats.totalItens - stats.itensInventariados,
+        percentual:
+          stats.totalItens > 0
+            ? Math.round((stats.itensInventariados / stats.totalItens) * 100)
+            : 0,
+      }))
+      .sort((a, b) => a.nome.localeCompare(b.nome));
 
     // Distribuição por servidor/carga atual
     const itensPorServidor = {};
@@ -146,6 +188,9 @@ export async function GET(request) {
 
     // Itens cadastrados durante inventário
     const itensCadastrados = itens.filter((i) => i.cadastradoDuranteInventario);
+
+    // Itens sobra de inventário (bens sem etiqueta - prefixo 99999)
+    const itensSobra = itens.filter((i) => i.numero?.startsWith("99999"));
 
     // Estado de conservação
     const estadoConservacao = {};
@@ -213,21 +258,15 @@ export async function GET(request) {
       cargosComissao.includes(m.papel)
     );
 
-    // Correções por usuário (com nomes)
-    const correcoesPorUsuarioDetalhado = await Promise.all(
-      (resumoCorrecoes.porUsuario || []).map(async (item) => {
-        if (!item.inventarianteId)
-          return { nome: "Desconhecido", total: item._count.id };
-        const usuario = await prisma.usuario.findUnique({
-          where: { id: item.inventarianteId },
-          select: { nome: true },
-        });
-        return {
-          nome: usuario?.nome || "Desconhecido",
-          total: item._count.id,
-        };
-      })
-    );
+    // Correções por usuário — calculado em memória a partir das correções já carregadas
+    const correcoesPorUsuarioMap = {};
+    listaCorrecoes.forEach((c) => {
+      const nome = c.inventariante?.nome || "Desconhecido";
+      correcoesPorUsuarioMap[nome] = (correcoesPorUsuarioMap[nome] || 0) + 1;
+    });
+    const correcoesPorUsuarioDetalhado = Object.entries(correcoesPorUsuarioMap)
+      .map(([nome, total]) => ({ nome, total }))
+      .sort((a, b) => b.total - a.total);
 
     // Timeline resumida (do audit log)
     const timeline = auditLogs.map((log) => ({
@@ -276,8 +315,16 @@ export async function GET(request) {
           sala: i.sala || i.salaEncontrada || "—",
         })),
       },
+      itensSobra: {
+        total: itensSobra.length,
+        lista: itensSobra.map((i) => ({
+          numero: i.numero,
+          descricao: i.descricao,
+          sala: i.sala || i.salaEncontrada || "—",
+        })),
+      },
       correcoesRealizadas: {
-        total: resumoCorrecoes.total,
+        total: listaCorrecoes.length,
         porUsuario: correcoesPorUsuarioDetalhado,
         lista: listaCorrecoes.map((c) => ({
           numero: c.numero,
