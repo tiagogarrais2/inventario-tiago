@@ -6,7 +6,7 @@ export default function Rodape() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-gray-800 text-white py-4 mt-auto">
+    <footer className="app-rodape bg-gray-800 text-white py-4 mt-auto">
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0 text-sm">
           <div className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-4 text-center">
@@ -15,7 +15,9 @@ export default function Rodape() {
               por Adm.Tiago das Graças Arrais - IFCE
             </span>
             <span className="hidden sm:inline">•</span>
-            <span>Copyright © {currentYear} - Direitos reservados ao IFCE (INPI)</span>
+            <span>
+              Copyright © {currentYear} - Direitos reservados ao IFCE (INPI)
+            </span>
           </div>
           <div className="flex items-center space-x-4">
             <a

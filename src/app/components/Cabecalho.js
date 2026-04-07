@@ -7,7 +7,7 @@ export default function Cabecalho() {
   const { data: session, status } = useSession();
 
   return (
-    <div>
+    <div className="app-cabecalho">
       <h1>
         <Link href={"/"}>Sistema de Inventário</Link>
       </h1>

@@ -1,6 +1,8 @@
 import { formatarData } from "../utils";
 
 export default function Capa({ inventario, membrosComissao, datas }) {
+  const dataGeracaoRelatorio = formatarData(new Date());
+
   return (
     <>
       {/* ============= CAPA ============= */}
@@ -31,7 +33,7 @@ export default function Capa({ inventario, membrosComissao, datas }) {
               ))}
             </div>
           )}
-          <p style={{ marginTop: "2rem" }}>{formatarData(datas.criacao)}</p>
+          <p style={{ marginTop: "2rem" }}>{dataGeracaoRelatorio}</p>
         </div>
       </div>
 
@@ -71,7 +73,7 @@ export default function Capa({ inventario, membrosComissao, datas }) {
             <tr>
               <th>Nome</th>
               <th>E-mail</th>
-              <th>Papel</th>
+              <th style={{ width: "12ch", whiteSpace: "nowrap" }}>Papel</th>
             </tr>
           </thead>
           <tbody>
@@ -79,7 +81,9 @@ export default function Capa({ inventario, membrosComissao, datas }) {
               <tr key={i}>
                 <td>{m.nome}</td>
                 <td>{m.email}</td>
-                <td>{m.papel}</td>
+                <td style={{ width: "12ch", whiteSpace: "nowrap" }}>
+                  {m.papel}
+                </td>
               </tr>
             ))}
           </tbody>
