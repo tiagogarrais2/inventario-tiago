@@ -350,6 +350,7 @@ export async function GET(request) {
         lista: emailLogs.map((e) => ({
           data: e.createdAt,
           assunto: e.assunto,
+          mensagem: e.mensagem || "—",
           remetente: e.remetente?.nome || "Desconhecido",
           totalEnviados: e.totalEnviados,
           status: e.status,

@@ -76,6 +76,65 @@ export default function RelatorioFinalPage({ params }) {
     fetchDados();
   }, [nome, status, router]);
 
+  // === CÁLCULO DE MÉTRICAS DE SERVIDORES (DEVE ESTAR ANTES DE RETORNOS CONDICIONAIS) ===
+  const servidoresMetricas = React.useMemo(() => {
+    if (
+      !dados?.itensPorServidor ||
+      Object.keys(dados?.itensPorServidor || {}).length === 0
+    ) {
+      return {
+        totalServidoresComDados: 0,
+        cargaMedia: 0,
+        percentualInventariados: 0,
+        percentualPendentes: 0,
+        servidorMaiorCarga: null,
+        maiorCargaTotal: 0,
+        servidorMenorCarga: null,
+        menorCargaTotal: 0,
+      };
+    }
+
+    const itensPorServidor = dados.itensPorServidor;
+    const servidores = Object.entries(itensPorServidor);
+    const totalBens = servidores.reduce(
+      (acc, [_, stats]) => acc + stats.total,
+      0
+    );
+    const totalInventariados = servidores.reduce(
+      (acc, [_, stats]) => acc + stats.inventariados,
+      0
+    );
+    const totalPendentes = servidores.reduce(
+      (acc, [_, stats]) => acc + stats.pendentes,
+      0
+    );
+
+    let maiorCarga = { servidor: null, total: 0 };
+    let menorCarga = { servidor: null, total: Infinity };
+
+    servidores.forEach(([servidor, stats]) => {
+      if (stats.total > maiorCarga.total) {
+        maiorCarga = { servidor, total: stats.total };
+      }
+      if (stats.total < menorCarga.total) {
+        menorCarga = { servidor, total: stats.total };
+      }
+    });
+
+    return {
+      totalServidoresComDados: servidores.length,
+      cargaMedia: totalBens > 0 ? Math.round(totalBens / servidores.length) : 0,
+      percentualInventariados:
+        totalBens > 0 ? Math.round((totalInventariados / totalBens) * 100) : 0,
+      percentualPendentes:
+        totalBens > 0 ? Math.round((totalPendentes / totalBens) * 100) : 0,
+      servidorMaiorCarga: maiorCarga.servidor,
+      maiorCargaTotal: maiorCarga.total,
+      servidorMenorCarga: menorCarga.servidor,
+      menorCargaTotal: menorCarga.total,
+    };
+  }, [dados]);
+
   if (status === "loading" || loading) {
     return (
       <div
@@ -109,6 +168,7 @@ export default function RelatorioFinalPage({ params }) {
     datas,
     itensPorStatus,
     estatisticasPorSala,
+    itensPorServidor,
     itensMovidos,
     itensCadastrados,
     itensSobra,
@@ -141,6 +201,10 @@ export default function RelatorioFinalPage({ params }) {
             line-height: 1.5;
             color: #000;
             background: #fff;
+          }
+          .app-cabecalho,
+          .app-rodape {
+            display: none !important;
           }
           .no-print {
             display: none !important;
@@ -333,6 +397,8 @@ export default function RelatorioFinalPage({ params }) {
           totalSalas={totalSalas}
           totalServidores={totalServidores}
           itensPorStatus={itensPorStatus}
+          itensPorServidor={itensPorServidor}
+          servidoresMetricas={servidoresMetricas}
           itensMovidos={itensMovidos}
           itensCadastrados={itensCadastrados}
           itensSobra={itensSobra}

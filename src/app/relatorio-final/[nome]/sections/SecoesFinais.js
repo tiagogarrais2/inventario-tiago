@@ -10,6 +10,19 @@ export default function SecoesFinais({
 }) {
   const temComunicacoes = comunicacoes.total > 0;
   const secaoConsideracoes = temComunicacoes ? "6" : "5";
+  const formatarDataHora = (data) =>
+    new Date(data).toLocaleString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  const comunicacoesOrdenadas = temComunicacoes
+    ? [...comunicacoes.lista].sort(
+        (a, b) => new Date(a.data) - new Date(b.data)
+      )
+    : [];
 
   return (
     <>
@@ -36,6 +49,43 @@ export default function SecoesFinais({
             comunicação(ões) por e-mail para servidores e membros relacionados
             ao processo.
           </p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Data do Envio</th>
+                <th>Assunto</th>
+                <th>Remetente</th>
+                <th>Destinatários</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {comunicacoesOrdenadas.map((com, idx) => (
+                <tr key={idx}>
+                  <td>{formatarDataHora(com.data)}</td>
+                  <td>{com.assunto || "—"}</td>
+                  <td>{com.remetente || "—"}</td>
+                  <td>{com.totalEnviados ?? "—"}</td>
+                  <td>{com.status || "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {comunicacoesOrdenadas.map((com, idx) => (
+            <div key={`msg-${idx}`} style={{ marginTop: "1rem" }}>
+              <p className="no-indent" style={{ fontWeight: "bold" }}>
+                Texto da comunicação {idx + 1}
+              </p>
+              <p
+                className="no-indent"
+                style={{ whiteSpace: "pre-line", textAlign: "left" }}
+              >
+                {com.mensagem || "—"}
+              </p>
+            </div>
+          ))}
         </div>
       )}
 
