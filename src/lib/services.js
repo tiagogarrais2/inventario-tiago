@@ -1,6 +1,15 @@
 import prisma from "./db.js";
 import nodemailer from "nodemailer";
 
+function sortByNomePtBr(items) {
+  return items.sort((itemA, itemB) =>
+    itemA.nome.localeCompare(itemB.nome, "pt-BR", {
+      sensitivity: "base",
+      numeric: true,
+    })
+  );
+}
+
 // Service para gerenciar usuários
 class UsuarioService {
   static async findOrCreateFromSession(sessionUser) {
@@ -405,11 +414,11 @@ class InventarioService {
   static async getEstatisticasPorSala(inventarioId) {
     try {
       // Buscar todas as salas com estatísticas
-      const salas = await prisma.sala.findMany({
+      const salasRaw = await prisma.sala.findMany({
         where: { inventarioId },
         select: { nome: true },
-        orderBy: { nome: "asc" },
       });
+      const salas = sortByNomePtBr(salasRaw);
 
       const estatisticasSalas = await Promise.all(
         salas.map(async (sala) => {
@@ -723,10 +732,11 @@ class SalaService {
     const inventario = await InventarioService.findByName(nomeInventario);
     if (!inventario) return [];
 
-    return await prisma.sala.findMany({
+    const salas = await prisma.sala.findMany({
       where: { inventarioId: inventario.id },
-      orderBy: { nome: "asc" },
     });
+
+    return sortByNomePtBr(salas);
   }
 
   static async create(nomeInventario, dados) {
@@ -791,10 +801,11 @@ class ServidorService {
     const inventario = await InventarioService.findByName(nomeInventario);
     if (!inventario) return [];
 
-    return await prisma.servidor.findMany({
+    const servidores = await prisma.servidor.findMany({
       where: { inventarioId: inventario.id },
-      orderBy: { nome: "asc" },
     });
+
+    return sortByNomePtBr(servidores);
   }
 
   static async create(nomeInventario, dados) {
@@ -858,11 +869,12 @@ class ServidorService {
     const inventario = await InventarioService.findByName(nomeInventario);
     if (!inventario) return [];
 
-    return await prisma.servidor.findMany({
+    const servidores = await prisma.servidor.findMany({
       where: { inventarioId: inventario.id },
       select: { nome: true, email: true },
-      orderBy: { nome: "asc" },
     });
+
+    return sortByNomePtBr(servidores);
   }
 
   static async updateEmail(nomeInventario, servidorNome, email) {
