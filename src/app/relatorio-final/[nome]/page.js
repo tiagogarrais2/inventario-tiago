@@ -232,7 +232,7 @@ export default function RelatorioFinalPage({ params }) {
           }
           @page {
             size: A4;
-            margin: 3cm 2cm 2cm 3cm;
+            margin: 2cm 1cm 1cm 2cm;
           }
           .grafico-container {
             break-inside: avoid;

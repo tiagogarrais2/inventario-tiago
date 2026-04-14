@@ -249,7 +249,7 @@ export async function GET(request) {
               : 0,
         };
       })
-      .filter((entry) => entry.quantidadeSalas >= 2)
+      .filter((entry) => entry.quantidadeSalas >= 5)
       .sort((a, b) => {
         if (b.quantidadeSalas !== a.quantidadeSalas) {
           return b.quantidadeSalas - a.quantidadeSalas;
@@ -333,7 +333,7 @@ export async function GET(request) {
       if (vDep > 0) valorTotalDepreciado += vDep;
     });
 
-    // Classificação ABC por valor de aquisição (Categoria A = top 20% de itens)
+    // Classificação ABC por Pareto (Categoria A = até ~40% do valor acumulado)
     const itensComValorABC = itens
       .map((item) => ({
         ...item,
@@ -347,22 +347,39 @@ export async function GET(request) {
       0
     );
     const totalItensComValor = itensComValorABC.length;
-    const quantidadeCategoriaA =
-      totalItensComValor > 0
-        ? Math.max(1, Math.ceil(totalItensComValor * 0.2))
-        : 0;
-    const listaCategoriA = itensComValorABC.slice(0, quantidadeCategoriaA);
+    const limiteParetoCategoriaA = 0.4;
+
+    let valorAcumuladoCategoriaA = 0;
+    const listaCategoriA = [];
+    for (const item of itensComValorABC) {
+      listaCategoriA.push(item);
+      valorAcumuladoCategoriaA += item._valorNum;
+
+      // Inclui o item de cruzamento e encerra a seleção
+      if (
+        valorTotalABC > 0 &&
+        valorAcumuladoCategoriaA / valorTotalABC >= limiteParetoCategoriaA
+      ) {
+        break;
+      }
+    }
 
     const categoriaANaoLocalizados = listaCategoriA.filter(
       (i) => !i.dataInventario
     );
 
     const classificacaoABC = {
-      regra: "Categoria A: 20% dos itens com maior valor de aquisição",
+      regra:
+        "Categoria A: itens até ~40% do valor acumulado de aquisição (Pareto)",
       totalItensComValor,
       valorTotalAquisicaoABC: valorTotalABC,
       categoriaA: {
         total: listaCategoriA.length,
+        valorAcumulado: valorAcumuladoCategoriaA,
+        percentualValor:
+          valorTotalABC > 0
+            ? Math.round((valorAcumuladoCategoriaA / valorTotalABC) * 100)
+            : 0,
         percentualItens:
           totalItensComValor > 0
             ? Math.round((listaCategoriA.length / totalItensComValor) * 100)

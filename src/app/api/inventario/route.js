@@ -24,6 +24,10 @@ export async function GET(request) {
   const nomeInventario = searchParams.get("inventario");
   const tombo = searchParams.get("tombo");
   const serie = searchParams.get("serie");
+  const origem = searchParams.get("origem");
+  const formato = searchParams.get("formato");
+  const solicitacaoExportacaoJson =
+    origem === "relatorios" && formato === "json-completo";
 
   if (!nomeInventario) {
     return NextResponse.json(
@@ -187,11 +191,15 @@ export async function GET(request) {
       };
     });
 
-    // Registrar acesso ao inventário no log de auditoria
+    // Registrar visualizacao comum ou exportacao auditavel de inventario
     await AuditoriaService.log(
-      "view_inventory",
+      solicitacaoExportacaoJson ? "export_inventory_json" : "view_inventory",
       session.user,
-      { total_items: itens.length },
+      {
+        total_items: itens.length,
+        origem: origem || "api",
+        formato: solicitacaoExportacaoJson ? "json-completo" : null,
+      },
       inventario.nome
     );
 
