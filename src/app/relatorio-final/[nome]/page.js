@@ -58,9 +58,12 @@ export default function RelatorioFinalPage({ params }) {
     if (!nome) return;
 
     async function fetchDados() {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 45000);
       try {
         const res = await fetch(
-          `/api/relatorio-final?inventario=${encodeURIComponent(nome)}`
+          `/api/relatorio-final?inventario=${encodeURIComponent(nome)}`,
+          { signal: controller.signal, cache: "no-store" }
         );
         if (!res.ok) {
           const err = await res.json();
@@ -68,8 +71,15 @@ export default function RelatorioFinalPage({ params }) {
         }
         setDados(await res.json());
       } catch (e) {
-        setError(e.message);
+        if (e.name === "AbortError") {
+          setError(
+            "A geração do relatório excedeu o tempo limite (45s). Tente novamente ou reduza o volume de dados."
+          );
+        } else {
+          setError(e.message || "Falha de rede ao carregar relatório.");
+        }
       } finally {
+        clearTimeout(timeoutId);
         setLoading(false);
       }
     }
@@ -169,6 +179,7 @@ export default function RelatorioFinalPage({ params }) {
     itensPorStatus,
     estatisticasPorSala,
     itensPorServidor,
+    servidoresMultiplasSalas,
     itensMovidos,
     itensCadastrados,
     itensSobra,
@@ -178,6 +189,7 @@ export default function RelatorioFinalPage({ params }) {
     totalServidores,
     totalSalas,
     topMarcas,
+    classificacaoABC,
     timeline,
     comunicacoes,
   } = dados;
@@ -398,6 +410,7 @@ export default function RelatorioFinalPage({ params }) {
           totalServidores={totalServidores}
           itensPorStatus={itensPorStatus}
           itensPorServidor={itensPorServidor}
+          servidoresMultiplasSalas={servidoresMultiplasSalas || []}
           servidoresMetricas={servidoresMetricas}
           itensMovidos={itensMovidos}
           itensCadastrados={itensCadastrados}
@@ -411,6 +424,7 @@ export default function RelatorioFinalPage({ params }) {
           pieEstadoData={pieEstadoData}
           estadoEntriesOrdenados={estadoEntriesOrdenados}
           barMarcasData={barMarcasData}
+          classificacaoABC={classificacaoABC}
           barOptions={barOptions}
           pieOptions={pieOptions}
         />

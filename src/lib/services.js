@@ -101,17 +101,17 @@ class InventarioService {
   static async checkPermissions(nomeInventario, userEmail) {
     const inventario = await this.findByName(nomeInventario);
     if (!inventario) {
-      return { hasAccess: false, isOwner: false };
+      return { hasAccess: false, isOwner: false, inventario: null };
     }
 
     const usuario = await UsuarioService.findByEmail(userEmail);
     if (!usuario) {
-      return { hasAccess: false, isOwner: false };
+      return { hasAccess: false, isOwner: false, inventario: null };
     }
 
     const isOwner = inventario.proprietarioId === usuario.id;
     if (isOwner) {
-      return { hasAccess: true, isOwner: true };
+      return { hasAccess: true, isOwner: true, inventario };
     }
 
     const permissao = await prisma.permissao.findUnique({
@@ -126,6 +126,7 @@ class InventarioService {
     return {
       hasAccess: permissao?.ativa === true,
       isOwner: false,
+      inventario,
     };
   }
 

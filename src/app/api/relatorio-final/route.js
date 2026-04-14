@@ -29,8 +29,8 @@ export async function GET(request) {
       return NextResponse.json({ error: "Acesso negado." }, { status: 403 });
     }
 
-    // Buscar inventário (checkPermissions já validou existência)
-    const inventario = await InventarioService.findByName(nomeInventario);
+    // Reusar inventário já carregado em checkPermissions (evita query duplicada)
+    const inventario = permissoes.inventario;
     if (!inventario) {
       return NextResponse.json(
         { error: "Inventário não encontrado." },
@@ -48,41 +48,76 @@ export async function GET(request) {
       auditLogs,
       emailLogs,
       listaCorrecoes,
-    ] = await Promise.all([
+    ] = await prisma.$transaction([
       prisma.itemInventario.findMany({
         where: { inventarioId: inventario.id },
-        include: {
-          inventariante: { select: { nome: true, email: true } },
+        select: {
+          numero: true,
+          descricao: true,
+          sala: true,
+          salaEncontrada: true,
+          cargaAtual: true,
+          estadoConservacao: true,
+          fornecedor: true,
+          marca: true,
+          valorAquisicao: true,
+          valorDepreciado: true,
+          dataInventario: true,
+          cadastradoDuranteInventario: true,
         },
       }),
       prisma.sala.findMany({
         where: { inventarioId: inventario.id },
+        select: { nome: true },
         orderBy: { nome: "asc" },
       }),
       prisma.servidor.findMany({
         where: { inventarioId: inventario.id },
+        select: { nome: true },
         orderBy: { nome: "asc" },
       }),
       prisma.permissao.findMany({
         where: { inventarioId: inventario.id, ativa: true },
-        include: { usuario: { select: { nome: true, email: true } } },
+        select: {
+          cargo: true,
+          usuario: { select: { nome: true, email: true } },
+        },
       }),
       prisma.auditLog.findMany({
         where: { inventarioId: inventario.id },
-        include: { usuario: { select: { nome: true } } },
+        select: {
+          timestamp: true,
+          acao: true,
+          detalhes: true,
+          usuario: { select: { nome: true } },
+        },
         orderBy: { timestamp: "asc" },
+        take: 1000,
       }),
       prisma.emailLog.findMany({
         where: { inventarioId: inventario.id },
-        include: { remetente: { select: { nome: true } } },
+        select: {
+          createdAt: true,
+          assunto: true,
+          mensagem: true,
+          totalEnviados: true,
+          status: true,
+          remetente: { select: { nome: true } },
+        },
         orderBy: { createdAt: "desc" },
+        take: 500,
       }),
       prisma.correcaoItem.findMany({
         where: { inventarioId: inventario.id },
-        include: {
+        select: {
+          numero: true,
+          descricao: true,
+          observacoes: true,
+          dataCorrecao: true,
           inventariante: { select: { nome: true } },
         },
         orderBy: { dataCorrecao: "desc" },
+        take: 1000,
       }),
     ]);
 
@@ -166,20 +201,61 @@ export async function GET(request) {
       }))
       .sort((a, b) => a.nome.localeCompare(b.nome));
 
-    // Distribuição por servidor/carga atual
+    // Distribuição por servidor/carga atual + dispersão em salas distintas
     const itensPorServidor = {};
+    const servidorSalasMap = {};
     itens.forEach((item) => {
       const carga = item.cargaAtual || "Sem carga definida";
+      const salaReferencia = item.salaEncontrada || item.sala || "Sem sala";
+
       if (!itensPorServidor[carga]) {
         itensPorServidor[carga] = { total: 0, inventariados: 0, pendentes: 0 };
       }
+
+      if (!servidorSalasMap[carga]) {
+        servidorSalasMap[carga] = {
+          salas: new Set(),
+          totalBens: 0,
+          inventariados: 0,
+          pendentes: 0,
+        };
+      }
+
       itensPorServidor[carga].total++;
+      servidorSalasMap[carga].totalBens++;
+      servidorSalasMap[carga].salas.add(salaReferencia);
+
       if (item.dataInventario) {
         itensPorServidor[carga].inventariados++;
+        servidorSalasMap[carga].inventariados++;
       } else {
         itensPorServidor[carga].pendentes++;
+        servidorSalasMap[carga].pendentes++;
       }
     });
+
+    const servidoresMultiplasSalas = Object.entries(servidorSalasMap)
+      .map(([servidor, stats]) => {
+        const quantidadeSalas = stats.salas.size;
+        return {
+          servidor,
+          quantidadeSalas,
+          totalBens: stats.totalBens,
+          inventariados: stats.inventariados,
+          pendentes: stats.pendentes,
+          percentualInventariado:
+            stats.totalBens > 0
+              ? Math.round((stats.inventariados / stats.totalBens) * 100)
+              : 0,
+        };
+      })
+      .filter((entry) => entry.quantidadeSalas >= 2)
+      .sort((a, b) => {
+        if (b.quantidadeSalas !== a.quantidadeSalas) {
+          return b.quantidadeSalas - a.quantidadeSalas;
+        }
+        return b.totalBens - a.totalBens;
+      });
 
     // Itens movidos (salaEncontrada diferente de sala)
     const itensMovidos = itens.filter(
@@ -227,18 +303,96 @@ export async function GET(request) {
       .map(([nome, quantidade]) => ({ nome, quantidade }));
 
     // Valores patrimoniais
+    // Parser monetário robusto — suporta pt-BR (1.234,56) e en-US (1,234.56)
+    const parseValorMonetario = (valorStr) => {
+      if (!valorStr) return 0;
+      const limpo = valorStr.replace(/[^\d.,]/g, "");
+      if (!limpo) return 0;
+      const ultimaVirgula = limpo.lastIndexOf(",");
+      const ultimoPonto = limpo.lastIndexOf(".");
+      let normalizado;
+      if (ultimaVirgula > ultimoPonto) {
+        // pt-BR: 1.234,56 — ponto é milhar, vírgula é decimal
+        normalizado = limpo.replace(/\./g, "").replace(",", ".");
+      } else if (ultimoPonto > ultimaVirgula) {
+        // en-US: 1,234.56 — vírgula é milhar, ponto é decimal
+        normalizado = limpo.replace(/,/g, "");
+      } else {
+        normalizado = limpo;
+      }
+      const valor = parseFloat(normalizado);
+      return isNaN(valor) ? 0 : valor;
+    };
+
     let valorTotalAquisicao = 0;
     let valorTotalDepreciado = 0;
     itens.forEach((item) => {
-      const vAq = parseFloat(
-        (item.valorAquisicao || "0").replace(/[^\d.,]/g, "").replace(",", ".")
-      );
-      const vDep = parseFloat(
-        (item.valorDepreciado || "0").replace(/[^\d.,]/g, "").replace(",", ".")
-      );
-      if (!isNaN(vAq)) valorTotalAquisicao += vAq;
-      if (!isNaN(vDep)) valorTotalDepreciado += vDep;
+      const vAq = parseValorMonetario(item.valorAquisicao);
+      const vDep = parseValorMonetario(item.valorDepreciado);
+      if (vAq > 0) valorTotalAquisicao += vAq;
+      if (vDep > 0) valorTotalDepreciado += vDep;
     });
+
+    // Classificação ABC por valor de aquisição (Categoria A = top 20% de itens)
+    const itensComValorABC = itens
+      .map((item) => ({
+        ...item,
+        _valorNum: parseValorMonetario(item.valorAquisicao),
+      }))
+      .filter((item) => item._valorNum > 0)
+      .sort((a, b) => b._valorNum - a._valorNum);
+
+    const valorTotalABC = itensComValorABC.reduce(
+      (acc, i) => acc + i._valorNum,
+      0
+    );
+    const totalItensComValor = itensComValorABC.length;
+    const quantidadeCategoriaA =
+      totalItensComValor > 0
+        ? Math.max(1, Math.ceil(totalItensComValor * 0.2))
+        : 0;
+    const listaCategoriA = itensComValorABC.slice(0, quantidadeCategoriaA);
+
+    const categoriaANaoLocalizados = listaCategoriA.filter(
+      (i) => !i.dataInventario
+    );
+
+    const classificacaoABC = {
+      regra: "Categoria A: 20% dos itens com maior valor de aquisição",
+      totalItensComValor,
+      valorTotalAquisicaoABC: valorTotalABC,
+      categoriaA: {
+        total: listaCategoriA.length,
+        percentualItens:
+          totalItensComValor > 0
+            ? Math.round((listaCategoriA.length / totalItensComValor) * 100)
+            : 0,
+        lista: listaCategoriA.map((i, idx) => ({
+          posicao: idx + 1,
+          numero: i.numero,
+          descricao: i.descricao || "—",
+          valorAquisicao: i.valorAquisicao || "—",
+          valorNumerico: i._valorNum,
+          sala: i.salaEncontrada || i.sala || "—",
+          cargaAtual: i.cargaAtual || "—",
+          estadoConservacao: i.estadoConservacao || "—",
+          localizado: !!i.dataInventario,
+        })),
+      },
+      categoriaANaoLocalizados: {
+        total: categoriaANaoLocalizados.length,
+        lista: categoriaANaoLocalizados.map((i, idx) => ({
+          posicao: idx + 1,
+          numero: i.numero,
+          descricao: i.descricao || "—",
+          valorAquisicao: i.valorAquisicao || "—",
+          valorNumerico: i._valorNum,
+          sala: i.sala || "—",
+          cargaAtual: i.cargaAtual || "—",
+          estadoConservacao: i.estadoConservacao || "—",
+        })),
+      },
+    };
 
     // Membros da comissão (apenas Presidente, Vice-Presidente e Membro)
     const cargosComissao = ["Presidente", "Vice-Presidente", "Membro"];
@@ -298,6 +452,7 @@ export async function GET(request) {
       itensPorStatus,
       estatisticasPorSala,
       itensPorServidor,
+      servidoresMultiplasSalas,
       itensMovidos: {
         total: itensMovidos.length,
         lista: itensMovidos.map((i) => ({
@@ -344,6 +499,7 @@ export async function GET(request) {
       totalSalas: salas.length,
       topFornecedores,
       topMarcas,
+      classificacaoABC,
       timeline,
       comunicacoes: {
         total: emailLogs.length,
