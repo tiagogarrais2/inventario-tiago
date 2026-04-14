@@ -225,10 +225,38 @@ export default function Resultados({
         conclusão do levantamento.
       </p>
 
-      <h3>3.5.1 Servidores com bens em 2 ou mais salas</h3>
+      <h3>3.5.1 Servidores com bens em 5 ou mais salas</h3>
       <p>
-        Para evidenciar a dispersão patrimonial, foram destacados os servidores
-        que concentram bens distribuídos em duas ou mais salas distintas.
+        Com o objetivo de diagnosticar a complexidade do controle de ativos no
+        Campus, o sistema identificou os casos de dispersão patrimonial
+        acentuada. Foram destacados, especificamente, os servidores que figuram
+        como fiéis depositários de bens distribuídos em cinco ou mais salas
+        distintas. Esta análise é vital para compreender a carga administrativa
+        imposta ao servidor, visto que a fragmentação física dos itens sob uma
+        única responsabilidade dificulta a vigilância direta e a conferência
+        periódica dos ativos, elevando o risco de inconsistências nos registros.
+      </p>
+
+      <p>
+        Identificou-se que essa dispersão possui relação direta com o exercício
+        de funções gratificadas ou cargos de chefia. Nestes casos, o servidor
+        acaba assumindo a responsabilidade formal por bens de uso coletivo
+        alocados em áreas de convivência, salas de reuniões ou laboratórios
+        multiusuários. Essa configuração cria um distanciamento entre a guarda
+        jurídica (quem assina o termo) e o uso fático do bem, tornando o
+        controle patrimonial um desafio logístico, já que o responsável responde
+        por uma carga que não está sob sua vigilância exclusiva.
+      </p>
+
+      <p>
+        A evidência desse cenário justifica-se pela necessidade de otimização da
+        gestão. Este mapeamento serve como subsídio para que a instituição
+        avalie a viabilidade de redistribuição de responsabilidades ou a
+        atualização dos termos de cautela, buscando aproximar a custódia dos
+        bens à sua localização física efetiva e ao seu uso real. Tal medida visa
+        promover um controle mais eficiente e justo, evitando que a
+        responsabilidade patrimonial se torne um encargo excessivo para
+        servidores em cargos de gestão ou coordenação.
       </p>
       {servidoresMultiplasSalas.length > 0 ? (
         <table>
@@ -257,7 +285,7 @@ export default function Resultados({
         </table>
       ) : (
         <p>
-          Nenhum servidor apresentou bens distribuídos em duas ou mais salas
+          Nenhum servidor apresentou bens distribuídos em cinco ou mais salas
           neste inventário.
         </p>
       )}
@@ -473,14 +501,14 @@ export default function Resultados({
           </h3>
           <p>
             Com o intuito de conferir maior rigor técnico à auditoria, o
-            relatório final adotou a metodologia de Classificação ABC,
-            selecionando os 20% de itens com maior valor de aquisição. Esta
-            análise permitiu identificar os bens da Categoria A, que representam
-            o estrato de maior valor agregado e relevância financeira para o
-            Campus. O foco sobre este grupo é estratégico, pois assegura que o
-            esforço de fiscalização seja maximizado sobre os ativos que compõem
-            a maior parcela do capital investido na unidade, garantindo o zelo
-            com o erário de forma eficiente e prioritária.
+            relatório final adotou a metodologia de Classificação ABC, aplicando
+            o critério de Pareto para selecionar os bens da Categoria A até o
+            limite de aproximadamente 40% do valor acumulado de aquisição. Esta
+            análise permitiu identificar os itens de maior impacto financeiro
+            para o Campus. O foco sobre este grupo é estratégico, pois assegura
+            que o esforço de fiscalização seja maximizado sobre os ativos que
+            concentram maior relevância patrimonial, garantindo o zelo com o
+            erário de forma eficiente e prioritária.
           </p>
           <p>
             Dentre os itens classificados nesta categoria de alta criticidade,
@@ -496,16 +524,24 @@ export default function Resultados({
           <p>
             A seguir, apresentam-se os itens de Categoria A não localizados. Do
             total de {classificacaoABC.categoriaA.total.toLocaleString("pt-BR")}{" "}
-            bens classificados na Categoria A (
-            {classificacaoABC.categoriaA.percentualItens}% dos itens com valor
-            registrado),{" "}
+            bens classificados na Categoria A (aproximadamente{" "}
+            {classificacaoABC.categoriaA.percentualValor}% do valor total de
+            aquisição considerado, com valor acumulado de{" "}
+            {classificacaoABC.categoriaA.valorAcumulado.toLocaleString(
+              "pt-BR",
+              {
+                style: "currency",
+                currency: "BRL",
+              }
+            )}
+            ),{" "}
             {classificacaoABC.categoriaANaoLocalizados.total.toLocaleString(
               "pt-BR"
             )}{" "}
             não{" "}
             {classificacaoABC.categoriaANaoLocalizados.total === 1
               ? "foi localizado"
-              : "foram localizados"}
+              : "foram localizados "}
             durante as diligências físicas:
           </p>
           {classificacaoABC.categoriaANaoLocalizados.total > 0 ? (
@@ -513,11 +549,11 @@ export default function Resultados({
               <thead>
                 <tr>
                   <th style={{ width: "6%" }}>#</th>
-                  <th style={{ width: "14%" }}>Nº do bem</th>
-                  <th style={{ width: "32%" }}>Descrição</th>
-                  <th style={{ width: "16%" }}>Valor de aquisição</th>
-                  <th style={{ width: "17%" }}>Sala (registro)</th>
-                  <th style={{ width: "15%" }}>Carga atual</th>
+                  <th style={{ width: "12%" }}>Tombo</th>
+                  <th style={{ width: "30%" }}>Descrição</th>
+                  <th style={{ width: "18%" }}>Valor de aquisição</th>
+                  <th style={{ width: "22%" }}>Sala (registro)</th>
+                  <th style={{ width: "12%" }}>Carga atual</th>
                 </tr>
               </thead>
               <tbody>
@@ -537,7 +573,11 @@ export default function Resultados({
                       })}
                     </td>
                     <td>{item.sala}</td>
-                    <td>{item.cargaAtual}</td>
+                    <td>
+                      {item.cargaAtual.length > 20
+                        ? `${item.cargaAtual.slice(0, 20)}...`
+                        : item.cargaAtual}
+                    </td>
                   </tr>
                 ))}
               </tbody>
