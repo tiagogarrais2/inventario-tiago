@@ -19,6 +19,7 @@ export default function RelatorioItensPorValorPage({ params }) {
   const [servidores, setServidores] = useState([]);
   const [modalAberto, setModalAberto] = useState(false);
   const [itemSelecionado, setItemSelecionado] = useState(null);
+  const [ocultarInventariados, setOcultarInventariados] = useState(false);
   const [formData, setFormData] = useState({
     dataInventario: new Date().toISOString().split("T")[0],
     inventariante: "",
@@ -297,8 +298,12 @@ export default function RelatorioItensPorValorPage({ params }) {
   if (loading) return <p>Carregando relatório...</p>;
   if (error) return <p style={{ color: "red" }}>{error}</p>;
 
+  const itensFiltrados = ocultarInventariados
+    ? itens.filter((item) => !item.dataInventario)
+    : itens;
+
   // Calcular total do valor depreciado
-  const totalValorDepreciado = itens.reduce((total, item) => {
+  const totalValorDepreciado = itensFiltrados.reduce((total, item) => {
     const valorLimpo = item.valorDepreciado
       ? item.valorDepreciado.replace(/[^\d,.-]/g, "").replace(",", ".")
       : "0";
@@ -342,8 +347,19 @@ export default function RelatorioItensPorValorPage({ params }) {
         <h3 style={{ margin: 0, marginBottom: "10px" }}>
           💰 Informações do Relatório
         </h3>
+        <label
+          style={{ display: "flex", alignItems: "center", marginBottom: "10px" }}
+        >
+          <input
+            type="checkbox"
+            checked={ocultarInventariados}
+            onChange={(e) => setOcultarInventariados(e.target.checked)}
+            style={{ marginRight: "8px", cursor: "pointer" }}
+          />
+          Ocultar itens inventariados
+        </label>
         <p style={{ margin: "5px 0" }}>
-          <strong>Total de itens:</strong> {itens.length}
+          <strong>Total de itens:</strong> {itensFiltrados.length}
         </p>
         <p style={{ margin: "5px 0" }}>
           <strong>Valor total depreciado:</strong>{" "}
@@ -365,7 +381,7 @@ export default function RelatorioItensPorValorPage({ params }) {
       </div>
 
       {/* Lista de Itens */}
-      {itens.length === 0 ? (
+      {itensFiltrados.length === 0 ? (
         <div
           style={{
             padding: "20px",
@@ -381,7 +397,7 @@ export default function RelatorioItensPorValorPage({ params }) {
         </div>
       ) : (
         <ul>
-          {itens.map((item, index) => (
+          {itensFiltrados.map((item, index) => (
             <li
               key={index}
               style={{

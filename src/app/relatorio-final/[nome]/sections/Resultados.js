@@ -6,6 +6,7 @@ export default function Resultados({
   totalServidores,
   itensPorStatus,
   itensPorServidor,
+  servidoresMultiplasSalas,
   servidoresMetricas,
   itensMovidos,
   itensCadastrados,
@@ -19,6 +20,7 @@ export default function Resultados({
   pieEstadoData,
   estadoEntriesOrdenados,
   barMarcasData,
+  classificacaoABC,
   barOptions,
   pieOptions,
 }) {
@@ -223,6 +225,43 @@ export default function Resultados({
         conclusão do levantamento.
       </p>
 
+      <h3>3.5.1 Servidores com bens em 2 ou mais salas</h3>
+      <p>
+        Para evidenciar a dispersão patrimonial, foram destacados os servidores
+        que concentram bens distribuídos em duas ou mais salas distintas.
+      </p>
+      {servidoresMultiplasSalas.length > 0 ? (
+        <table>
+          <thead>
+            <tr>
+              <th>Servidor(a)</th>
+              <th>Salas distintas</th>
+              <th>Total de bens</th>
+              <th>Inventariados</th>
+              <th>Pendentes</th>
+              <th>Progresso</th>
+            </tr>
+          </thead>
+          <tbody>
+            {servidoresMultiplasSalas.map((item) => (
+              <tr key={item.servidor}>
+                <td>{item.servidor}</td>
+                <td>{item.quantidadeSalas.toLocaleString("pt-BR")}</td>
+                <td>{item.totalBens.toLocaleString("pt-BR")}</td>
+                <td>{item.inventariados.toLocaleString("pt-BR")}</td>
+                <td>{item.pendentes.toLocaleString("pt-BR")}</td>
+                <td>{item.percentualInventariado}%</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <p>
+          Nenhum servidor apresentou bens distribuídos em duas ou mais salas
+          neste inventário.
+        </p>
+      )}
+
       {servidoresMetricas && servidoresMetricas.totalServidoresComDados > 0 && (
         <div className="quadro-resumo">
           <p>
@@ -424,6 +463,92 @@ export default function Resultados({
             <Bar data={barMarcasData} options={barOptions} />
           </div>
         </>
+      )}
+
+      {/* 3.12 Classificação ABC — Itens de Alta Criticidade (Categoria A) */}
+      {classificacaoABC && classificacaoABC.categoriaA.total > 0 && (
+        <div className="page-break">
+          <h3>
+            3.12 Classificação ABC — Itens de Alta Criticidade (Categoria A)
+          </h3>
+          <p>
+            Com o intuito de conferir maior rigor técnico à auditoria, o
+            relatório final adotou a metodologia de Classificação ABC,
+            selecionando os 20% de itens com maior valor de aquisição. Esta
+            análise permitiu identificar os bens da Categoria A, que representam
+            o estrato de maior valor agregado e relevância financeira para o
+            Campus. O foco sobre este grupo é estratégico, pois assegura que o
+            esforço de fiscalização seja maximizado sobre os ativos que compõem
+            a maior parcela do capital investido na unidade, garantindo o zelo
+            com o erário de forma eficiente e prioritária.
+          </p>
+          <p>
+            Dentre os itens classificados nesta categoria de alta criticidade,
+            dedicou-se especial atenção àqueles que, durante as diligências
+            físicas, não foram localizados em suas respectivas unidades. A
+            exposição detalhada destes bens ausentes visa fornecer à gestão uma
+            visão clara e imediata dos riscos patrimoniais de maior impacto
+            financeiro. Tal transparência é essencial para a tomada de decisões
+            rápidas, orientando processos de busca ativa, abertura de
+            sindicâncias ou procedimentos de baixa, assegurando que nenhum item
+            de alto valor permaneça sem a devida prestação de contas.
+          </p>
+          <p>
+            A seguir, apresentam-se os itens de Categoria A não localizados. Do
+            total de {classificacaoABC.categoriaA.total.toLocaleString("pt-BR")}{" "}
+            bens classificados na Categoria A (
+            {classificacaoABC.categoriaA.percentualItens}% dos itens com valor
+            registrado),{" "}
+            {classificacaoABC.categoriaANaoLocalizados.total.toLocaleString(
+              "pt-BR"
+            )}{" "}
+            não{" "}
+            {classificacaoABC.categoriaANaoLocalizados.total === 1
+              ? "foi localizado"
+              : "foram localizados"}
+            durante as diligências físicas:
+          </p>
+          {classificacaoABC.categoriaANaoLocalizados.total > 0 ? (
+            <table>
+              <thead>
+                <tr>
+                  <th style={{ width: "6%" }}>#</th>
+                  <th style={{ width: "14%" }}>Nº do bem</th>
+                  <th style={{ width: "32%" }}>Descrição</th>
+                  <th style={{ width: "16%" }}>Valor de aquisição</th>
+                  <th style={{ width: "17%" }}>Sala (registro)</th>
+                  <th style={{ width: "15%" }}>Carga atual</th>
+                </tr>
+              </thead>
+              <tbody>
+                {classificacaoABC.categoriaANaoLocalizados.lista.map((item) => (
+                  <tr key={item.numero}>
+                    <td>{item.posicao}</td>
+                    <td>{item.numero}</td>
+                    <td>
+                      {item.descricao.length > 40
+                        ? `${item.descricao.slice(0, 40)}...`
+                        : item.descricao}
+                    </td>
+                    <td>
+                      {item.valorNumerico.toLocaleString("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      })}
+                    </td>
+                    <td>{item.sala}</td>
+                    <td>{item.cargaAtual}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p>
+              Todos os bens classificados na Categoria A foram localizados
+              durante as diligências físicas do inventário.
+            </p>
+          )}
+        </div>
       )}
     </>
   );
