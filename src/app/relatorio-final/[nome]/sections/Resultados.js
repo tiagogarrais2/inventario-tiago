@@ -28,6 +28,12 @@ export default function Resultados({
   const estadoLabels = estadoEntriesOrdenados.map(([k]) => k);
   const cargaInicial =
     estatisticas.totalItens - itensCadastrados.total - (itensSobra?.total || 0);
+  const percentualCadastrados =
+    cargaInicial > 0
+      ? ((itensCadastrados.total / cargaInicial) * 100)
+          .toFixed(1)
+          .replace(".", ",")
+      : "0,0";
 
   return (
     <>
@@ -185,7 +191,7 @@ export default function Resultados({
         servidores, estrutura que reflete a natureza descentralizada das
         operações institucionais. A dispersão de ativos por diferentes unidades
         administrativas é características comum em organizações com múltiplos
-        departamentos, câmpus ou setores especializados. Essa fragmentação de
+        departamentos, campus ou setores especializados. Essa fragmentação de
         responsabilidades, embora necessária para a gestão operacional, exige
         mecanismos robustos de controle e rastreamento para assegurar a
         integridade dos registros patrimoniais e evitar lacunas de supervisão.
@@ -347,17 +353,36 @@ export default function Resultados({
       </div>
 
       {/* 3.7 Itens Cadastrados Durante o Inventário */}
-      <h3>3.7 Itens Cadastrados Durante o Inventário</h3>
+      <h3>3.7 Itens cadastrados durante o inventário</h3>
 
       <p>
         Durante as diligências de campo, identificou-se um montante de{" "}
-        {itensCadastrados.total} bem(ns) que, embora não constassem na base de
-        dados inicial (carga de dados pré-existente), estavam devidamente
-        identificados com etiquetas patrimoniais físicas. Diante da constatação
-        da existência desses ativos no recinto do Campus, procedeu-se ao
-        cadastramento imediato no sistema para garantir a fidedignidade do
-        inventário e a proteção do patrimônio público.
+        {itensCadastrados.total} bem(ns) — equivalente a{" "}
+        <strong>{percentualCadastrados}%</strong> da carga patrimonial inicial —
+        que, embora não constassem na base de dados inicial (carga de dados
+        pré-existente), estavam devidamente identificados com etiquetas
+        patrimoniais físicas. Diante da constatação da existência desses ativos
+        no recinto do Campus, procedeu-se ao cadastramento imediato no sistema
+        para garantir a fidedignidade do inventário e a proteção do patrimônio
+        público.
       </p>
+
+      <div className="quadro-resumo">
+        <p>
+          <strong>Carga patrimonial inicial:</strong>{" "}
+          {cargaInicial.toLocaleString("pt-BR")} bens
+        </p>
+        <p>
+          <strong>Bens cadastrados em campo:</strong>{" "}
+          {itensCadastrados.total.toLocaleString("pt-BR")} bens
+        </p>
+        <p>
+          <strong>Forma de cálculo:</strong>{" "}
+          {itensCadastrados.total.toLocaleString("pt-BR")} ÷{" "}
+          {cargaInicial.toLocaleString("pt-BR")} × 100 ={" "}
+          <strong>{percentualCadastrados}%</strong>
+        </p>
+      </div>
 
       <p>
         Observou-se que as etiquetas encontradas nestes itens apresentam padrões
