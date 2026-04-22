@@ -24,6 +24,7 @@ export async function GET(request) {
   const nomeInventario = searchParams.get("inventario");
   const tombo = searchParams.get("tombo");
   const serie = searchParams.get("serie");
+  const busca = searchParams.get("busca");
   const origem = searchParams.get("origem");
   const formato = searchParams.get("formato");
   const solicitacaoExportacaoJson =
@@ -157,6 +158,50 @@ export async function GET(request) {
       );
 
       return NextResponse.json(itemComCorrecoes);
+    }
+
+    // Se foi solicitada busca por descrição
+    if (busca) {
+      const itensBusca = await ItemInventarioService.findByDescricao(
+        nomeInventario,
+        busca
+      );
+
+      if (itensBusca === null) {
+        return NextResponse.json(
+          { error: "Inventário não encontrado." },
+          { status: 404 }
+        );
+      }
+
+      // Enriquecer cada item com informações de correção
+      const itensEnriquecidos = await Promise.all(
+        itensBusca.map(async (item) => {
+          const correcoesItem = await CorrecaoService.findByNumeroOriginal(
+            inventario.nome,
+            item.numero
+          );
+          return {
+            ...item,
+            temCorrecoes: correcoesItem.length > 0,
+            totalCorrecoes: correcoesItem.length,
+            ultimaCorrecao:
+              correcoesItem.length > 0
+                ? correcoesItem[correcoesItem.length - 1].dataCorrecao
+                : null,
+            historicoCorrecoes: correcoesItem,
+          };
+        })
+      );
+
+      await AuditoriaService.log(
+        "search_by_name",
+        session.user,
+        { termo: busca, total_encontrados: itensEnriquecidos.length },
+        inventario.nome
+      );
+
+      return NextResponse.json(itensEnriquecidos);
     }
 
     // Retornar todos os itens do inventário

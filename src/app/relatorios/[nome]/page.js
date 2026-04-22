@@ -228,6 +228,12 @@ export default function RelatoriosPage({ params }) {
         >
           💰 Itens ordenados por valor
         </Button>
+        {/* Busca por nome */}
+        <Button
+          onClick={() => router.push(`/relatorios/${nome}/busca-por-nome`)}
+        >
+          🔍 Buscar itens por nome
+        </Button>
         {/* Relatório Final */}
         <Button onClick={() => router.push(`/relatorio-final/${nome}`)}>
           📄 Relatório Final
