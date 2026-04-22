@@ -565,6 +565,35 @@ class ItemInventarioService {
     }
   }
 
+  static async findByDescricao(nomeInventario, termoBusca) {
+    try {
+      const inventario = await InventarioService.findByName(nomeInventario);
+
+      if (!inventario) {
+        return null;
+      }
+
+      return await prisma.itemInventario.findMany({
+        where: {
+          inventarioId: inventario.id,
+          descricao: {
+            contains: termoBusca,
+            mode: "insensitive",
+          },
+        },
+        include: {
+          inventariante: {
+            select: { nome: true, email: true },
+          },
+        },
+        orderBy: { numero: "asc" },
+      });
+    } catch (error) {
+      console.error(`Erro em findByDescricao:`, error);
+      throw error;
+    }
+  }
+
   static async create(nomeInventario, dados) {
     const inventario = await InventarioService.findByName(nomeInventario);
     if (!inventario) throw new Error("Inventário não encontrado");
