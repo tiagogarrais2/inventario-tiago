@@ -5,11 +5,10 @@ export default function SecoesFinais({
   correcoesRealizadas,
   itensCadastrados,
   itensSobra,
-  timeline,
   comunicacoes,
 }) {
   const temComunicacoes = comunicacoes.total > 0;
-  const secaoConsideracoes = temComunicacoes ? "6" : "5";
+  const secaoConsideracoes = temComunicacoes ? "5" : "4";
   const formatarDataHora = (data) =>
     new Date(data).toLocaleString("pt-BR", {
       day: "2-digit",
@@ -26,24 +25,10 @@ export default function SecoesFinais({
 
   return (
     <>
-      {/* ============= 4. CRONOLOGIA ============= */}
-      <div className="page-break">
-        <h2>4 CRONOLOGIA DO INVENTÁRIO</h2>
-        {timeline.length > 0 ? (
-          <p>
-            O sistema registrou {timeline.length} evento(s) ao longo do
-            inventário, compreendendo ações de carga de dados, inventariação de
-            bens, correções e demais operações realizadas pela comissão.
-          </p>
-        ) : (
-          <p>Nenhum registro de atividade encontrado.</p>
-        )}
-      </div>
-
-      {/* ============= 5. COMUNICAÇÕES ============= */}
+      {/* ============= 4. COMUNICAÇÕES ============= */}
       {temComunicacoes && (
         <div className="page-break">
-          <h2>5 COMUNICAÇÕES REALIZADAS</h2>
+          <h2>4 COMUNICAÇÕES REALIZADAS</h2>
           <p>
             Durante o inventário, foram realizadas {comunicacoes.total}{" "}
             comunicação(ões) por e-mail para servidores e membros relacionados

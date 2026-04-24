@@ -435,7 +435,6 @@ export default function RelatorioFinalPage({ params }) {
           correcoesRealizadas={correcoesRealizadas}
           itensCadastrados={itensCadastrados}
           itensSobra={itensSobra}
-          timeline={timeline}
           comunicacoes={comunicacoes}
         />
       </div>
