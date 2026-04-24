@@ -20,20 +20,96 @@ export async function POST(request) {
   }
 
   try {
-    const { inventario, assunto, mensagem, filtroMin, filtroMax } =
-      await request.json();
+    const {
+      inventario,
+      assunto,
+      mensagem,
+      filtroMin,
+      filtroMax,
+      emailsManuais,
+    } = await request.json();
 
-    if (
-      !inventario ||
-      !assunto ||
-      !mensagem ||
-      filtroMin == null ||
-      filtroMax == null
-    ) {
+    if (!inventario || !assunto || !mensagem) {
+      return NextResponse.json(
+        { error: "Campos obrigatórios: inventario, assunto, mensagem." },
+        { status: 400 }
+      );
+    }
+
+    // Modo manual: lista de emails fornecida diretamente
+    if (Array.isArray(emailsManuais) && emailsManuais.length > 0) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const invalido = emailsManuais.find((e) => !emailRegex.test(e));
+      if (invalido) {
+        return NextResponse.json(
+          { error: `Email inválido na lista: ${invalido}` },
+          { status: 400 }
+        );
+      }
+
+      const proprietario = await isOwner(inventario, session.user.email);
+      if (!proprietario) {
+        return NextResponse.json(
+          { error: "Apenas o proprietário do inventário pode enviar emails." },
+          { status: 403 }
+        );
+      }
+
+      const destinatarios = emailsManuais.map((email) => ({
+        nome: email,
+        email,
+        pendentes: null,
+        total: null,
+        pendenciaPct: null,
+      }));
+
+      let status = "enviado";
+      let erroDetalhes = null;
+
+      try {
+        await EmailService.sendBCC(emailsManuais, assunto, mensagem);
+      } catch (emailError) {
+        console.error("Erro ao enviar email:", emailError);
+        status = "erro";
+        erroDetalhes = emailError.message;
+      }
+
+      await EmailService.logEnvio(inventario, session.user.email, {
+        assunto,
+        mensagem,
+        destinatarios,
+        filtroMin: null,
+        filtroMax: null,
+        totalEnviados: destinatarios.length,
+        status,
+        erroDetalhes,
+      });
+
+      if (status === "erro") {
+        return NextResponse.json(
+          {
+            error:
+              "Erro ao enviar emails. O envio foi registrado para referência.",
+            detalhes: erroDetalhes,
+            destinatarios,
+          },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        totalEnviados: destinatarios.length,
+        destinatarios,
+      });
+    }
+
+    // Modo filtro: validação dos filtros obrigatórios
+    if (filtroMin == null || filtroMax == null) {
       return NextResponse.json(
         {
           error:
-            "Todos os campos são obrigatórios: inventario, assunto, mensagem, filtroMin, filtroMax.",
+            "Informe filtroMin e filtroMax para envio por filtro, ou emailsManuais para envio manual.",
         },
         { status: 400 }
       );
