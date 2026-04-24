@@ -47,6 +47,10 @@ export default function EmailsPage({ params }) {
   const [mostrarSalvarTemplate, setMostrarSalvarTemplate] = useState(false);
   const [tituloSalvarTemplate, setTituloSalvarTemplate] = useState("");
 
+  // Modo de envio
+  const [modoEnvio, setModoEnvio] = useState("filtro"); // "filtro" | "manual"
+  const [emailsManuais, setEmailsManuais] = useState("");
+
   // Abas
   const [abaAtiva, setAbaAtiva] = useState("compor"); // "compor", "emails", "historico", "textos"
 
@@ -316,6 +320,60 @@ export default function EmailsPage({ params }) {
       alert("Preencha o assunto e a mensagem.");
       return;
     }
+
+    if (modoEnvio === "manual") {
+      const listaEmails = emailsManuais
+        .split(/[\n,;]+/)
+        .map((e) => e.trim())
+        .filter((e) => e.length > 0);
+
+      if (listaEmails.length === 0) {
+        alert("Informe ao menos um endereço de email.");
+        return;
+      }
+
+      const emailInvalido = listaEmails.find(
+        (e) => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)
+      );
+      if (emailInvalido) {
+        alert(`Email inválido: ${emailInvalido}`);
+        return;
+      }
+
+      const confirmar = confirm(
+        `Enviar email em CCO para ${listaEmails.length} endereço(s)?\n\nAssunto: ${assunto}\n\nDestinatários:\n${listaEmails.join("\n")}`
+      );
+      if (!confirmar) return;
+
+      setEnviando(true);
+      try {
+        const res = await fetch("/api/emails/enviar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            inventario: nome,
+            assunto,
+            mensagem,
+            emailsManuais: listaEmails,
+          }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert(
+            `Emails enviados com sucesso para ${data.totalEnviados} endereço(s)!`
+          );
+          setMostrarSalvarTemplate(true);
+          carregarHistorico();
+        } else {
+          alert(data.error || "Erro ao enviar emails.");
+        }
+      } catch {
+        alert("Erro ao enviar emails.");
+      }
+      setEnviando(false);
+      return;
+    }
+
     if (comEmail.length === 0) {
       alert("Nenhum servidor com email cadastrado na faixa selecionada.");
       return;
@@ -498,191 +556,244 @@ export default function EmailsPage({ params }) {
               )}
             </div>
 
-            {/* Filtro de % */}
+            {/* Toggle modo de envio */}
             <div
               style={{
-                padding: "15px",
+                padding: "12px 15px",
                 border: "1px solid #ddd",
                 borderRadius: "5px",
                 backgroundColor: "#f8f9fa",
                 marginBottom: "20px",
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                flexWrap: "wrap",
               }}
             >
-              <h4 style={{ margin: "0 0 10px 0" }}>🎯 Filtro por Pendência</h4>
-              <div
+              <span style={{ fontWeight: "bold", fontSize: "14px" }}>
+                🎯 Modo de envio:
+              </span>
+              <button
+                onClick={() => setModoEnvio("filtro")}
                 style={{
-                  display: "flex",
-                  gap: "15px",
-                  alignItems: "center",
-                  flexWrap: "wrap",
+                  padding: "6px 16px",
+                  borderRadius: "4px",
+                  border: "1px solid #007bff",
+                  cursor: "pointer",
+                  fontWeight: modoEnvio === "filtro" ? "bold" : "normal",
+                  backgroundColor: modoEnvio === "filtro" ? "#007bff" : "white",
+                  color: modoEnvio === "filtro" ? "white" : "#007bff",
+                  fontSize: "13px",
                 }}
               >
-                <div>
-                  <label style={{ fontWeight: "bold", fontSize: "14px" }}>
-                    Mínimo (%):
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={filtroMin}
-                    onChange={(e) =>
-                      setFiltroMin(
-                        Math.min(100, Math.max(0, Number(e.target.value)))
-                      )
-                    }
-                    style={{
-                      width: "80px",
-                      padding: "6px",
-                      marginLeft: "8px",
-                      border: "1px solid #ccc",
-                      borderRadius: "4px",
-                    }}
-                  />
-                </div>
-                <div>
-                  <label style={{ fontWeight: "bold", fontSize: "14px" }}>
-                    Máximo (%):
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={filtroMax}
-                    onChange={(e) =>
-                      setFiltroMax(
-                        Math.min(100, Math.max(0, Number(e.target.value)))
-                      )
-                    }
-                    style={{
-                      width: "80px",
-                      padding: "6px",
-                      marginLeft: "8px",
-                      border: "1px solid #ccc",
-                      borderRadius: "4px",
-                    }}
-                  />
-                </div>
-                <div
-                  style={{
-                    padding: "6px 12px",
-                    backgroundColor: "#e9ecef",
-                    borderRadius: "4px",
-                    fontSize: "14px",
-                  }}
-                >
-                  {servidoresFiltrados.length} servidor(es) na faixa •{" "}
-                  <strong style={{ color: "#28a745" }}>
-                    {comEmail.length} com email
-                  </strong>{" "}
-                  •{" "}
-                  <strong style={{ color: "#dc3545" }}>
-                    {semEmail.length} sem email
-                  </strong>
-                </div>
-              </div>
-              {/* Atalhos */}
-              <div
+                📊 Por filtro de pendência
+              </button>
+              <button
+                onClick={() => setModoEnvio("manual")}
                 style={{
-                  marginTop: "10px",
-                  display: "flex",
-                  gap: "8px",
-                  flexWrap: "wrap",
+                  padding: "6px 16px",
+                  borderRadius: "4px",
+                  border: "1px solid #6f42c1",
+                  cursor: "pointer",
+                  fontWeight: modoEnvio === "manual" ? "bold" : "normal",
+                  backgroundColor: modoEnvio === "manual" ? "#6f42c1" : "white",
+                  color: modoEnvio === "manual" ? "white" : "#6f42c1",
+                  fontSize: "13px",
                 }}
               >
-                <span style={{ fontSize: "13px", color: "#6c757d" }}>
-                  Atalhos:
-                </span>
-                <button
-                  onClick={() => {
-                    setFiltroMin(100);
-                    setFiltroMax(100);
-                  }}
-                  style={{
-                    padding: "2px 8px",
-                    fontSize: "12px",
-                    border: "1px solid #ccc",
-                    borderRadius: "3px",
-                    cursor: "pointer",
-                    backgroundColor: "#fff3cd",
-                    color: "black",
-                  }}
-                >
-                  100% pendentes
-                </button>
-                <button
-                  onClick={() => {
-                    setFiltroMin(50);
-                    setFiltroMax(100);
-                  }}
-                  style={{
-                    padding: "2px 8px",
-                    fontSize: "12px",
-                    border: "1px solid #ccc",
-                    borderRadius: "3px",
-                    cursor: "pointer",
-                    backgroundColor: "#f8d7da",
-                    color: "black",
-                  }}
-                >
-                  50%+ pendentes
-                </button>
-                <button
-                  onClick={() => {
-                    setFiltroMin(30);
-                    setFiltroMax(60);
-                  }}
-                  style={{
-                    padding: "2px 8px",
-                    fontSize: "12px",
-                    border: "1px solid #ccc",
-                    borderRadius: "3px",
-                    cursor: "pointer",
-                    backgroundColor: "#d4edda",
-                    color: "black",
-                  }}
-                >
-                  30% a 60%
-                </button>
-                <button
-                  onClick={() => {
-                    setFiltroMin(1);
-                    setFiltroMax(100);
-                  }}
-                  style={{
-                    padding: "2px 8px",
-                    fontSize: "12px",
-                    border: "1px solid #ccc",
-                    borderRadius: "3px",
-                    cursor: "pointer",
-                    backgroundColor: "#d1ecf1",
-                    color: "black",
-                  }}
-                >
-                  Qualquer pendência
-                </button>
-                <button
-                  onClick={() => {
-                    setFiltroMin(0);
-                    setFiltroMax(100);
-                  }}
-                  style={{
-                    padding: "2px 8px",
-                    fontSize: "12px",
-                    border: "1px solid #ccc",
-                    borderRadius: "3px",
-                    cursor: "pointer",
-                    backgroundColor: "#e9ecef",
-                    color: "black",
-                  }}
-                >
-                  Todos
-                </button>
-              </div>
+                ✍️ Destinatários manuais
+              </button>
             </div>
 
+            {/* Filtro de % */}
+            {modoEnvio === "filtro" && (
+              <div
+                style={{
+                  padding: "15px",
+                  border: "1px solid #ddd",
+                  borderRadius: "5px",
+                  backgroundColor: "#f8f9fa",
+                  marginBottom: "20px",
+                }}
+              >
+                <h4 style={{ margin: "0 0 10px 0" }}>
+                  🎯 Filtro por Pendência
+                </h4>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "15px",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <div>
+                    <label style={{ fontWeight: "bold", fontSize: "14px" }}>
+                      Mínimo (%):
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={filtroMin}
+                      onChange={(e) =>
+                        setFiltroMin(
+                          Math.min(100, Math.max(0, Number(e.target.value)))
+                        )
+                      }
+                      style={{
+                        width: "80px",
+                        padding: "6px",
+                        marginLeft: "8px",
+                        border: "1px solid #ccc",
+                        borderRadius: "4px",
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontWeight: "bold", fontSize: "14px" }}>
+                      Máximo (%):
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={filtroMax}
+                      onChange={(e) =>
+                        setFiltroMax(
+                          Math.min(100, Math.max(0, Number(e.target.value)))
+                        )
+                      }
+                      style={{
+                        width: "80px",
+                        padding: "6px",
+                        marginLeft: "8px",
+                        border: "1px solid #ccc",
+                        borderRadius: "4px",
+                      }}
+                    />
+                  </div>
+                  <div
+                    style={{
+                      padding: "6px 12px",
+                      backgroundColor: "#e9ecef",
+                      borderRadius: "4px",
+                      fontSize: "14px",
+                    }}
+                  >
+                    {servidoresFiltrados.length} servidor(es) na faixa •{" "}
+                    <strong style={{ color: "#28a745" }}>
+                      {comEmail.length} com email
+                    </strong>{" "}
+                    •{" "}
+                    <strong style={{ color: "#dc3545" }}>
+                      {semEmail.length} sem email
+                    </strong>
+                  </div>
+                </div>
+                {/* Atalhos */}
+                <div
+                  style={{
+                    marginTop: "10px",
+                    display: "flex",
+                    gap: "8px",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <span style={{ fontSize: "13px", color: "#6c757d" }}>
+                    Atalhos:
+                  </span>
+                  <button
+                    onClick={() => {
+                      setFiltroMin(100);
+                      setFiltroMax(100);
+                    }}
+                    style={{
+                      padding: "2px 8px",
+                      fontSize: "12px",
+                      border: "1px solid #ccc",
+                      borderRadius: "3px",
+                      cursor: "pointer",
+                      backgroundColor: "#fff3cd",
+                      color: "black",
+                    }}
+                  >
+                    100% pendentes
+                  </button>
+                  <button
+                    onClick={() => {
+                      setFiltroMin(50);
+                      setFiltroMax(100);
+                    }}
+                    style={{
+                      padding: "2px 8px",
+                      fontSize: "12px",
+                      border: "1px solid #ccc",
+                      borderRadius: "3px",
+                      cursor: "pointer",
+                      backgroundColor: "#f8d7da",
+                      color: "black",
+                    }}
+                  >
+                    50%+ pendentes
+                  </button>
+                  <button
+                    onClick={() => {
+                      setFiltroMin(30);
+                      setFiltroMax(60);
+                    }}
+                    style={{
+                      padding: "2px 8px",
+                      fontSize: "12px",
+                      border: "1px solid #ccc",
+                      borderRadius: "3px",
+                      cursor: "pointer",
+                      backgroundColor: "#d4edda",
+                      color: "black",
+                    }}
+                  >
+                    30% a 60%
+                  </button>
+                  <button
+                    onClick={() => {
+                      setFiltroMin(1);
+                      setFiltroMax(100);
+                    }}
+                    style={{
+                      padding: "2px 8px",
+                      fontSize: "12px",
+                      border: "1px solid #ccc",
+                      borderRadius: "3px",
+                      cursor: "pointer",
+                      backgroundColor: "#d1ecf1",
+                      color: "black",
+                    }}
+                  >
+                    Qualquer pendência
+                  </button>
+                  <button
+                    onClick={() => {
+                      setFiltroMin(0);
+                      setFiltroMax(100);
+                    }}
+                    style={{
+                      padding: "2px 8px",
+                      fontSize: "12px",
+                      border: "1px solid #ccc",
+                      borderRadius: "3px",
+                      cursor: "pointer",
+                      backgroundColor: "#e9ecef",
+                      color: "black",
+                    }}
+                  >
+                    Todos
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Preview dos destinatários */}
-            {servidoresFiltrados.length > 0 && (
+            {modoEnvio === "filtro" && servidoresFiltrados.length > 0 && (
               <div
                 style={{
                   marginBottom: "20px",
@@ -758,6 +869,68 @@ export default function EmailsPage({ params }) {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            )}
+
+            {/* Destinatários manuais */}
+            {modoEnvio === "manual" && (
+              <div
+                style={{
+                  padding: "15px",
+                  border: "1px solid #6f42c1",
+                  borderRadius: "5px",
+                  backgroundColor: "#f5f0ff",
+                  marginBottom: "20px",
+                }}
+              >
+                <h4 style={{ margin: "0 0 10px 0" }}>
+                  ✍️ Destinatários Manuais
+                </h4>
+                <p
+                  style={{
+                    fontSize: "13px",
+                    color: "#555",
+                    margin: "0 0 10px 0",
+                  }}
+                >
+                  Informe os endereços de email separados por vírgula, ponto e
+                  vírgula ou uma por linha. O email será enviado em CCO para
+                  todos.
+                </p>
+                <textarea
+                  value={emailsManuais}
+                  onChange={(e) => setEmailsManuais(e.target.value)}
+                  placeholder={
+                    "email1@exemplo.com\nemail2@exemplo.com\nemail3@exemplo.com"
+                  }
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    border: "1px solid #b39ddb",
+                    borderRadius: "4px",
+                    fontSize: "14px",
+                    minHeight: "100px",
+                    fontFamily: "monospace",
+                    boxSizing: "border-box",
+                  }}
+                />
+                {emailsManuais.trim() && (
+                  <div
+                    style={{
+                      marginTop: "8px",
+                      fontSize: "13px",
+                      color: "#6f42c1",
+                    }}
+                  >
+                    {(() => {
+                      const lista = emailsManuais
+                        .split(/[\n,;]+/)
+                        .map((e) => e.trim())
+                        .filter((e) => e.length > 0);
+                      return `${lista.length} endereço(s) informado(s)`;
+                    })()}
+                  </div>
+                )}
               </div>
             )}
 
@@ -878,23 +1051,44 @@ export default function EmailsPage({ params }) {
             <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
               <Button
                 onClick={enviarEmails}
-                disabled={enviando || comEmail.length === 0}
+                disabled={
+                  enviando ||
+                  (modoEnvio === "filtro"
+                    ? comEmail.length === 0
+                    : !emailsManuais.trim())
+                }
                 style={{
-                  backgroundColor: comEmail.length > 0 ? "#28a745" : "#6c757d",
+                  backgroundColor:
+                    modoEnvio === "filtro"
+                      ? comEmail.length > 0
+                        ? "#28a745"
+                        : "#6c757d"
+                      : emailsManuais.trim()
+                        ? "#6f42c1"
+                        : "#6c757d",
                   color: "white",
                   padding: "10px 20px",
                   border: "none",
                   borderRadius: "4px",
-                  cursor: comEmail.length > 0 ? "pointer" : "not-allowed",
+                  cursor:
+                    modoEnvio === "filtro"
+                      ? comEmail.length > 0
+                        ? "pointer"
+                        : "not-allowed"
+                      : emailsManuais.trim()
+                        ? "pointer"
+                        : "not-allowed",
                   fontWeight: "bold",
                   fontSize: "15px",
                 }}
               >
                 {enviando
                   ? "⏳ Enviando..."
-                  : `📧 Enviar CCO para ${comEmail.length} servidor(es)`}
+                  : modoEnvio === "manual"
+                    ? `📧 Enviar CCO para destinatários manuais`
+                    : `📧 Enviar CCO para ${comEmail.length} servidor(es)`}
               </Button>
-              {semEmail.length > 0 && (
+              {modoEnvio === "filtro" && semEmail.length > 0 && (
                 <span style={{ fontSize: "13px", color: "#dc3545" }}>
                   ⚠️ {semEmail.length} servidor(es) sem email não receberão a
                   mensagem.{" "}
