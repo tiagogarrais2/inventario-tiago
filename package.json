@@ -3,6 +3,7 @@
   "version": "3.3.7",
   "author": "Tiago das Graças Arrais <tiago.arrais@ifce.edu.br>",
   "description": "Sistema Informatizado de Inventário Patrimonial",
+  "license": "GPL-3.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
