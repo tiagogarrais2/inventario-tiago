@@ -233,7 +233,22 @@ class InventarioService {
         where: { inventarioId: inventarioId },
       });
 
-      // 7. Por último, excluir o inventário
+      // 7. Excluir servidores do inventário
+      await prisma.servidor.deleteMany({
+        where: { inventarioId: inventarioId },
+      });
+
+      // 8. Excluir logs de e-mail do inventário
+      await prisma.emailLog.deleteMany({
+        where: { inventarioId: inventarioId },
+      });
+
+      // 9. Excluir templates de e-mail do inventário
+      await prisma.emailTemplate.deleteMany({
+        where: { inventarioId: inventarioId },
+      });
+
+      // 10. Por último, excluir o inventário
       await prisma.inventario.delete({
         where: { id: inventarioId },
       });
