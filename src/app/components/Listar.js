@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Button from "./Button";
-import TimerText from "./TimerText";
 
 export default function Listar({ atualizar, novoInventario }) {
   const [inventarios, setInventarios] = useState([]);
@@ -28,25 +27,6 @@ export default function Listar({ atualizar, novoInventario }) {
           margin: "0 auto",
         }}
       >
-        {inventarios.length === 0 && (
-          <TimerText
-            initialTime={4}
-            finalText={
-              <span>
-                Solicite seu acesso ao inventário do IFCE no seguinte{" "}
-                <a
-                  href="https://forms.gle/Vb68rtPgdmfF9BwKA"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ color: "#007bff", textDecoration: "underline" }}
-                >
-                  link
-                </a>
-                .
-              </span>
-            }
-          />
-        )}
         {inventarios.map((nome) => {
           const isNovo = novoInventario && nome === novoInventario;
           return (

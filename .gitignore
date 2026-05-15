@@ -1,6 +1,7 @@
 .next
 .env
 .env-prd
+.env-prd.yml
 .env.development
 .env.production
 .env.local
