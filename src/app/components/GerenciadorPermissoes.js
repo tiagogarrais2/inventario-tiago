@@ -122,8 +122,8 @@ export default function GerenciadorPermissoes({
             method: "DELETE",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              inventario: inventarioNome,
-              email: email,
+              inventarioNome: inventarioNome,
+              emailUsuario: email,
             }),
           });
 
