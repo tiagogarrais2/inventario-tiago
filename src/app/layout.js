@@ -4,7 +4,7 @@ import Rodape from "./components/Rodape";
 import Providers from "./components/Providers";
 
 export const metadata = {
-  title: "Inventário Tiago",
+  title: "Sistema Informatizado de Inventário Patrimonial",
   description: "Aplicativo para controle de inventário",
   icons: {
     icon: "/favicon-32x32.png", // Ícone padrão

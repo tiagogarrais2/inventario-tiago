@@ -12,7 +12,7 @@ export default function Rodape() {
           <div className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-4 text-center">
             <span>
               <strong>
-                Sistema Informatizado de Inventário Patrimonial v3.3.6
+                Sistema Informatizado de Inventário Patrimonial v3.4
               </strong>{" "}
               <hr /> Desenvolvido por Adm.Tiago das Graças Arrais - IFCE
             </span>

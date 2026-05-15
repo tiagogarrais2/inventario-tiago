@@ -1,4 +1,4 @@
-# 📋 Sistema de Inventário Tiago v3.3.0
+# 📋 Sistema Informatizado de Inventário Patrimonial v3.4
 
 Sistema completo para gerenciamento de inventários com banco de dados PostgreSQL, autenticação, controle de acesso, auditoria, **sistema de correções avançado**, **funcionalidade de exclusão de inventários** e **cadastro de bens sem etiqueta (sobra de inventário)**. Desenvolvido em Next.js 15 com NextAuth para autenticação segura via Google OAuth e Prisma ORM para persistência de dados.
 
@@ -49,6 +49,80 @@ Sistema completo para gerenciamento de inventários com banco de dados PostgreSQ
 2. **🌐 Acesse o sistema** e faça login com Google
 3. **📤 Faça upload** do arquivo baixado
 4. **🎯 Explore todas as funcionalidades!**
+
+---
+
+## � Estrutura do Arquivo de Importação
+
+O sistema aceita arquivos nos formatos **`.json`** e **`.csv`**. O conteúdo deve ser um conjunto de registros onde cada registro representa um bem patrimonial.
+
+### Formato JSON
+
+Array de objetos, onde cada objeto é um item:
+
+```json
+[
+  {
+    "NUMERO": "12345",
+    "STATUS": "Ativo",
+    "DESCRICAO": "Teclado USB",
+    "CARGA ATUAL": "João Silva",
+    "SALA": "SALA 01",
+    "ESTADO DE CONSERVAÇÃO": "Bom",
+    "VALOR DEPRECIADO": "45.25"
+  }
+]
+```
+
+### Formato CSV
+
+Primeira linha como cabeçalho, demais linhas como registros:
+
+```csv
+NUMERO,STATUS,DESCRICAO,CARGA ATUAL,SALA,ESTADO DE CONSERVAÇÃO,VALOR DEPRECIADO
+12345,Ativo,Teclado USB,João Silva,SALA 01,Bom,45.25
+```
+
+### Colunas Reconhecidas pelo Sistema
+
+| Coluna                  | Importância     | Impacto no sistema                                                                                    |
+| ----------------------- | --------------- | ----------------------------------------------------------------------------------------------------- |
+| `NUMERO`                | **Obrigatória** | Identificador primário; usado na busca por tombo durante o inventário                                 |
+| `SALA`                  | **Obrigatória** | Popula o dropdown de salas nos formulários e nos relatórios por sala                                  |
+| `CARGA ATUAL`           | **Obrigatória** | Popula o dropdown de servidores; necessário para relatórios por servidor e filtro "Minhas Pendências" |
+| `DESCRICAO`             | Recomendada     | Utilizada na busca por nome/descrição                                                                 |
+| `STATUS`                | Recomendada     | Exibido nos relatórios e usado em filtros                                                             |
+| `ESTADO DE CONSERVAÇÃO` | Recomendada     | Exibido nos relatórios; obrigatório ao inventariar um item                                            |
+| `VALOR DEPRECIADO`      | Recomendada     | Necessário para o relatório de itens ordenados por valor financeiro                                   |
+| `VALOR AQUISIÇÃO`       | Recomendada     | Exibido no relatório final e na ficha do item                                                         |
+| `ED`                    | Opcional        | Elemento de despesa; exibido na ficha do item                                                         |
+| `CONTA CONTABIL`        | Opcional        | Exibido na ficha do item                                                                              |
+| `RÓTULOS`               | Opcional        | Exibido na ficha do item                                                                              |
+| `SETOR DO RESPONSÁVEL`  | Opcional        | Exibido na ficha do item                                                                              |
+| `CAMPUS DA CARGA`       | Opcional        | Exibido na ficha do item                                                                              |
+| `CARGA CONTÁBIL`        | Opcional        | Exibido na ficha do item                                                                              |
+| `NUMERO NOTA FISCAL`    | Opcional        | Exibido na ficha do item                                                                              |
+| `NÚMERO DE SÉRIE`       | Opcional        | Permite busca alternativa por número de série                                                         |
+| `DATA DA ENTRADA`       | Opcional        | Exibido na ficha do item                                                                              |
+| `DATA DA CARGA`         | Opcional        | Exibido na ficha do item                                                                              |
+| `FORNECEDOR`            | Opcional        | Exibido na ficha do item                                                                              |
+| `#`                     | Ignorada        | Coluna de número de linha presente em alguns exports; ignorada pelo sistema                           |
+
+> **⚠️ Atenção:** O sistema não rejeita arquivos com colunas ausentes — campos não informados são importados como texto vazio. Entretanto, funcionalidades que dependem dessas colunas ficarão degradadas. Os campos `NUMERO`, `SALA` e `CARGA ATUAL` são indispensáveis para o funcionamento completo do sistema.
+
+### Compatibilidade com o SUAP (IFCE e Institutos Federais)
+
+O sistema é totalmente compatível com as exportações do **SUAP** (Sistema Unificado de Administração Pública), utilizado pelo IFCE e por outros institutos federais para gestão patrimonial. As colunas geradas pelo módulo de Patrimônio do SUAP correspondem diretamente às colunas reconhecidas pelo sistema — **nenhum ajuste manual no arquivo é necessário**.
+
+**Como exportar do SUAP e importar no sistema:**
+
+1. Acesse o SUAP e vá em **Patrimônio → Inventário Bens Móveis**
+2. Aplique os filtros desejados (campus, setor, responsável, etc.)
+3. Clique em **Exportar** e escolha o formato `.csv` ou `.json`
+4. Acesse este sistema, faça login com o Google e clique em **Enviar Arquivo**
+5. Selecione o arquivo exportado e confirme o upload
+
+> **ℹ️ Nota:** A coluna `#` presente nas exportações do SUAP (número sequencial de linha) é ignorada automaticamente pelo sistema.
 
 ---
 
@@ -143,9 +217,11 @@ Sistema completo para gerenciamento de inventários com banco de dados PostgreSQ
 
 - **Relatórios dinâmicos**: Dados em tempo real do PostgreSQL
 - **Organização por sala**: Visualização completa incluindo salas vazias
-- **Organização por servidor**: Novo relatório que agrupa itens por carga atual/servidor responsável
-- **Minhas Pendências**: Filtro automático que mostra apenas os itens vinculados ao usuário logado
-- **Organização por valor**: Novo relatório que lista itens ordenados por valor depreciado (maior para menor)
+- **Organização por servidor**: Agrupa itens por carga atual/servidor responsável
+- **Meu Inventário**: Filtro rápido que exibe apenas os itens vinculados ao usuário logado (`/relatorio-por-servidor/[nome]?meus=true`)
+- **Organização por valor**: Lista itens ordenados por valor depreciado (maior para menor)
+- **Busca por nome**: Localização de itens por descrição
+- **Itens movidos**: Relatório de bens cuja sala encontrada diverge da sala de origem
 - **Status visual**: Indicação clara de itens inventariados vs não inventariados
 - **Sistema de badges**: Indicadores visuais para diferentes status dos itens:
   - 🟢 **Badge INVENTARIADO** - Para itens confirmados durante inventário
@@ -160,6 +236,18 @@ Sistema completo para gerenciamento de inventários com banco de dados PostgreSQ
 - **Campo de observações**: Possibilidade de adicionar notas durante o inventário
 - **Inventário direto**: Botão para inventariar itens não inventariados diretamente do relatório
 
+### 📄 **Relatório Final**
+
+- **Documento completo**: Relatório formal estruturado com capa, introdução, metodologia, resultados e considerações finais
+- **Gráficos automáticos**: Pizza de progresso, distribuição por status, distribuição por estado de conservação, top marcas e itens por sala
+- **Visão geral quantitativa**: Total de bens, carga inicial, inventariados, pendentes, movidos, cadastrados em campo, sem etiqueta e correções realizadas
+- **Análise por servidor**: Métricas individuais de progresso e itens em múltiplas salas
+- **Classificação ABC**: Agrupamento de itens por valor patrimonial
+- **Seção de sobra de inventário**: Tabela detalhada de bens sem etiqueta encontrados
+- **Otimizado para impressão**: Layout paginado pronto para PDF
+- **Timeout configurável**: Suporte a inventários grandes (até 45 segundos de geração)
+- **Rota**: `/relatorio-final/[nome]`
+
 ### 📝 **Inventário Direto dos Relatórios v2.3.0 (NOVO!)**
 
 - **Botão "Inventariar Item"**: Aparece automaticamente para itens não inventariados
@@ -171,6 +259,28 @@ Sistema completo para gerenciamento de inventários com banco de dados PostgreSQ
 - **API consistente**: Usa a mesma API `/update-inventario` sem modificações
 - **Validação completa**: Mesmas regras de negócio da página de inventário
 - **Feedback visual**: Notificações de sucesso/erro idênticas ao sistema principal
+
+### 📧 **Sistema de Disparo de E-mails**
+
+- **Exclusivo para proprietários**: Apenas o proprietário do inventário pode acessar e enviar e-mails
+- **Dois modos de envio**:
+  - **Por progresso**: Filtra servidores cujo percentual de itens pendentes está dentro de um intervalo configurável (ex.: entre 20% e 80% pendente)
+  - **Manual**: Lista livre de endereços de e-mail separados por vírgula
+- **Envio em BCC**: Todos os destinatários recebem o e-mail sem ver os demais (privacidade preservada)
+- **Composição livre**: Assunto e corpo da mensagem totalmente personalizáveis
+- **Templates e rascunhos**: Textos salvos por inventário para reaproveitamento em disparos futuros
+- **Histórico completo**: Registro de todos os disparos com destinatários, assunto e data/hora
+- **Teste de configuração**: Envio de e-mail de teste para verificar as credenciais SMTP
+- **Rota**: `/inventario/[nome]/emails`
+
+### ⬇️ **Exportação Auditável do Inventário (JSON)**
+
+- **Download completo**: Exporta todos os itens do inventário em formato `.json`
+- **Modal de confirmação**: Solicitação explícita de confirmação antes de iniciar a exportação
+- **Registrado em auditoria**: Cada exportação grava log com usuário, inventário, data e hora
+- **Payload estruturado**: Arquivo contém metadados (`inventario`, `exportadoEm`, `totalItens`) além da lista de itens
+- **Nome de arquivo automático**: Gerado a partir do nome do inventário, normalizado e sem caracteres especiais
+- **Disponível na página de relatórios**: `/relatorios/[nome]`
 
 ### 🧪 **Demonstração e Testes**
 
@@ -693,6 +803,15 @@ npx prisma migrate deploy
 - ✅ **Interface aprimorada**: Badges visuais e navegação integrada
 - ✅ **API robusta**: Endpoints especializados para correções
 
+### **v3.4.0** - 15/05/2026
+
+- 📄 **NEW**: Relatório Final formal com capa, gráficos, análise ABC, seção de sobra de inventário e layout otimizado para impressão
+- 📋 **NEW**: Botão "Meu Inventário" — acesso direto ao filtro de pendências do usuário logado
+- 📧 **NEW**: Sistema de disparo de e-mails para servidores (filtragem por % de progresso ou lista manual, BCC, templates, histórico)
+- ⬇️ **NEW**: Exportação auditável do inventário completo em JSON (`/relatorios/[nome]`)
+- 🔒 **SECURITY**: Exportação registrada nos logs de auditoria (usuário, data e hora)
+- 🔒 **SECURITY**: Envio de e-mails restrito ao proprietário do inventário
+
 ### **v3.3.0** - 01/04/2026
 
 - 🏷️ **NEW**: Sobra de Inventário — Fluxo institucionalizado para cadastro de bens sem etiqueta (prefixo 99999)
@@ -769,4 +888,4 @@ npx prisma migrate deploy
 
 ---
 
-**🎯 Sistema de Inventário v2.0.0 - Robusto, Escalável e Pronto para Produção!**
+**🎯 Sistema Informatizado de Inventário Patrimonial v3.4 - Robusto, Escalável e Pronto para Produção!**
