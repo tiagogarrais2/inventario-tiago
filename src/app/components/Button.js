@@ -47,6 +47,7 @@ export default function Button({
       {...props}
       onClick={handleClick}
       disabled={isButtonDisabled}
+      aria-disabled={disabled || isDisabled}
       className={className}
       style={{
         opacity: disabled || isDisabled ? 0.5 : 1,

@@ -320,6 +320,7 @@ export default function Cadastrar() {
                   value={formData[fieldName] || ""}
                   onChange={handleChange}
                   required
+                  aria-required="true"
                   style={{ marginLeft: "10px", padding: "5px" }}
                 >
                   <option value="">Selecione uma opção</option>
@@ -336,6 +337,7 @@ export default function Cadastrar() {
                   value={formData[fieldName] || ""}
                   onChange={handleChange}
                   required
+                  aria-required="true"
                   style={{ marginLeft: "10px", padding: "5px" }}
                 >
                   <option value="">Selecione uma sala</option>

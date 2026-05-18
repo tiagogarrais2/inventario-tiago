@@ -458,11 +458,14 @@ export default function InventariarPage({ params }) {
       {/* Campo de seleção de sala atual do inventário */}
       <div style={{ marginBottom: "16px" }}>
         <label
+          htmlFor="sala-inventario"
           style={{ display: "block", fontWeight: "bold", marginBottom: "4px" }}
         >
-          🏢 Sala atual do inventário:
+          <span aria-hidden="true">🏢</span> Sala atual do inventário:
         </label>
         <select
+          id="sala-inventario"
+          aria-label="Selecionar sala do inventário"
           value={salaSelecionada}
           onChange={handleSalaChange}
           style={{
@@ -555,12 +558,18 @@ export default function InventariarPage({ params }) {
             marginTop: 10,
           }}
         >
-          <Button onClick={handleCadastrar}>Cadastrar item</Button>
+          <Button
+            onClick={handleCadastrar}
+            aria-label="Cadastrar novo item no inventário"
+          >
+            Cadastrar item
+          </Button>
           <Button
             onClick={handleCadastrarSemEtiqueta}
+            aria-label="Cadastrar bem sem etiqueta no inventário"
             style={{ backgroundColor: "#e67e22", borderColor: "#e67e22" }}
           >
-            🏷️ Cadastrar Bem Sem Etiqueta
+            <span aria-hidden="true">🏷️</span> Cadastrar Bem Sem Etiqueta
           </Button>
         </div>
       )}
@@ -792,6 +801,7 @@ export default function InventariarPage({ params }) {
           <br />
           <Button
             onClick={confirmarEncontrado}
+            aria-label="Confirmar que o item foi encontrado no inventário"
             style={{ marginTop: 10, marginRight: 10 }}
           >
             Confirmar Item Encontrado

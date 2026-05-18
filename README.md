@@ -642,6 +642,66 @@ git push gitlab main
 git push origin main && git push gitlab main
 ```
 
+### **Script de Deploy Automatizado**
+
+O projeto inclui o script `scripts/deploy.sh`, registrado como `npm run deploy`, que automatiza todo o fluxo de build, versionamento e publicação em um único comando.
+
+#### Uso
+
+```bash
+npm run deploy -- "Mensagem descrevendo as alterações"
+```
+
+> **Atenção:** use `--` antes da mensagem para que o npm repasse o argumento corretamente ao script.
+
+#### O que o script faz (em ordem)
+
+| Etapa | Ação                                                                                                  |
+| ----- | ----------------------------------------------------------------------------------------------------- |
+| 1     | **Build** — executa `npm run build` e interrompe tudo se houver erro                                  |
+| 2     | **Detecção automática de versão** — lê a última tag Git (ex.: `v3.4.3`) e calcula o próximo patch (`v3.4.4`) |
+| 3     | **Confirmação interativa** — exibe o resumo (mensagem, tag atual → nova, imagem Docker) e aguarda `s/N` |
+| 4     | **Commit** — `git add -A` + `git commit -m "<mensagem>"`                                              |
+| 5     | **Tag** — `git tag -a v3.4.4 -m "<mensagem>"`                                                        |
+| 6     | **Push Git** — `git push` + `git push --tags`                                                         |
+| 7     | **Docker build** — `docker build -t gitlab.../inventario-patrimonial:3.4.4 .`                        |
+| 8     | **Docker push** — `docker push gitlab.../inventario-patrimonial:3.4.4`                               |
+
+#### Exemplo de execução
+
+```
+==> [1/6] npm run build
+...build concluído...
+
+-------------------------------------------------------
+  Mensagem : Adiciona filtro por sala no relatório
+  Tag atual : v3.4.3  →  nova tag: v3.4.4
+  Imagem   : gitlab.ifce.edu.br:5050/projetos/sistema-informatizado-de-inventario-patrimonial:3.4.4
+-------------------------------------------------------
+
+Confirma e faz push? [s/N] s
+
+==> [2/6] git add -A && git commit
+==> [3/6] git tag v3.4.4
+==> [4/6] git push && git push --tags
+==> [5/6] docker build ...
+==> [6/6] docker push ...
+
+Deploy concluído! Versão v3.4.4 publicada.
+```
+
+#### Requisitos
+
+- Docker instalado e autenticado no registry do GitLab (`docker login gitlab.ifce.edu.br:5050`)
+- Git configurado com acesso de push (SSH ou token)
+- Pelo menos uma tag de versão existente no repositório (`git tag`)
+
+#### Cancelamento seguro
+
+Se você responder `N` (ou pressionar Enter) na confirmação, **nenhuma alteração é enviada** — nem commit, nem tag, nem push Docker. O build local permanece, mas nada é publicado.
+
+---
+
 ### **Comandos Úteis**
 
 ```bash

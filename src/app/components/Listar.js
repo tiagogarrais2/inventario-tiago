@@ -65,6 +65,7 @@ export default function Listar({ atualizar, novoInventario }) {
               )}
               <Button
                 onClick={() => router.push(`/inventario/${nome}`)}
+                aria-label={`Abrir inventário ${nome}`}
                 style={{
                   width: "100%",
                   padding: "12px 16px",
@@ -95,7 +96,7 @@ export default function Listar({ atualizar, novoInventario }) {
                   e.target.style.boxShadow = "none";
                 }}
               >
-                📋 {nome}
+                <span aria-hidden="true">📋</span> {nome}
               </Button>
             </div>
           );

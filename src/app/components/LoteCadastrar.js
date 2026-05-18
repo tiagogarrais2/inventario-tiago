@@ -296,12 +296,16 @@ export default function LoteCadastrar() {
           />
         </div>
         <div>
-          <label>Servidor(a) Inventariante:</label>
+          <label htmlFor="lote-servidor-inventariante">
+            Servidor(a) Inventariante:
+          </label>
           <select
+            id="lote-servidor-inventariante"
             name="SERVIDOR(A) INVENTARIANTE"
             value={formData["SERVIDOR(A) INVENTARIANTE"]}
             onChange={handleChange}
             required
+            aria-required="true"
           >
             <option value="">Selecione</option>
             {servidoresOptions.map((serv) => (
@@ -312,12 +316,14 @@ export default function LoteCadastrar() {
           </select>
         </div>
         <div>
-          <label>Status:</label>
+          <label htmlFor="lote-status">Status:</label>
           <select
+            id="lote-status"
             name="STATUS"
             value={formData.STATUS}
             onChange={handleChange}
             required
+            aria-required="true"
           >
             <option value="">Selecione</option>
             {STATUS_OPTIONS.map((opt) => (
@@ -328,22 +334,26 @@ export default function LoteCadastrar() {
           </select>
         </div>
         <div>
-          <label>Descrição:</label>
+          <label htmlFor="lote-descricao">Descrição:</label>
           <input
+            id="lote-descricao"
             type="text"
             name="DESCRICAO"
             value={formData.DESCRICAO}
             onChange={handleChange}
             required
+            aria-required="true"
           />
         </div>
         <div>
-          <label>Carga Atual:</label>
+          <label htmlFor="lote-carga-atual">Carga Atual:</label>
           <select
+            id="lote-carga-atual"
             name="CARGA ATUAL"
             value={formData["CARGA ATUAL"]}
             onChange={handleChange}
             required
+            aria-required="true"
           >
             <option value="">Selecione</option>
             {servidoresOptions.map((serv) => (
@@ -354,12 +364,14 @@ export default function LoteCadastrar() {
           </select>
         </div>
         <div>
-          <label>Sala:</label>
+          <label htmlFor="lote-sala">Sala:</label>
           <select
+            id="lote-sala"
             name="SALA"
             value={formData.SALA}
             onChange={handleChange}
             required
+            aria-required="true"
           >
             <option value="">Selecione</option>
             {salasOptions.map((sala) => (
@@ -370,12 +382,16 @@ export default function LoteCadastrar() {
           </select>
         </div>
         <div>
-          <label>Estado de Conservação:</label>
+          <label htmlFor="lote-estado-conservacao">
+            Estado de Conservação:
+          </label>
           <select
+            id="lote-estado-conservacao"
             name="ESTADO DE CONSERVAÇÃO"
             value={formData["ESTADO DE CONSERVAÇÃO"]}
             onChange={handleChange}
             required
+            aria-required="true"
           >
             <option value="">Selecione</option>
             {ESTADOS_CONSERVACAO.map((estado) => (
