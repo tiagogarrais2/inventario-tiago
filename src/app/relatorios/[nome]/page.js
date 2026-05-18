@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Button from "../../components/Button";
+import { useFocusTrap } from "../../lib/useFocusTrap";
 
 export default function RelatoriosPage({ params }) {
   const [nome, setNome] = useState("");
@@ -22,6 +23,10 @@ export default function RelatoriosPage({ params }) {
   const [accessLoading, setAccessLoading] = useState(true);
   const [exportandoJson, setExportandoJson] = useState(false);
   const [modalExportacaoAberto, setModalExportacaoAberto] = useState(false);
+  const { modalRef: modalExportacaoRef } = useFocusTrap({
+    isOpen: modalExportacaoAberto,
+    onClose: cancelarExportacao,
+  });
 
   const normalizarNomeArquivo = (valor) => {
     if (!valor) return "inventario";
@@ -264,6 +269,11 @@ export default function RelatoriosPage({ params }) {
           }}
         >
           <div
+            ref={modalExportacaoRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-exportacao-titulo"
+            tabIndex={-1}
             style={{
               width: "100%",
               maxWidth: "540px",
@@ -273,7 +283,10 @@ export default function RelatoriosPage({ params }) {
               padding: "1.2rem 1.25rem",
             }}
           >
-            <h3 style={{ marginTop: 0, marginBottom: "0.75rem" }}>
+            <h3
+              id="modal-exportacao-titulo"
+              style={{ marginTop: 0, marginBottom: "0.75rem" }}
+            >
               Confirmar exportação auditável
             </h3>
             <p style={{ margin: "0 0 0.6rem 0" }}>

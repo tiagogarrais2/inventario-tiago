@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Button from "../../components/Button";
+import { useFocusTrap } from "../../lib/useFocusTrap";
 
 export default function RelatorioPorServidorPage({ params }) {
   const unwrappedParams = React.use(params);
@@ -25,6 +26,10 @@ export default function RelatorioPorServidorPage({ params }) {
   const [meusServidoresNomes, setMeusServidoresNomes] = useState([]);
   const [avisoSemServidor, setAvisoSemServidor] = useState(false);
   const [modalAberto, setModalAberto] = useState(false);
+  const { modalRef: modalInventarioRef } = useFocusTrap({
+    isOpen: modalAberto,
+    onClose: () => setModalAberto(false),
+  });
   const [itemSelecionado, setItemSelecionado] = useState(null);
   const [salas, setSalas] = useState([]);
   const [filtroInventario, setFiltroInventario] = useState("todos");
@@ -1247,6 +1252,11 @@ export default function RelatorioPorServidorPage({ params }) {
           }}
         >
           <div
+            ref={modalInventarioRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-inventario-titulo"
+            tabIndex={-1}
             style={{
               backgroundColor: "white",
               padding: "20px",
@@ -1257,7 +1267,7 @@ export default function RelatorioPorServidorPage({ params }) {
               overflowY: "auto",
             }}
           >
-            <h3 style={{ marginTop: 0 }}>
+            <h3 id="modal-inventario-titulo" style={{ marginTop: 0 }}>
               Inventariar Item: {itemSelecionado.numero}
             </h3>
             <p style={{ marginBottom: "15px" }}>

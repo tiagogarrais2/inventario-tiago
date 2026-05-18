@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import Button from "./Button";
 import { useNotifications } from "./Notifications";
+import { useFocusTrap } from "../lib/useFocusTrap";
 
 const CARGOS_DISPONIVEIS = [
   "Presidente",
@@ -18,6 +19,7 @@ export default function GerenciadorPermissoes({
 }) {
   const { data: session } = useSession();
   const { showSuccess, showError, showConfirmation } = useNotifications();
+  const { modalRef } = useFocusTrap({ isOpen: true, onClose });
   const [permissoes, setPermissoes] = useState([]);
   const [novoEmail, setNovoEmail] = useState("");
   const [novoCargo, setNovoCargo] = useState("Servidor(a)");
@@ -152,11 +154,18 @@ export default function GerenciadorPermissoes({
     return (
       <div className="modal-overlay" onClick={onClose}>
         <div
+          ref={modalRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-acesso-negado-titulo"
+          tabIndex={-1}
           className="modal-content modal-content-small"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="modal-header">
-            <h2 className="modal-title">Acesso Negado</h2>
+            <h2 id="modal-acesso-negado-titulo" className="modal-title">
+              Acesso Negado
+            </h2>
             <Button onClick={onClose} className="modal-close-btn">
               ✕
             </Button>
@@ -178,9 +187,17 @@ export default function GerenciadorPermissoes({
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-permissoes-titulo"
+        tabIndex={-1}
+        className="modal-content"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="modal-header">
-          <h2 className="modal-title">
+          <h2 id="modal-permissoes-titulo" className="modal-title">
             Gerenciar Permissões - {inventarioNome}
           </h2>
           <Button onClick={onClose} className="modal-close-btn">

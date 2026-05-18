@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Button from "../../../components/Button";
+import { useFocusTrap } from "../../../lib/useFocusTrap";
 
 export default function BuscaPorNomePage({ params }) {
   const unwrappedParams = React.use(params);
@@ -26,6 +27,10 @@ export default function BuscaPorNomePage({ params }) {
   const [salas, setSalas] = useState([]);
   const [servidores, setServidores] = useState([]);
   const [modalAberto, setModalAberto] = useState(false);
+  const { modalRef: modalInventarioRef } = useFocusTrap({
+    isOpen: modalAberto,
+    onClose: () => setModalAberto(false),
+  });
   const [itemSelecionado, setItemSelecionado] = useState(null);
   const [formData, setFormData] = useState({
     dataInventario: new Date().toISOString().split("T")[0],
@@ -874,6 +879,11 @@ export default function BuscaPorNomePage({ params }) {
           }}
         >
           <div
+            ref={modalInventarioRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-inventario-titulo"
+            tabIndex={-1}
             style={{
               backgroundColor: "white",
               padding: "20px",
@@ -884,7 +894,7 @@ export default function BuscaPorNomePage({ params }) {
               overflowY: "auto",
             }}
           >
-            <h3 style={{ marginTop: 0 }}>
+            <h3 id="modal-inventario-titulo" style={{ marginTop: 0 }}>
               Inventariar Item: {itemSelecionado.numero}
             </h3>
             <p style={{ marginBottom: "15px" }}>

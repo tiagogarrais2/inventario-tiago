@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Button from "../../../components/Button";
+import { useFocusTrap } from "../../../lib/useFocusTrap";
 
 export default function RelatorioItensPorValorPage({ params }) {
   const unwrappedParams = React.use(params);
@@ -18,6 +19,10 @@ export default function RelatorioItensPorValorPage({ params }) {
   const [salas, setSalas] = useState([]);
   const [servidores, setServidores] = useState([]);
   const [modalAberto, setModalAberto] = useState(false);
+  const { modalRef: modalInventarioRef } = useFocusTrap({
+    isOpen: modalAberto,
+    onClose: () => setModalAberto(false),
+  });
   const [itemSelecionado, setItemSelecionado] = useState(null);
   const [ocultarInventariados, setOcultarInventariados] = useState(false);
   const [formData, setFormData] = useState({
@@ -348,7 +353,11 @@ export default function RelatorioItensPorValorPage({ params }) {
           💰 Informações do Relatório
         </h3>
         <label
-          style={{ display: "flex", alignItems: "center", marginBottom: "10px" }}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            marginBottom: "10px",
+          }}
         >
           <input
             type="checkbox"
@@ -766,6 +775,11 @@ export default function RelatorioItensPorValorPage({ params }) {
           }}
         >
           <div
+            ref={modalInventarioRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-inventario-titulo"
+            tabIndex={-1}
             style={{
               backgroundColor: "white",
               padding: "20px",
@@ -776,7 +790,7 @@ export default function RelatorioItensPorValorPage({ params }) {
               overflowY: "auto",
             }}
           >
-            <h3 style={{ marginTop: 0 }}>
+            <h3 id="modal-inventario-titulo" style={{ marginTop: 0 }}>
               Inventariar Item: {itemSelecionado.numero}
             </h3>
             <p style={{ marginBottom: "15px" }}>

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Button from "../../components/Button";
+import { useFocusTrap } from "../../lib/useFocusTrap";
 
 export default function RelatorioPage({ params }) {
   const unwrappedParams = React.use(params);
@@ -20,6 +21,10 @@ export default function RelatorioPage({ params }) {
   const [servidores, setServidores] = useState([]);
   const [modalAberto, setModalAberto] = useState(false);
   const [itemSelecionado, setItemSelecionado] = useState(null);
+  const { modalRef: modalInventarioRef } = useFocusTrap({
+    isOpen: modalAberto,
+    onClose: () => setModalAberto(false),
+  });
   const [formData, setFormData] = useState({
     dataInventario: new Date().toISOString().split("T")[0],
     inventariante: "",
@@ -1173,6 +1178,11 @@ export default function RelatorioPage({ params }) {
           }}
         >
           <div
+            ref={modalInventarioRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-inventario-titulo"
+            tabIndex={-1}
             style={{
               backgroundColor: "white",
               padding: "20px",
@@ -1183,7 +1193,7 @@ export default function RelatorioPage({ params }) {
               overflowY: "auto",
             }}
           >
-            <h3 style={{ marginTop: 0 }}>
+            <h3 id="modal-inventario-titulo" style={{ marginTop: 0 }}>
               Inventariar Item: {itemSelecionado.numero}
             </h3>
             <p style={{ marginBottom: "15px" }}>
