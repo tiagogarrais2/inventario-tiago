@@ -10,10 +10,10 @@
     "build": "npx prisma generate && npx next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "npx prisma generate && npx prisma db push --accept-data-loss && node scripts/ensure-database.mjs",
+    "postinstall": "npx prisma generate",
     "migrate": "npx prisma migrate deploy",
     "ensure-db": "node scripts/ensure-database.mjs",
-    "deploy": "bash scripts/deploy.sh"
+    "deploy": "npm run build && bash scripts/deploy.sh"
   },
   "dependencies": {
     "@prisma/client": "^6.19.0",

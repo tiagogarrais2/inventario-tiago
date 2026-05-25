@@ -47,6 +47,9 @@ fi
 
 echo "==> [entrypoint] Variáveis de ambiente OK."
 
+echo "==> [entrypoint] Aplicando migrações do Prisma..."
+npx prisma migrate deploy
+
 # Garante estrutura completa do banco (cria tabela correcoes_item se necessário)
 if [ -f "./scripts/ensure-database.mjs" ]; then
   echo "==> [entrypoint] Verificando estrutura do banco de dados..."
