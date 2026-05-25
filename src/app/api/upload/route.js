@@ -121,7 +121,43 @@ export async function POST(request) {
         { status: 400 }
       );
     }
-    // --- Fim da lógica de processamento de arquivo ---
+
+    // === APLICAR MAPEAMENTO DE COLUNAS (se fornecido pelo cliente) ===
+    // columnMapping: { "Ambiente": "SALA", "Responsavel": "CARGA ATUAL" }
+    const columnMappingRaw = formData.get("columnMapping");
+    const columnMapping = columnMappingRaw ? JSON.parse(columnMappingRaw) : {};
+
+    // Lista de todas as colunas reconhecidas pelo sistema (nomes canônicos)
+    const ALL_KNOWN_COLUMNS = new Set([
+      "NUMERO", "STATUS", "ED", "CONTA CONTABIL", "DESCRICAO", "RÓTULOS",
+      "CARGA ATUAL", "SETOR DO RESPONSÁVEL", "CAMPUS DA CARGA", "CARGA CONTÁBIL",
+      "VALOR AQUISIÇÃO", "VALOR DEPRECIADO", "NUMERO NOTA FISCAL", "NÚMERO DE SÉRIE",
+      "DATA DA ENTRADA", "DATA DA CARGA", "FORNECEDOR", "SALA", "ESTADO DE CONSERVAÇÃO",
+      // Variantes aceitas e colunas ignoradas
+      "CARGA_ATUAL", "#",
+    ]);
+
+    if (Object.keys(columnMapping).length > 0 || true) {
+      for (const record of records) {
+        // 1. Aplicar renomeação canônica: fileCol → sysCol
+        for (const [srcCol, dstCol] of Object.entries(columnMapping)) {
+          if (srcCol in record && srcCol !== dstCol) {
+            record[dstCol] = record[srcCol];
+            delete record[srcCol];
+          }
+        }
+
+        // 2. Coletar colunas extras (não reconhecidas) em __dadosExtras
+        const extras = {};
+        for (const key of Object.keys(record)) {
+          if (!ALL_KNOWN_COLUMNS.has(key)) {
+            extras[key] = record[key];
+          }
+        }
+        record.__dadosExtras = Object.keys(extras).length > 0 ? extras : null;
+      }
+    }
+    // === FIM DO MAPEAMENTO ===
 
     // === SALVAR NO BANCO DE DADOS ===
 
@@ -209,7 +245,8 @@ export async function POST(request) {
 
     for (const item of records) {
       try {
-        await ItemInventarioService.create(nomeInventario, item);
+        const dadosExtras = item.__dadosExtras || null;
+        await ItemInventarioService.create(nomeInventario, item, dadosExtras);
         itensSalvos++;
 
         if (itensSalvos % 50 === 0) {

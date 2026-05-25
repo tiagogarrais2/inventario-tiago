@@ -81,6 +81,7 @@ model ItemInventario {
   sala              String?
   setor             String?
   estadoConservacao String?  @map("estado_conservacao")
+  dadosExtras       Json?    @map("dados_extras")
   
   // Campos de inventário
   dataInventario           DateTime?

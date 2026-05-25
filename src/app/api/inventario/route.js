@@ -225,8 +225,10 @@ export async function GET(request) {
     // Adicionar informações de correção para cada item (sem consultas adicionais)
     const itensComCorrecoes = itens.map((item) => {
       const correcoesItem = correcoesPorItem[item.numero] || [];
+      const { dadosExtras, ...itemSemExtras } = item;
       return {
-        ...item,
+        ...itemSemExtras,
+        ...(dadosExtras && typeof dadosExtras === "object" ? dadosExtras : {}),
         temCorrecoes: correcoesItem.length > 0,
         totalCorrecoes: correcoesItem.length,
         ultimaCorrecao:

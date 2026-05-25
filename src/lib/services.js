@@ -609,7 +609,7 @@ class ItemInventarioService {
     }
   }
 
-  static async create(nomeInventario, dados) {
+  static async create(nomeInventario, dados, dadosExtras = null) {
     const inventario = await InventarioService.findByName(nomeInventario);
     if (!inventario) throw new Error("Inventário não encontrado");
 
@@ -635,6 +635,7 @@ class ItemInventarioService {
       fornecedor: dados.FORNECEDOR || "",
       sala: dados.SALA || "",
       estadoConservacao: dados["ESTADO DE CONSERVAÇÃO"] || "",
+      dadosExtras: dadosExtras || undefined,
     };
 
     return await prisma.itemInventario.create({
