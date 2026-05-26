@@ -46,6 +46,11 @@ COPY entrypoint.sh .
 RUN chmod +x entrypoint.sh
 RUN chmod +x ./node_modules/.bin/prisma
 
+# Garante que o usuário nextjs seja dono de tudo e tenha permissão de execução
+RUN chown -R nextjs:nodejs /app
+RUN chmod -R 755 /app/node_modules/.bin
+RUN chmod +x /app/entrypoint.sh
+
 USER nextjs
 
 EXPOSE 3000
