@@ -129,12 +129,28 @@ export async function POST(request) {
 
     // Lista de todas as colunas reconhecidas pelo sistema (nomes canônicos)
     const ALL_KNOWN_COLUMNS = new Set([
-      "NUMERO", "STATUS", "ED", "CONTA CONTABIL", "DESCRICAO", "RÓTULOS",
-      "CARGA ATUAL", "SETOR DO RESPONSÁVEL", "CAMPUS DA CARGA", "CARGA CONTÁBIL",
-      "VALOR AQUISIÇÃO", "VALOR DEPRECIADO", "NUMERO NOTA FISCAL", "NÚMERO DE SÉRIE",
-      "DATA DA ENTRADA", "DATA DA CARGA", "FORNECEDOR", "SALA", "ESTADO DE CONSERVAÇÃO",
+      "NUMERO",
+      "STATUS",
+      "ED",
+      "CONTA CONTABIL",
+      "DESCRICAO",
+      "RÓTULOS",
+      "CARGA ATUAL",
+      "SETOR DO RESPONSÁVEL",
+      "CAMPUS DA CARGA",
+      "CARGA CONTÁBIL",
+      "VALOR AQUISIÇÃO",
+      "VALOR DEPRECIADO",
+      "NUMERO NOTA FISCAL",
+      "NÚMERO DE SÉRIE",
+      "DATA DA ENTRADA",
+      "DATA DA CARGA",
+      "FORNECEDOR",
+      "SALA",
+      "ESTADO DE CONSERVAÇÃO",
       // Variantes aceitas e colunas ignoradas
-      "CARGA_ATUAL", "#",
+      "CARGA_ATUAL",
+      "#",
     ]);
 
     if (Object.keys(columnMapping).length > 0 || true) {

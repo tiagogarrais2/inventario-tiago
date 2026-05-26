@@ -158,7 +158,11 @@ export default function Criar({ onUploadConcluido }) {
   const canConfirmMapping = Object.entries(pendingMappings).every(
     ([, { type, selectedFileCol }]) => {
       if (type === "mandatory" || type === "recommended") {
-        return selectedFileCol && selectedFileCol !== "" && selectedFileCol !== "__none__";
+        return (
+          selectedFileCol &&
+          selectedFileCol !== "" &&
+          selectedFileCol !== "__none__"
+        );
       }
       return true;
     }
@@ -168,13 +172,17 @@ export default function Criar({ onUploadConcluido }) {
     .filter(
       ([, { type, selectedFileCol }]) =>
         (type === "mandatory" || type === "recommended") &&
-        (!selectedFileCol || selectedFileCol === "" || selectedFileCol === "__none__")
+        (!selectedFileCol ||
+          selectedFileCol === "" ||
+          selectedFileCol === "__none__")
     )
     .map(([sysCol]) => sysCol);
 
   const handleConfirmMapping = () => {
     const mapping = {};
-    for (const [sysCol, { selectedFileCol }] of Object.entries(pendingMappings)) {
+    for (const [sysCol, { selectedFileCol }] of Object.entries(
+      pendingMappings
+    )) {
       if (selectedFileCol && selectedFileCol !== "__none__") {
         mapping[selectedFileCol] = sysCol; // fileCol → sysCol
       }
@@ -186,13 +194,20 @@ export default function Criar({ onUploadConcluido }) {
   // Colunas do arquivo já em uso em outro mapeamento (não reutilizar)
   const usedFileColumns = (excludeSysCol) =>
     Object.entries(pendingMappings)
-      .filter(([sc, { selectedFileCol }]) => sc !== excludeSysCol && selectedFileCol && selectedFileCol !== "__none__")
+      .filter(
+        ([sc, { selectedFileCol }]) =>
+          sc !== excludeSysCol &&
+          selectedFileCol &&
+          selectedFileCol !== "__none__"
+      )
       .map(([, { selectedFileCol }]) => selectedFileCol);
 
   // Colunas do arquivo que já existem com nome exato no sistema (para resumo verde)
-  const foundColumns = [...MANDATORY_COLUMNS, ...RECOMMENDED_COLUMNS, ...OPTIONAL_COLUMNS].filter(
-    (col) => fileColumns.includes(col)
-  );
+  const foundColumns = [
+    ...MANDATORY_COLUMNS,
+    ...RECOMMENDED_COLUMNS,
+    ...OPTIONAL_COLUMNS,
+  ].filter((col) => fileColumns.includes(col));
 
   // Função para conectar ao SSE
   const connectToProgress = (sessionId) => {
@@ -356,7 +371,9 @@ export default function Criar({ onUploadConcluido }) {
 
           {/* Indicador de análise */}
           {step === "analyzing" && (
-            <p className="text-sm text-gray-500 mb-3">Analisando colunas do arquivo...</p>
+            <p className="text-sm text-gray-500 mb-3">
+              Analisando colunas do arquivo...
+            </p>
           )}
 
           {/* UI de mapeamento de colunas */}
@@ -370,7 +387,8 @@ export default function Criar({ onUploadConcluido }) {
               {foundColumns.length > 0 && (
                 <div className="mb-4">
                   <p className="text-xs font-medium text-green-700 mb-1">
-                    ✓ Colunas encontradas com nome correto ({foundColumns.length}):
+                    ✓ Colunas encontradas com nome correto (
+                    {foundColumns.length}):
                   </p>
                   <div className="flex flex-wrap gap-1">
                     {foundColumns.map((col) => (
@@ -387,51 +405,61 @@ export default function Criar({ onUploadConcluido }) {
 
               {/* Colunas que precisam de mapeamento */}
               <div className="space-y-3">
-                {Object.entries(pendingMappings).map(([sysCol, { type, selectedFileCol }]) => {
-                  const unavailable = usedFileColumns(sysCol);
-                  return (
-                    <div key={sysCol} className="bg-white border border-gray-200 rounded p-3">
-                      <div className="flex items-start gap-2 mb-2">
-                        <span
-                          className={`text-xs px-2 py-0.5 rounded font-medium shrink-0 ${BADGE_STYLES[type]}`}
-                        >
-                          {BADGE_LABELS[type]}
-                        </span>
-                        <p className="text-sm text-gray-700">
-                          Esperávamos a coluna{" "}
-                          <strong>&quot;{sysCol}&quot;</strong>, mas ela não foi
-                          encontrada no arquivo. Qual coluna corresponde?
-                        </p>
-                      </div>
-                      <select
-                        value={selectedFileCol}
-                        onChange={(e) =>
-                          setPendingMappings((prev) => ({
-                            ...prev,
-                            [sysCol]: { ...prev[sysCol], selectedFileCol: e.target.value },
-                          }))
-                        }
-                        className="w-full text-sm border border-gray-300 rounded px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                {Object.entries(pendingMappings).map(
+                  ([sysCol, { type, selectedFileCol }]) => {
+                    const unavailable = usedFileColumns(sysCol);
+                    return (
+                      <div
+                        key={sysCol}
+                        className="bg-white border border-gray-200 rounded p-3"
                       >
-                        {/* Opção vazia apenas para mandatory/recommended (forçar escolha) */}
-                        {(type === "mandatory" || type === "recommended") && (
-                          <option value="">-- Selecione uma coluna --</option>
-                        )}
-                        {/* Opção "nenhum" apenas para optional */}
-                        {type === "optional" && (
-                          <option value="__none__">Nenhum dado correspondente</option>
-                        )}
-                        {fileColumns
-                          .filter((fc) => !unavailable.includes(fc))
-                          .map((fc) => (
-                            <option key={fc} value={fc}>
-                              {fc}
+                        <div className="flex items-start gap-2 mb-2">
+                          <span
+                            className={`text-xs px-2 py-0.5 rounded font-medium shrink-0 ${BADGE_STYLES[type]}`}
+                          >
+                            {BADGE_LABELS[type]}
+                          </span>
+                          <p className="text-sm text-gray-700">
+                            Esperávamos a coluna{" "}
+                            <strong>&quot;{sysCol}&quot;</strong>, mas ela não
+                            foi encontrada no arquivo. Qual coluna corresponde?
+                          </p>
+                        </div>
+                        <select
+                          value={selectedFileCol}
+                          onChange={(e) =>
+                            setPendingMappings((prev) => ({
+                              ...prev,
+                              [sysCol]: {
+                                ...prev[sysCol],
+                                selectedFileCol: e.target.value,
+                              },
+                            }))
+                          }
+                          className="w-full text-sm border border-gray-300 rounded px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        >
+                          {/* Opção vazia apenas para mandatory/recommended (forçar escolha) */}
+                          {(type === "mandatory" || type === "recommended") && (
+                            <option value="">-- Selecione uma coluna --</option>
+                          )}
+                          {/* Opção "nenhum" apenas para optional */}
+                          {type === "optional" && (
+                            <option value="__none__">
+                              Nenhum dado correspondente
                             </option>
-                          ))}
-                      </select>
-                    </div>
-                  );
-                })}
+                          )}
+                          {fileColumns
+                            .filter((fc) => !unavailable.includes(fc))
+                            .map((fc) => (
+                              <option key={fc} value={fc}>
+                                {fc}
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+                    );
+                  }
+                )}
               </div>
 
               {/* Aviso de campos faltantes */}
@@ -466,7 +494,8 @@ export default function Criar({ onUploadConcluido }) {
               <ul className="text-xs text-green-700 space-y-0.5">
                 {Object.entries(confirmedMapping).map(([fileCol, sysCol]) => (
                   <li key={fileCol}>
-                    <span className="font-medium">&quot;{fileCol}&quot;</span> → &quot;{sysCol}&quot;
+                    <span className="font-medium">&quot;{fileCol}&quot;</span> →
+                    &quot;{sysCol}&quot;
                   </li>
                 ))}
               </ul>
