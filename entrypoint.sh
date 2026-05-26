@@ -3,18 +3,16 @@ set -e
 
 echo "==> [entrypoint] Iniciando aplicação..."
 
-# Constrói DATABASE_URL a partir de Docker Secrets (padrão IFCE/compose.prd.yaml)
-# se a variável não estiver definida diretamente.
+# Constrói DATABASE_URL a partir de Docker Secrets
 if [ -z "$DATABASE_URL" ]; then
   echo "==> [entrypoint] DATABASE_URL não definida. Construindo a partir de variáveis POSTGRES_*..."
 
-  # Lê a senha do Docker Secret (arquivo) se DB_PASSWORD_FILE estiver definido
   if [ -n "$DB_PASSWORD_FILE" ] && [ -f "$DB_PASSWORD_FILE" ]; then
     POSTGRES_PASSWORD=$(cat "$DB_PASSWORD_FILE")
   fi
 
   if [ -z "$POSTGRES_PASSWORD" ]; then
-    echo "[ERRO] Senha do banco não encontrada. Defina DATABASE_URL, POSTGRES_PASSWORD ou DB_PASSWORD_FILE." >&2
+    echo "[ERRO] Senha do banco não encontrada." >&2
     exit 1
   fi
 
@@ -27,38 +25,28 @@ if [ -z "$DATABASE_URL" ]; then
   echo "==> [entrypoint] DATABASE_URL construída para host: ${DB_HOST}:${DB_PORT}/${DB_NAME}"
 fi
 
-# Validação de variáveis obrigatórias — falha com mensagem clara em vez de exit 0 silencioso
+# Validação de variáveis obrigatórias
 echo "==> [entrypoint] Validando variáveis de ambiente obrigatórias..."
 
-if [ -z "$DATABASE_URL" ]; then
-  echo "[ERRO] DATABASE_URL não está definida." >&2
-  exit 1
-fi
-
-if [ -z "$NEXTAUTH_SECRET" ]; then
-  echo "[ERRO] NEXTAUTH_SECRET não está definida. O NextAuth.js não consegue inicializar sem ela." >&2
-  exit 1
-fi
-
-if [ -z "$NEXTAUTH_URL" ]; then
-  echo "[ERRO] NEXTAUTH_URL não está definida." >&2
-  exit 1
-fi
+if [ -z "$DATABASE_URL" ]; then echo "[ERRO] DATABASE_URL não definida." >&2; exit 1; fi
+if [ -z "$NEXTAUTH_SECRET" ]; then echo "[ERRO] NEXTAUTH_SECRET não definida." >&2; exit 1; fi
+if [ -z "$NEXTAUTH_URL" ]; then echo "[ERRO] NEXTAUTH_URL não definida." >&2; exit 1; fi
 
 echo "==> [entrypoint] Variáveis de ambiente OK."
 
+# --- ALTERAÇÃO AQUI ---
 echo "==> [entrypoint] Aplicando migrações do Prisma..."
-npx prisma migrate deploy
+# Usamos o caminho direto para o binário que copiamos no Dockerfile
+# Isso evita que o npx tente baixar o prisma e falhe por falta de internet ou arquivos .wasm
+./node_modules/.bin/prisma migrate deploy
+# ----------------------
 
-# Garante estrutura completa do banco (cria tabela correcoes_item se necessário)
+# Garante estrutura completa do banco
 if [ -f "./scripts/ensure-database.mjs" ]; then
   echo "==> [entrypoint] Verificando estrutura do banco de dados..."
   node scripts/ensure-database.mjs
 fi
 
-# HOSTNAME=0.0.0.0 é obrigatório para o servidor standalone do Next.js
-# escutar em todas as interfaces dentro do container.
-# Sem isso, o processo pode encerrar silenciosamente com exit 0.
 export HOSTNAME="0.0.0.0"
 
 echo "==> [entrypoint] Iniciando servidor Next.js na porta ${PORT:-3000}..."
