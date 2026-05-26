@@ -3,7 +3,9 @@ FROM node:20-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY package.json package-lock.json* ./
-RUN npm ci
+
+# AJUSTE AQUI: Adicionado --ignore-scripts para evitar que o prisma generate rode sem o schema
+RUN npm ci --ignore-scripts
 
 # Estágio 2: Build do sistema
 FROM node:20-alpine AS builder
@@ -11,7 +13,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Define os alvos do binário para o Alpine Linux (musl) usado no IFCE
+# Aqui sim o prisma generate funciona, pois o arquivo ./prisma/schema.prisma foi copiado acima
 ENV PRISMA_CLI_BINARY_TARGETS=native,linux-musl-openssl-3.0.x
 RUN npx prisma generate
 RUN npm run build
@@ -28,16 +30,16 @@ ENV PRISMA_SKIP_POSTINSTALL_GENERATE=true
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# 1. Copia o standalone primeiro
+# 1. Copia o standalone
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 
-# 2. Injeta as dependências do Prisma no node_modules do standalone
+# 2. Injeta as dependências do Prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.bin ./node_modules/.bin
 
-# 3. Copia migrations e scripts auxiliares
+# 3. Copia migrations e scripts
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/scripts/ensure-database.mjs ./scripts/ensure-database.mjs
 
@@ -47,8 +49,6 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 COPY entrypoint.sh .
 RUN chmod +x entrypoint.sh
-
-# Garante permissão de execução para o binário do Prisma
 RUN chmod +x ./node_modules/.bin/prisma
 
 USER nextjs
