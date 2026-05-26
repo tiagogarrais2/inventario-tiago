@@ -3,8 +3,6 @@ FROM node:20-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY package.json package-lock.json* ./
-
-# AJUSTE AQUI: Adicionado --ignore-scripts para evitar que o prisma generate rode sem o schema
 RUN npm ci --ignore-scripts
 
 # Estágio 2: Build do sistema
@@ -13,8 +11,8 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Aqui sim o prisma generate funciona, pois o arquivo ./prisma/schema.prisma foi copiado acima
-ENV PRISMA_CLI_BINARY_TARGETS=native,linux-musl-openssl-3.0.x
+# AJUSTE AQUI: Removemos a ENV PRISMA_CLI_BINARY_TARGETS daqui
+# O npx prisma generate agora lerá o binaryTargets do seu schema.prisma
 RUN npx prisma generate
 RUN npm run build
 
@@ -30,20 +28,17 @@ ENV PRISMA_SKIP_POSTINSTALL_GENERATE=true
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# 1. Copia o standalone
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 
-# 2. Injeta as dependências do Prisma
+# Injeção das dependências do Prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.bin ./node_modules/.bin
 
-# 3. Copia migrations e scripts
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/scripts/ensure-database.mjs ./scripts/ensure-database.mjs
 
-# 4. Arquivos estáticos e entrypoint
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
