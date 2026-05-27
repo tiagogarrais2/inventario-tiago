@@ -1,53 +1,37 @@
 #!/bin/sh
 set -e
 
-echo "==> [entrypoint] Iniciando aplicação..."
+echo "==> [entrypoint] Iniciando aplicação v3.3.11..."
 
-# 1. Montagem da DATABASE_URL (Docker Secrets)
+# 1. Montagem da DATABASE_URL
 if [ -z "$DATABASE_URL" ]; then
-  echo "==> [entrypoint] DATABASE_URL não definida. Construindo a partir de segredos..."
-
   if [ -n "$DB_PASSWORD_FILE" ] && [ -f "$DB_PASSWORD_FILE" ]; then
     POSTGRES_PASSWORD=$(cat "$DB_PASSWORD_FILE")
   fi
-
-  if [ -z "$POSTGRES_PASSWORD" ]; then
-    echo "[ERRO] Senha do banco não encontrada." >&2
-    exit 1
-  fi
-
-  DB_HOST="${POSTGRES_SERVER}"
-  DB_PORT="${POSTGRES_PORT}"
-  DB_NAME="${POSTGRES_DB}"
-  DB_USER="${POSTGRES_USER}"
-
-  export DATABASE_URL="postgresql://${DB_USER}:${POSTGRES_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
+  export DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_SERVER}:${POSTGRES_PORT}/${POSTGRES_DB}"
 fi
 
-# 2. Validação
-if [ -z "$DATABASE_URL" ] || [ -z "$NEXTAUTH_SECRET" ] || [ -z "$NEXTAUTH_URL" ]; then
-  echo "[ERRO] Variáveis de ambiente obrigatórias faltando!" >&2
+echo "==> [entrypoint] Validando variáveis..."
+if [ -z "$DATABASE_URL" ] || [ -z "$NEXTAUTH_SECRET" ]; then
+  echo "[ERRO] Variáveis essenciais faltando!" >&2
   exit 1
 fi
 
-echo "==> [entrypoint] Variáveis de ambiente OK."
-
-# 3. Migrações do Prisma
-echo "==> [entrypoint] Aplicando migrações do Prisma..."
-if [ -f "/app/node_modules/.bin/prisma" ]; then
-  # Execução direta para garantir uso do motor .wasm local
-  /app/node_modules/.bin/prisma migrate deploy
+# 2. Migrações
+echo "==> [entrypoint] Aplicando migrações..."
+# Tentamos rodar o binário diretamente pelo caminho que o Dockerfile garantiu
+if [ -f "./node_modules/.bin/prisma" ]; then
+    ./node_modules/.bin/prisma migrate deploy
 else
-  echo "[ERRO] Binário do Prisma não encontrado!" >&2
-  exit 1
+    echo "[ERRO] Binário do prisma não encontrado em ./node_modules/.bin/prisma"
+    exit 1
 fi
 
-# 4. Script de garantia de tabelas
-if [ -f "/app/scripts/ensure-database.mjs" ]; then
-  echo "==> [entrypoint] Verificando estrutura adicional..."
-  node /app/scripts/ensure-database.mjs
+# 3. Scripts extras
+if [ -f "./scripts/ensure-database.mjs" ]; then
+  node scripts/ensure-database.mjs
 fi
 
 export HOSTNAME="0.0.0.0"
-echo "==> [entrypoint] Iniciando servidor Next.js..."
+echo "==> [entrypoint] Servidor pronto. Iniciando Next.js..."
 exec node server.js

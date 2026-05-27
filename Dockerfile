@@ -1,22 +1,20 @@
-# Estágio 1: Instalação de dependências
+# Estágio 1: Deps
 FROM node:20-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci --ignore-scripts
 
-# Estágio 2: Build do sistema
+# Estágio 2: Builder
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-
-# AJUSTE AQUI: Removemos a ENV PRISMA_CLI_BINARY_TARGETS daqui
-# O npx prisma generate agora lerá o binaryTargets do seu schema.prisma
+# O binaryTargets deve estar no seu schema.prisma como conversamos
 RUN npx prisma generate
 RUN npm run build
 
-# Estágio 3: Execução (Imagem Final)
+# Estágio 3: Runner
 FROM node:20-alpine AS runner
 WORKDIR /app
 
@@ -28,28 +26,28 @@ ENV PRISMA_SKIP_POSTINSTALL_GENERATE=true
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
+# A mágica do standalone:
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
-# Injeção das dependências do Prisma
+# CORREÇÃO CRÍTICA: Injetando o Prisma onde o Standalone e o Entrypoint esperam
+# Copiamos para a raiz e para dentro do node_modules gerado pelo standalone
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.bin ./node_modules/.bin
 
+# Migrations e Scripts
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/scripts/ensure-database.mjs ./scripts/ensure-database.mjs
-
-COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 COPY entrypoint.sh .
 RUN chmod +x entrypoint.sh
 RUN chmod +x ./node_modules/.bin/prisma
 
-# Garante que o usuário nextjs seja dono de tudo e tenha permissão de execução
+# Garantia de permissão para o usuário nextjs
 RUN chown -R nextjs:nodejs /app
-RUN chmod -R 755 /app/node_modules/.bin
-RUN chmod +x /app/entrypoint.sh
 
 USER nextjs
 
