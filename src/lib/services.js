@@ -6,7 +6,7 @@ function sortByNomePtBr(items) {
     itemA.nome.localeCompare(itemB.nome, "pt-BR", {
       sensitivity: "base",
       numeric: true,
-    })
+    }),
   );
 }
 
@@ -68,7 +68,12 @@ class InventarioService {
     }
   }
 
-  static async create(nome, nomeExibicao = null, userEmail = null) {
+  static async create(
+    nome,
+    nomeExibicao = null,
+    userEmail = null,
+    importMetadata = {},
+  ) {
     let proprietarioId = null;
 
     if (userEmail) {
@@ -84,6 +89,8 @@ class InventarioService {
         nome,
         nomeExibicao: nomeExibicao || nome,
         proprietarioId,
+        importFormat: importMetadata.format || undefined,
+        importMapping: importMetadata.mapping || undefined,
       },
     });
   }
@@ -194,7 +201,7 @@ class InventarioService {
     const inventariosUnicos = todosInventarios.filter(
       (inventario, index, self) =>
         inventario &&
-        index === self.findIndex((i) => i && i.id === inventario.id)
+        index === self.findIndex((i) => i && i.id === inventario.id),
     );
 
     return inventariosUnicos;
@@ -254,14 +261,14 @@ class InventarioService {
       });
 
       console.log(
-        `[EXCLUSAO] Inventário ${inventarioId} e todos os dados relacionados excluídos com sucesso`
+        `[EXCLUSAO] Inventário ${inventarioId} e todos os dados relacionados excluídos com sucesso`,
       );
 
       return true;
     } catch (error) {
       console.error(
         `[EXCLUSAO] Erro ao excluir inventário ${inventarioId}:`,
-        error
+        error,
       );
       throw error;
     }
@@ -285,7 +292,7 @@ class InventarioService {
     } catch (error) {
       console.error(
         "[INVENTARIO] Erro ao buscar inventários do proprietário:",
-        error
+        error,
       );
       throw error;
     }
@@ -324,7 +331,7 @@ class InventarioService {
     } catch (error) {
       console.error(
         "[INVENTARIO] Erro ao buscar inventários do usuário:",
-        error
+        error,
       );
       throw error;
     }
@@ -421,7 +428,7 @@ class InventarioService {
     } catch (error) {
       console.error(
         "[INVENTARIO] Erro ao buscar estatísticas do inventário:",
-        error
+        error,
       );
       throw error;
     }
@@ -466,14 +473,14 @@ class InventarioService {
             itensNaoInventariados: totalItens - itensInventariados,
             percentual,
           };
-        })
+        }),
       );
 
       return estatisticasSalas;
     } catch (error) {
       console.error(
         "[INVENTARIO] Erro ao buscar estatísticas por sala:",
-        error
+        error,
       );
       throw error;
     }
@@ -678,7 +685,7 @@ class ItemInventarioService {
     nomeInventario,
     numero,
     updateData,
-    userEmail = null
+    userEmail = null,
   ) {
     const inventario = await InventarioService.findByName(nomeInventario);
     if (!inventario) throw new Error("Inventário não encontrado");
@@ -693,7 +700,7 @@ class ItemInventarioService {
 
     if (!item) {
       throw new Error(
-        `Item ${numero} não encontrado no inventário ${nomeInventario}`
+        `Item ${numero} não encontrado no inventário ${nomeInventario}`,
       );
     }
 
@@ -799,13 +806,13 @@ class SalaService {
 
   static async createMany(nomeInventario, salas) {
     console.log(
-      `[SalaService] Criando ${salas.length} salas para ${nomeInventario}`
+      `[SalaService] Criando ${salas.length} salas para ${nomeInventario}`,
     );
 
     const inventario = await InventarioService.findByName(nomeInventario);
     if (!inventario) {
       console.log(
-        `[SalaService] ERRO: Inventário ${nomeInventario} não encontrado`
+        `[SalaService] ERRO: Inventário ${nomeInventario} não encontrado`,
       );
       throw new Error("Inventário não encontrado");
     }
@@ -821,7 +828,7 @@ class SalaService {
     }));
 
     console.log(
-      `[SalaService] Dados preparados para ${salasData.length} salas únicas`
+      `[SalaService] Dados preparados para ${salasData.length} salas únicas`,
     );
 
     if (salasData.length === 0) {
@@ -868,13 +875,13 @@ class ServidorService {
 
   static async createMany(nomeInventario, servidores) {
     console.log(
-      `[ServidorService] Criando ${servidores.length} servidores para ${nomeInventario}`
+      `[ServidorService] Criando ${servidores.length} servidores para ${nomeInventario}`,
     );
 
     const inventario = await InventarioService.findByName(nomeInventario);
     if (!inventario) {
       console.log(
-        `[ServidorService] ERRO: Inventário ${nomeInventario} não encontrado`
+        `[ServidorService] ERRO: Inventário ${nomeInventario} não encontrado`,
       );
       throw new Error("Inventário não encontrado");
     }
@@ -882,7 +889,7 @@ class ServidorService {
     // Remover duplicatas e criar dados únicos
     const servidoresUnicos = [
       ...new Set(
-        servidores.filter((servidor) => servidor && servidor.trim() !== "")
+        servidores.filter((servidor) => servidor && servidor.trim() !== ""),
       ),
     ];
 
@@ -892,7 +899,7 @@ class ServidorService {
     }));
 
     console.log(
-      `[ServidorService] Dados preparados para ${servidoresData.length} servidores únicos`
+      `[ServidorService] Dados preparados para ${servidoresData.length} servidores únicos`,
     );
 
     if (servidoresData.length === 0) {
@@ -951,7 +958,7 @@ class ServidorService {
           },
         },
         data: { email: email || null },
-      })
+      }),
     );
 
     return await prisma.$transaction(operations);
@@ -984,13 +991,13 @@ class CabecalhoService {
 
   static async createMany(nomeInventario, headers) {
     console.log(
-      `[CabecalhoService] Criando ${headers.length} cabeçalhos para ${nomeInventario}`
+      `[CabecalhoService] Criando ${headers.length} cabeçalhos para ${nomeInventario}`,
     );
 
     const inventario = await InventarioService.findByName(nomeInventario);
     if (!inventario) {
       console.log(
-        `[CabecalhoService] ERRO: Inventário ${nomeInventario} não encontrado`
+        `[CabecalhoService] ERRO: Inventário ${nomeInventario} não encontrado`,
       );
       throw new Error("Inventário não encontrado");
     }
@@ -1150,7 +1157,7 @@ class AuditoriaService {
     } catch (error) {
       console.error(
         "[AUDITORIA] Erro ao buscar atividade recente do inventário:",
-        error
+        error,
       );
       throw error;
     }

@@ -15,6 +15,48 @@ import {
   AuditoriaService,
 } from "../../../lib/services.js";
 
+const SIG_SIPAC_COLUMN_MAP = {
+  tombamento: "NUMERO",
+  localidade: "SALA",
+  responsavel: "CARGA ATUAL",
+  denominacao: "DESCRICAO",
+  status: "STATUS",
+  estado: "ESTADO DE CONSERVAÇÃO",
+  "valor atual": "VALOR DEPRECIADO",
+  "valor de entrada": "VALOR AQUISIÇÃO",
+  "unidade responsavel": "SETOR DO RESPONSÁVEL",
+  "data de tombamento": "DATA DA CARGA",
+};
+
+function normalizeColumnName(header) {
+  return header
+    .toString()
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .replace(/["']/g, "")
+    .replace(/\s+/g, " ");
+}
+
+function detectSigSipacColumnMapping(columns) {
+  const normalizedToOriginal = columns.reduce((acc, column) => {
+    acc[normalizeColumnName(column)] = column;
+    return acc;
+  }, {});
+
+  const mapping = {};
+  for (const [sigName, targetColumn] of Object.entries(SIG_SIPAC_COLUMN_MAP)) {
+    const originalColumn = normalizedToOriginal[sigName];
+    if (!originalColumn) {
+      return null;
+    }
+    mapping[originalColumn] = targetColumn;
+  }
+
+  return mapping;
+}
+
 export async function POST(request) {
   // Verificar autenticação
   const session = await getServerSession(authOptions);
@@ -28,7 +70,7 @@ export async function POST(request) {
 
     return NextResponse.json(
       { error: "Acesso negado. Usuário não autenticado." },
-      { status: 401 }
+      { status: 401 },
     );
   }
 
@@ -41,7 +83,7 @@ export async function POST(request) {
   if (!file || typeof file === "string") {
     return NextResponse.json(
       { error: "Arquivo não enviado." },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -56,7 +98,7 @@ export async function POST(request) {
         error:
           "Erro de segurança: Nome do responsável não corresponde ao usuário autenticado.",
       },
-      { status: 403 }
+      { status: 403 },
     );
   }
 
@@ -84,7 +126,7 @@ export async function POST(request) {
           {
             error: "Erro ao processar JSON. Verifique a formatação.",
           },
-          { status: 400 }
+          { status: 400 },
         );
       }
     } else if (fileName.endsWith(".csv")) {
@@ -104,28 +146,38 @@ export async function POST(request) {
           {
             error: "Erro ao processar CSV. Verifique o formato.",
           },
-          { status: 400 }
+          { status: 400 },
         );
       }
     } else {
       // Se o tipo não ser suportado
       return NextResponse.json(
         { error: "Tipo de arquivo não suportado. Use .csv ou .json." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (records.length === 0) {
       return NextResponse.json(
         { error: "Arquivo vazio ou sem dados válidos." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    // === APLICAR MAPEAMENTO DE COLUNAS (se fornecido pelo cliente) ===
-    // columnMapping: { "Ambiente": "SALA", "Responsavel": "CARGA ATUAL" }
+    // === APLICAR MAPEAMENTO DE COLUNAS (se fornecido pelo cliente) ou detectar SIG-SIPAC ===
     const columnMappingRaw = formData.get("columnMapping");
-    const columnMapping = columnMappingRaw ? JSON.parse(columnMappingRaw) : {};
+    let columnMapping = columnMappingRaw ? JSON.parse(columnMappingRaw) : {};
+    let importFormat = null;
+
+    if (Object.keys(columnMapping).length === 0) {
+      const candidateMapping = detectSigSipacColumnMapping(
+        Object.keys(records[0]),
+      );
+      if (candidateMapping) {
+        columnMapping = candidateMapping;
+        importFormat = "SIG-SIPAC";
+      }
+    }
 
     // Lista de todas as colunas reconhecidas pelo sistema (nomes canônicos)
     const ALL_KNOWN_COLUMNS = new Set([
@@ -153,25 +205,25 @@ export async function POST(request) {
       "#",
     ]);
 
-    if (Object.keys(columnMapping).length > 0 || true) {
-      for (const record of records) {
-        // 1. Aplicar renomeação canônica: fileCol → sysCol
+    for (const record of records) {
+      // 1. Aplicar renomeação canônica: fileCol → sysCol
+      if (Object.keys(columnMapping).length > 0) {
         for (const [srcCol, dstCol] of Object.entries(columnMapping)) {
           if (srcCol in record && srcCol !== dstCol) {
             record[dstCol] = record[srcCol];
             delete record[srcCol];
           }
         }
-
-        // 2. Coletar colunas extras (não reconhecidas) em __dadosExtras
-        const extras = {};
-        for (const key of Object.keys(record)) {
-          if (!ALL_KNOWN_COLUMNS.has(key)) {
-            extras[key] = record[key];
-          }
-        }
-        record.__dadosExtras = Object.keys(extras).length > 0 ? extras : null;
       }
+
+      // 2. Coletar colunas extras (não reconhecidas) em __dadosExtras
+      const extras = {};
+      for (const key of Object.keys(record)) {
+        if (!ALL_KNOWN_COLUMNS.has(key)) {
+          extras[key] = record[key];
+        }
+      }
+      record.__dadosExtras = Object.keys(extras).length > 0 ? extras : null;
     }
     // === FIM DO MAPEAMENTO ===
 
@@ -191,7 +243,11 @@ export async function POST(request) {
     const inventario = await InventarioService.create(
       nomeInventario,
       nomeExibicao,
-      session.user.email
+      session.user.email,
+      {
+        format: importFormat,
+        mapping: importFormat ? columnMapping : undefined,
+      },
     );
 
     sendProgress(sessionId, {
@@ -231,7 +287,7 @@ export async function POST(request) {
 
     // 4. Extrair e salvar servidores únicos do campo "carga_atual"
     const servidorSet = new Set(
-      records.map((r) => r["CARGA ATUAL"] || r["CARGA_ATUAL"]).filter(Boolean)
+      records.map((r) => r["CARGA ATUAL"] || r["CARGA_ATUAL"]).filter(Boolean),
     );
     const servidoresArray = [...servidorSet];
     console.log(`[UPLOAD] Servidores encontrados:`, servidoresArray);
@@ -267,7 +323,7 @@ export async function POST(request) {
 
         if (itensSalvos % 50 === 0) {
           console.log(
-            `[UPLOAD] ${itensSalvos}/${records.length} itens salvos...`
+            `[UPLOAD] ${itensSalvos}/${records.length} itens salvos...`,
           );
 
           sendProgress(sessionId, {
@@ -282,7 +338,7 @@ export async function POST(request) {
         errosItens++;
         console.warn(
           `[UPLOAD] Erro ao salvar item ${item.NUMERO}:`,
-          error.message
+          error.message,
         );
       }
     }
@@ -298,7 +354,7 @@ export async function POST(request) {
 
     // 5. Extrair setores para estatísticas
     const setorSet = new Set(
-      records.map((r) => r["SETOR DO RESPONSÁVEL"]).filter(Boolean)
+      records.map((r) => r["SETOR DO RESPONSÁVEL"]).filter(Boolean),
     );
 
     // 6. Log detalhado de auditoria
@@ -323,12 +379,12 @@ export async function POST(request) {
         },
         userAgent: request.headers.get("user-agent") || "N/A",
       },
-      nomeInventario
+      nomeInventario,
     );
 
     // Log no servidor para auditoria
     console.log(
-      `[UPLOAD] ${session.user?.name || session.user?.email} criou inventário ${nomeInventario} com ${itensSalvos} itens`
+      `[UPLOAD] ${session.user?.name || session.user?.email} criou inventário ${nomeInventario} com ${itensSalvos} itens`,
     );
 
     // Enviar progresso de conclusão
@@ -363,6 +419,7 @@ export async function POST(request) {
         salas: salaSet.size,
         setores: setorSet.size,
         servidores: servidoresArray.length,
+        importFormat,
       },
     });
   } catch (error) {
@@ -386,7 +443,7 @@ export async function POST(request) {
 
     return NextResponse.json(
       { error: `Erro interno do servidor: ${error.message}` },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

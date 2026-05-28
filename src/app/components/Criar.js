@@ -10,7 +10,6 @@ const RECOMMENDED_COLUMNS = [
   "ESTADO DE CONSERVAÇÃO",
   "VALOR DEPRECIADO",
   "VALOR AQUISIÇÃO",
-  "NÚMERO DE SÉRIE",
 ];
 const OPTIONAL_COLUMNS = [
   "ED",
@@ -20,10 +19,53 @@ const OPTIONAL_COLUMNS = [
   "CAMPUS DA CARGA",
   "CARGA CONTÁBIL",
   "NUMERO NOTA FISCAL",
+  "NÚMERO DE SÉRIE",
   "DATA DA ENTRADA",
   "DATA DA CARGA",
   "FORNECEDOR",
 ];
+
+const SIG_SIPAC_COLUMN_MAP = {
+  tombamento: "NUMERO",
+  localidade: "SALA",
+  responsavel: "CARGA ATUAL",
+  denominacao: "DESCRICAO",
+  status: "STATUS",
+  estado: "ESTADO DE CONSERVAÇÃO",
+  "valor atual": "VALOR DEPRECIADO",
+  "valor de entrada": "VALOR AQUISIÇÃO",
+  "unidade responsavel": "SETOR DO RESPONSÁVEL",
+  "data de tombamento": "DATA DA CARGA",
+};
+
+function normalizeColumnName(header) {
+  return header
+    .toString()
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .replace(/["']/g, "")
+    .replace(/\s+/g, " ");
+}
+
+function detectSigSipacColumnMapping(columns) {
+  const normalizedToOriginal = columns.reduce((acc, column) => {
+    acc[normalizeColumnName(column)] = column;
+    return acc;
+  }, {});
+
+  const mapping = {};
+  for (const [sigName, targetColumn] of Object.entries(SIG_SIPAC_COLUMN_MAP)) {
+    const originalColumn = normalizedToOriginal[sigName];
+    if (!originalColumn) {
+      return null;
+    }
+    mapping[originalColumn] = targetColumn;
+  }
+
+  return mapping;
+}
 
 function parseCSVHeaders(text) {
   const firstLine = text.split(/\r?\n/)[0];
@@ -121,6 +163,17 @@ export default function Criar({ onUploadConcluido }) {
       const columns = await extractFileColumns(file);
       setFileColumns(columns);
 
+      const sigSipacMapping = detectSigSipacColumnMapping(columns);
+      if (sigSipacMapping) {
+        setPendingMappings({});
+        setConfirmedMapping(sigSipacMapping);
+        setMessage(
+          "Arquivo reconhecido como SIG-SIPAC e mapeado automaticamente.",
+        );
+        setStep("ready");
+        return;
+      }
+
       const missing = {};
       for (const col of MANDATORY_COLUMNS) {
         if (!columns.includes(col)) {
@@ -148,7 +201,7 @@ export default function Criar({ onUploadConcluido }) {
       }
     } catch {
       setMessage(
-        "Não foi possível ler os cabeçalhos do arquivo. Verifique o formato."
+        "Não foi possível ler os cabeçalhos do arquivo. Verifique o formato.",
       );
       setStep("idle");
     }
@@ -165,7 +218,7 @@ export default function Criar({ onUploadConcluido }) {
         );
       }
       return true;
-    }
+    },
   );
 
   const unmappedRequired = Object.entries(pendingMappings)
@@ -174,14 +227,14 @@ export default function Criar({ onUploadConcluido }) {
         (type === "mandatory" || type === "recommended") &&
         (!selectedFileCol ||
           selectedFileCol === "" ||
-          selectedFileCol === "__none__")
+          selectedFileCol === "__none__"),
     )
     .map(([sysCol]) => sysCol);
 
   const handleConfirmMapping = () => {
     const mapping = {};
     for (const [sysCol, { selectedFileCol }] of Object.entries(
-      pendingMappings
+      pendingMappings,
     )) {
       if (selectedFileCol && selectedFileCol !== "__none__") {
         mapping[selectedFileCol] = sysCol; // fileCol → sysCol
@@ -198,7 +251,7 @@ export default function Criar({ onUploadConcluido }) {
         ([sc, { selectedFileCol }]) =>
           sc !== excludeSysCol &&
           selectedFileCol &&
-          selectedFileCol !== "__none__"
+          selectedFileCol !== "__none__",
       )
       .map(([, { selectedFileCol }]) => selectedFileCol);
 
@@ -216,7 +269,7 @@ export default function Criar({ onUploadConcluido }) {
     }
 
     const eventSource = new EventSource(
-      `/api/upload/progress?sessionId=${sessionId}`
+      `/api/upload/progress?sessionId=${sessionId}`,
     );
     eventSourceRef.current = eventSource;
 
@@ -240,7 +293,7 @@ export default function Criar({ onUploadConcluido }) {
     eventSource.onerror = (error) => {
       console.error("Erro na conexão SSE:", error);
       setProgress((prev) =>
-        prev ? { ...prev, error: "Conexão perdida" } : null
+        prev ? { ...prev, error: "Conexão perdida" } : null,
       );
     };
   };
@@ -458,7 +511,7 @@ export default function Criar({ onUploadConcluido }) {
                         </select>
                       </div>
                     );
-                  }
+                  },
                 )}
               </div>
 

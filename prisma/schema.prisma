@@ -37,6 +37,8 @@ model Inventario {
   id              String   @id @default(cuid())
   nome            String   @unique // Ex: "inventario-1758232868005-tiago"
   nomeExibicao    String   // Nome para exibir na interface
+  importFormat    String?  @map("import_format")
+  importMapping   Json?    @map("import_mapping")
   proprietarioId    String
   cargoProprietario String  @default("Servidor(a)") @map("cargo_proprietario")
   createdAt         DateTime @default(now())
