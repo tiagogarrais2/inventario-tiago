@@ -5,10 +5,10 @@ echo "==> [entrypoint] Iniciando aplicação v3.3.11..."
 
 # 1. Montagem da DATABASE_URL
 if [ -z "$DATABASE_URL" ]; then
-  if [ -n "$DB_PASSWORD_FILE" ] && [ -f "$DB_PASSWORD_FILE" ]; then
-    POSTGRES_PASSWORD=$(cat "$DB_PASSWORD_FILE")
+  if [ -n "$POSTGRES_PASSWORD_FILE" ] && [ -f "$POSTGRES_PASSWORD_FILE" ]; then
+    POSTGRES_PASSWORD=$(cat "$POSTGRES_PASSWORD_FILE")
   fi
-  export DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_SERVER}:${POSTGRES_PORT}/${POSTGRES_DB}"
+  export DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_SERVER}:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=disable"
 fi
 
 echo "==> [entrypoint] Validando variáveis..."

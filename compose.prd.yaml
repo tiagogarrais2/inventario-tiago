@@ -1,6 +1,6 @@
-# Referência Docker Compose: 
+# Referência Docker Compose:
 # https://github.com/docker/compose/blob/v1/docs/Compose%20file%20reference%20(legacy)/version-3.md
-version: '3.8'
+version: "3.8"
 
 services:
   app:
@@ -19,13 +19,12 @@ services:
       # Se solicitado a criação de banco a equipe informará usuário e password file
       POSTGRES_USER: exemplo
       # Quando o container for criado no cluster existirá um volume tmpfs montado no caminho informado pela equipe,
-      # cujo conteúdo será a senha do usuário no banco de dados. Dessa forma, não é necessário que a mesma esteja em 
+      # cujo conteúdo será a senha do usuário no banco de dados. Dessa forma, não é necessário que a mesma esteja em
       # texto claro no repositório.
       POSTGRES_PASSWORD_FILE: /run/secrets/pg_exemplo_pass
       # Caso sua aplicação não consiga ler o valor de um Docker Secret, é possível usar a senha diretamente. Exemplo:
       # POSTGRES_PASSWORD: minhasenhasecreta1234
       TZ: America/Fortaleza
-    entrypoint: ["docker-entrypoint-deploy.sh"]
     command: []
     deploy:
       # replicated = container normal
@@ -50,17 +49,17 @@ services:
       resources:
         # valores máximos de CPU e RAM que sua aplicação consumirá
         limits:
-          cpus: '1.0'
+          cpus: "1.0"
           memory: 512M
         # o mínimo necessário para que sua aplicação consiga executar corretamente
         reservations:
-          cpus: '0.05'
+          cpus: "0.05"
           memory: 128M
-    # para que sua aplicação consiga se recuperar de um eventual estado de erro é necessário que 
+    # para que sua aplicação consiga se recuperar de um eventual estado de erro é necessário que
     # a mesma possua uma checagem regular da saúde da aplicação
     healthcheck:
       # comando a ser executado dentro do container para checar se o serviço está sendo executado corretamente
-      test: curl -s http://127.0.0.1:8000/
+      test: curl -s http://127.0.0.1:3000/
       # intervalo de tempo entre cada verificação de saúde do container
       interval: 15s
       # tempo máximo que o test deve responder para ser considerado saudável
@@ -69,7 +68,7 @@ services:
       retries: 5
       # tempo estimado de inicializaçãodo container, o healthcheck só começará a ser executado após start_period
       start_period: 30s
-    # configuração de volume para armazenamento 
+    # configuração de volume para armazenamento
     volumes:
       - type: volume
         source: uploads
@@ -81,7 +80,7 @@ services:
     # rede Docker padrão para projetos hospedados no cluster
     networks:
       - rede_projetos
-  
+
   # serviços auxiliares da sua aplicação, se necessário
   redis:
     # caso precise uma imagem externa do GitHub utilize o Gitlab Dependency Proxy
@@ -91,7 +90,7 @@ services:
       equipe: "exemplo"
     # o healthcheck é obrigatório em todos os serviços
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -107,10 +106,10 @@ services:
         delay: 10s
       resources:
         limits:
-          cpus: '0.5'
+          cpus: "0.5"
           memory: 128M
         reservations:
-          cpus: '0.01'
+          cpus: "0.01"
           memory: 32M
     networks:
       - rede_projetos
@@ -129,7 +128,7 @@ volumes:
       o: "addr=nfs-server-1,rw,nfsvers=4"
       # caminho padrão que será criado no servidor de NFS
       device: ":/srv/nfs/exemplo/uploads"
- 
+
 secrets:
   # nome do Docker Secret criado pela DGTI contendo a senha do banco PostgreSQL 16
   pg_exemplo_pass:
