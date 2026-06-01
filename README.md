@@ -656,16 +656,16 @@ npm run deploy -- "Mensagem descrevendo as alterações"
 
 #### O que o script faz (em ordem)
 
-| Etapa | Ação                                                                                                  |
-| ----- | ----------------------------------------------------------------------------------------------------- |
-| 1     | **Build** — executa `npm run build` e interrompe tudo se houver erro                                  |
+| Etapa | Ação                                                                                                         |
+| ----- | ------------------------------------------------------------------------------------------------------------ |
+| 1     | **Build** — executa `npm run build` e interrompe tudo se houver erro                                         |
 | 2     | **Detecção automática de versão** — lê a última tag Git (ex.: `v3.4.3`) e calcula o próximo patch (`v3.4.4`) |
-| 3     | **Confirmação interativa** — exibe o resumo (mensagem, tag atual → nova, imagem Docker) e aguarda `s/N` |
-| 4     | **Commit** — `git add -A` + `git commit -m "<mensagem>"`                                              |
-| 5     | **Tag** — `git tag -a v3.4.4 -m "<mensagem>"`                                                        |
-| 6     | **Push Git** — `git push` + `git push --tags`                                                         |
-| 7     | **Docker build** — `docker build -t gitlab.../inventario-patrimonial:3.4.4 .`                        |
-| 8     | **Docker push** — `docker push gitlab.../inventario-patrimonial:3.4.4`                               |
+| 3     | **Confirmação interativa** — exibe o resumo (mensagem, tag atual → nova, imagem Docker) e aguarda `s/N`      |
+| 4     | **Commit** — `git add -A` + `git commit -m "<mensagem>"`                                                     |
+| 5     | **Tag** — `git tag -a v3.4.4 -m "<mensagem>"`                                                                |
+| 6     | **Push Git** — `git push` + `git push --tags`                                                                |
+| 7     | **Docker build** — `docker build -t gitlab.../inventario-patrimonial:3.4.4 .`                                |
+| 8     | **Docker push** — `docker push gitlab.../inventario-patrimonial:3.4.4`                                       |
 
 #### Exemplo de execução
 
