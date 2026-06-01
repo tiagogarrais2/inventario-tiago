@@ -45,9 +45,22 @@ fi
 
 # 5. Git commit
 echo ""
-echo "==> [2/6] git add -A && git commit"
+echo "==> [2/6] git pull --rebase && git add -A && git commit"
+STASHED=0
+if ! git diff --quiet || ! git diff --cached --quiet || [ -n "$(git ls-files --others --exclude-standard)" ]; then
+  git stash --include-untracked
+  STASHED=1
+fi
+git pull --rebase origin main
+if [ "$STASHED" -eq 1 ]; then
+  git stash pop
+fi
 git add -A
-git commit -m "$MENSAGEM"
+if git diff --cached --quiet; then
+  echo "Nada para commitar, prosseguindo..."
+else
+  git commit -m "$MENSAGEM"
+fi
 
 # 6. Git tag
 echo ""
