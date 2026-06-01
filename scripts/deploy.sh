@@ -65,6 +65,9 @@ fi
 # 6. Git tag
 echo ""
 echo "==> [3/6] git tag $NOVA_TAG"
+if git tag -l "$NOVA_TAG" | grep -q "$NOVA_TAG"; then
+  git tag -d "$NOVA_TAG"
+fi
 git tag -a "$NOVA_TAG" -m "$MENSAGEM"
 
 # 7. Git push
