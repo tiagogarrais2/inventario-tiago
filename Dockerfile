@@ -31,11 +31,11 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
-# CORREÇÃO CRÍTICA: Injetando o Prisma onde o Standalone e o Entrypoint esperam
-# Copiamos para a raiz e para dentro do node_modules gerado pelo standalone
+# CORREÇÃO CRÍTICA: Injetando o Prisma e suas dependências internas (como o pacote effect)
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/effect ./node_modules/effect
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.bin ./node_modules/.bin
 
 # Migrations e Scripts
