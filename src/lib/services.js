@@ -533,6 +533,159 @@ class InventarioService {
       data: { cargoProprietario: cargo },
     });
   }
+
+  static async duplicar(nomeInventarioOrigem, novoNomeExibicao, userEmail) {
+    const usuario = await UsuarioService.findByEmail(userEmail);
+    if (!usuario) {
+      throw new Error("Usuário não encontrado.");
+    }
+
+    const inventarioOrigem = await prisma.inventario.findUnique({
+      where: { nome: nomeInventarioOrigem },
+      include: {
+        itens: true,
+        salas: true,
+        servidores: true,
+        cabecalhos: true,
+        emailTemplates: true,
+      },
+    });
+
+    if (!inventarioOrigem) {
+      throw new Error("Inventário de origem não encontrado.");
+    }
+
+    if (inventarioOrigem.proprietarioId !== usuario.id) {
+      throw new Error("Apenas o proprietário do inventário pode duplicá-lo.");
+    }
+
+    const userPrefix = userEmail.split("@")[0].replace(/[^a-zA-Z0-9]/g, "");
+    const novoNomeSlug = `inventario-${Date.now()}-${userPrefix}`;
+
+    const novoInventario = await prisma.$transaction(
+      async (tx) => {
+        // 1. Criar novo inventário
+        const criado = await tx.inventario.create({
+          data: {
+            nome: novoNomeSlug,
+            nomeExibicao:
+              novoNomeExibicao || `${inventarioOrigem.nomeExibicao} (Cópia)`,
+            proprietarioId: usuario.id,
+            cargoProprietario: inventarioOrigem.cargoProprietario,
+            importFormat: inventarioOrigem.importFormat,
+            importMapping: inventarioOrigem.importMapping || undefined,
+          },
+        });
+
+        // 2. Duplicar Salas
+        if (inventarioOrigem.salas.length > 0) {
+          await tx.sala.createMany({
+            data: inventarioOrigem.salas.map((sala) => ({
+              inventarioId: criado.id,
+              nome: sala.nome,
+            })),
+          });
+        }
+
+        // 3. Duplicar Servidores
+        if (inventarioOrigem.servidores.length > 0) {
+          await tx.servidor.createMany({
+            data: inventarioOrigem.servidores.map((srv) => ({
+              inventarioId: criado.id,
+              nome: srv.nome,
+              email: srv.email,
+            })),
+          });
+        }
+
+        // 4. Duplicar Cabeçalhos
+        if (inventarioOrigem.cabecalhos.length > 0) {
+          await tx.cabecalhoInventario.createMany({
+            data: inventarioOrigem.cabecalhos.map((cab) => ({
+              inventarioId: criado.id,
+              campo: cab.campo,
+              ordem: cab.ordem,
+            })),
+          });
+        }
+
+        // 5. Duplicar Templates de E-mail
+        if (inventarioOrigem.emailTemplates.length > 0) {
+          await tx.emailTemplate.createMany({
+            data: inventarioOrigem.emailTemplates.map((tpl) => ({
+              inventarioId: criado.id,
+              autorId: usuario.id,
+              titulo: tpl.titulo,
+              assunto: tpl.assunto,
+              mensagem: tpl.mensagem,
+              tipo: tpl.tipo,
+            })),
+          });
+        }
+
+        // 6. Duplicar Itens do Inventário
+        if (inventarioOrigem.itens.length > 0) {
+          const itemsData = inventarioOrigem.itens.map((item) => ({
+            inventarioId: criado.id,
+            numero: item.numero,
+            status: item.status,
+            ed: item.ed,
+            contaContabil: item.contaContabil,
+            descricao: item.descricao,
+            rotulos: item.rotulos,
+            cargaAtual: item.cargaAtual,
+            setorResponsavel: item.setorResponsavel,
+            campusCarga: item.campusCarga,
+            cargaContabil: item.cargaContabil,
+            valorAquisicao: item.valorAquisicao,
+            valorDepreciado: item.valorDepreciado,
+            numeroNotaFiscal: item.numeroNotaFiscal,
+            numeroSerie: item.numeroSerie,
+            dataEntrada: item.dataEntrada,
+            dataCarga: item.dataCarga,
+            fornecedor: item.fornecedor,
+            marca: item.marca,
+            modelo: item.modelo,
+            sala: item.sala,
+            setor: item.setor,
+            estadoConservacao: item.estadoConservacao,
+            dadosExtras: item.dadosExtras || undefined,
+            dataInventario: item.dataInventario,
+            inventarianteId: item.inventarianteId,
+            salaEncontrada: item.salaEncontrada,
+            statusInventario: item.statusInventario,
+            observacoesInventario: item.observacoesInventario,
+            cadastradoDuranteInventario: item.cadastradoDuranteInventario,
+          }));
+
+          await tx.itemInventario.createMany({
+            data: itemsData,
+          });
+        }
+
+        // 7. Log de Auditoria
+        await tx.auditLog.create({
+          data: {
+            acao: "DUPLICAR_INVENTARIO",
+            usuarioId: usuario.id,
+            inventarioId: criado.id,
+            detalhes: {
+              inventarioOrigem: nomeInventarioOrigem,
+              novoNomeExibicao: criado.nomeExibicao,
+              totalItensDuplicados: inventarioOrigem.itens.length,
+            },
+          },
+        });
+
+        return criado;
+      },
+      {
+        timeout: 60000,
+      }
+    );
+
+    return novoInventario;
+  }
 }
 
 // Service para gerenciar itens de inventário

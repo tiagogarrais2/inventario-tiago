@@ -25,6 +25,7 @@ export default function InventarioPage({ params }) {
   const [accessLoading, setAccessLoading] = useState(true);
   const [showPermissoes, setShowPermissoes] = useState(false);
   const [excluindoInventario, setExcluindoInventario] = useState(false);
+  const [duplicandoInventario, setDuplicandoInventario] = useState(false);
   const [showAccessDeniedTimer, setShowAccessDeniedTimer] = useState(false);
   const router = useRouter();
   const inputRef = useRef(null);
@@ -333,6 +334,55 @@ export default function InventarioPage({ params }) {
     }
   }
 
+  async function handleDuplicarInventario() {
+    if (!isOwner) {
+      alert("Apenas o proprietário pode duplicar o inventário.");
+      return;
+    }
+
+    const novoNomeExibicao = window.prompt(
+      `Duplicar o inventário "${nome}":\n\n` +
+        `Digite o nome de exibição para a nova cópia do inventário:`,
+      `${nome} (Cópia)`
+    );
+
+    if (novoNomeExibicao === null) return;
+
+    const nomeFinal = novoNomeExibicao.trim() || `${nome} (Cópia)`;
+
+    setDuplicandoInventario(true);
+
+    try {
+      const response = await fetch("/api/duplicar-inventario", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          inventario: nome,
+          novoNomeExibicao: nomeFinal,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(
+          `✅ Inventário duplicado com sucesso!\n\n` +
+            `Novo inventário: "${data.novoInventario.nomeExibicao}"`
+        );
+        router.push(`/inventario/${data.novoInventario.nome}`);
+      } else {
+        throw new Error(data.error || "Erro ao duplicar inventário");
+      }
+    } catch (error) {
+      console.error("Erro ao duplicar inventário:", error);
+      alert(`❌ Erro ao duplicar inventário: ${error.message}`);
+    } finally {
+      setDuplicandoInventario(false);
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const nome = searchParams.get("nome");
@@ -490,8 +540,18 @@ export default function InventarioPage({ params }) {
                 Gerenciar Acesso
               </Button>
               <Button
+                onClick={handleDuplicarInventario}
+                disabled={duplicandoInventario || excluindoInventario}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-200"
+                style={{
+                  opacity: duplicandoInventario ? 0.7 : 1,
+                }}
+              >
+                {duplicandoInventario ? "Duplicando..." : "📋 Duplicar Inventário"}
+              </Button>
+              <Button
                 onClick={handleExcluirInventario}
-                disabled={excluindoInventario}
+                disabled={excluindoInventario || duplicandoInventario}
                 className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-200"
                 style={{
                   opacity: excluindoInventario ? 0.7 : 1,
