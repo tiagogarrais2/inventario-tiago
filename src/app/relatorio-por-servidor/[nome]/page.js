@@ -86,6 +86,7 @@ export default function RelatorioPorServidorPage({ params }) {
         if (response.ok) {
           setHasAccess(data.hasAccess);
           setIsOwner(data.isOwner || false);
+          if (data.nomeExibicao) setNomeExibicao(data.nomeExibicao);
         } else {
           setHasAccess(false);
           setIsOwner(false);
@@ -509,7 +510,7 @@ export default function RelatorioPorServidorPage({ params }) {
           }}
           title="Clique para ir ao inventário"
         >
-          {nome}
+          {nomeExibicao || nome}
         </a>
       </h2>
 

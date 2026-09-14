@@ -53,8 +53,9 @@ export default function EmailsPage({ params }) {
 
   // Abas
   const [abaAtiva, setAbaAtiva] = useState("compor"); // "compor", "emails", "historico", "textos"
+  const [nomeExibicao, setNomeExibicao] = useState("");
 
-  // Verificar se é proprietário
+  // Verificar se o usuário atual é o proprietário do inventário
   useEffect(() => {
     if (status === "loading") return;
     if (status === "unauthenticated") {
@@ -70,6 +71,7 @@ export default function EmailsPage({ params }) {
         const data = await res.json();
         if (data.isOwner) {
           setIsOwner(true);
+          if (data.nomeExibicao) setNomeExibicao(data.nomeExibicao);
         } else {
           router.push(`/inventario/${nome}`);
           return;
@@ -442,7 +444,7 @@ export default function EmailsPage({ params }) {
           href={`/inventario/${nome}`}
           style={{ color: "#007bff", textDecoration: "none" }}
         >
-          {nome}
+          {nomeExibicao || nome}
         </a>
       </h3>
 

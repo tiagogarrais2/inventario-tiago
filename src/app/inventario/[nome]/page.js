@@ -22,6 +22,7 @@ export default function InventarioPage({ params }) {
   const [notificacao, setNotificacao] = useState("");
   const [hasAccess, setHasAccess] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
+  const [nomeExibicao, setNomeExibicao] = useState("");
   const [accessLoading, setAccessLoading] = useState(true);
   const [showPermissoes, setShowPermissoes] = useState(false);
   const [excluindoInventario, setExcluindoInventario] = useState(false);
@@ -50,6 +51,7 @@ export default function InventarioPage({ params }) {
         if (response.ok) {
           setHasAccess(data.hasAccess);
           setIsOwner(data.isOwner);
+          if (data.nomeExibicao) setNomeExibicao(data.nomeExibicao);
           if (!data.hasAccess) {
             setShowAccessDeniedTimer(true);
           }
@@ -340,15 +342,16 @@ export default function InventarioPage({ params }) {
       return;
     }
 
+    const nomeAtualAmigavel = nomeExibicao || nome;
     const novoNomeExibicao = window.prompt(
-      `Duplicar o inventário "${nome}":\n\n` +
+      `Duplicar o inventário "${nomeAtualAmigavel}":\n\n` +
         `Digite o nome de exibição para a nova cópia do inventário:`,
-      `${nome} (Cópia)`
+      `${nomeAtualAmigavel} (Cópia)`
     );
 
     if (novoNomeExibicao === null) return;
 
-    const nomeFinal = novoNomeExibicao.trim() || `${nome} (Cópia)`;
+    const nomeFinal = novoNomeExibicao.trim() || `${nomeAtualAmigavel} (Cópia)`;
 
     setDuplicandoInventario(true);
 
@@ -488,6 +491,7 @@ export default function InventarioPage({ params }) {
       {showPermissoes && (
         <GerenciadorPermissoes
           inventarioNome={nome}
+          nomeExibicao={nomeExibicao}
           isOwner={isOwner}
           onClose={() => setShowPermissoes(false)}
         />
@@ -529,7 +533,7 @@ export default function InventarioPage({ params }) {
       )}
 
       <div>
-        <h2>{nome}</h2>
+        <h2>{nomeExibicao || nome}</h2>
         <div>
           {isOwner && (
             <>

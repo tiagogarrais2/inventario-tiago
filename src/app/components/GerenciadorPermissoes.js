@@ -14,6 +14,7 @@ const CARGOS_DISPONIVEIS = [
 
 export default function GerenciadorPermissoes({
   inventarioNome,
+  nomeExibicao,
   isOwner,
   onClose,
 }) {
@@ -198,7 +199,7 @@ export default function GerenciadorPermissoes({
       >
         <div className="modal-header">
           <h2 id="modal-permissoes-titulo" className="modal-title">
-            Gerenciar Permissões - {inventarioNome}
+            Gerenciar Permissões - {nomeExibicao || inventarioNome}
           </h2>
           <Button onClick={onClose} className="modal-close-btn">
             ✕
@@ -209,34 +210,44 @@ export default function GerenciadorPermissoes({
         <div className="modal-section">
           <h3 className="modal-section-title">Conceder Acesso</h3>
           <form onSubmit={adicionarPermissao} className="modal-form">
-            <input
-              type="email"
-              value={novoEmail}
-              onChange={(e) => setNovoEmail(e.target.value)}
-              placeholder="Email do usuário"
-              className="modal-input"
-              disabled={loading}
-              required
-            />
-            <select
-              value={novoCargo}
-              onChange={(e) => setNovoCargo(e.target.value)}
-              className="modal-input"
-              style={{ maxWidth: "180px" }}
-              disabled={loading}
-            >
-              {CARGOS_DISPONIVEIS.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
+            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+              <label style={{ fontSize: "13px", fontWeight: "600", color: "#374151" }}>
+                E-mail do Usuário:
+              </label>
+              <input
+                type="email"
+                value={novoEmail}
+                onChange={(e) => setNovoEmail(e.target.value)}
+                placeholder="Ex: usuario@ifce.edu.br"
+                className="modal-input"
+                disabled={loading}
+                required
+              />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+              <label style={{ fontSize: "13px", fontWeight: "600", color: "#374151" }}>
+                Cargo na Comissão:
+              </label>
+              <select
+                value={novoCargo}
+                onChange={(e) => setNovoCargo(e.target.value)}
+                className="modal-input"
+                disabled={loading}
+              >
+                {CARGOS_DISPONIVEIS.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
             <Button
               type="submit"
               disabled={loading}
               className="modal-btn modal-btn-primary"
+              style={{ width: "100%", marginTop: "4px" }}
             >
-              {loading ? "..." : "Conceder"}
+              {loading ? "Processando..." : "Conceder Acesso"}
             </Button>
           </form>
         </div>

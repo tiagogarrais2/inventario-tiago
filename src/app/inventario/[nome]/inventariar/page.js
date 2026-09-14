@@ -52,6 +52,7 @@ export default function InventariarPage({ params }) {
   const [serieValor, setSerieValor] = useState("");
   const [mostrarBuscaSerie, setMostrarBuscaSerie] = useState(false);
   const [observacoes, setObservacoes] = useState("");
+  const [nomeExibicao, setNomeExibicao] = useState("");
   const inputRef = useRef(null);
 
   // Verificar permissões de acesso
@@ -72,6 +73,7 @@ export default function InventariarPage({ params }) {
 
         if (response.ok) {
           setHasAccess(data.hasAccess);
+          if (data.nomeExibicao) setNomeExibicao(data.nomeExibicao);
         } else {
           setHasAccess(false);
         }
@@ -442,7 +444,7 @@ export default function InventariarPage({ params }) {
             }}
             title="Voltar ao inventário"
           >
-            {nome}
+            {nomeExibicao || nome}
           </a>
         </h1>
       </div>

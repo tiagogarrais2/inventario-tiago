@@ -58,6 +58,8 @@ export async function GET(request) {
     return NextResponse.json({
       hasAccess: permissionResult.hasAccess,
       isOwner: permissionResult.isOwner,
+      nomeExibicao:
+        permissionResult.inventario?.nomeExibicao || inventarioNome,
     });
   } catch (error) {
     console.error("Erro ao verificar permissões:", error);
