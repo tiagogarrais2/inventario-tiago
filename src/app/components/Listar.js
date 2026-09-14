@@ -5,14 +5,80 @@ import Button from "./Button";
 
 export default function Listar({ atualizar, novoInventario }) {
   const [inventarios, setInventarios] = useState([]);
+  const [redirecionando, setRedirecionando] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const noRedirect = searchParams.get("noredirect") === "true";
+
     fetch("/api/listar")
       .then((res) => res.json())
-      .then((data) => setInventarios(data.pastas || []))
+      .then((data) => {
+        let list = [];
+        if (data.inventarios && Array.isArray(data.inventarios)) {
+          list = data.inventarios;
+        } else if (data.pastas && Array.isArray(data.pastas)) {
+          list = data.pastas.map((p) => ({ nome: p, nomeExibicao: p }));
+        }
+        setInventarios(list);
+
+        // Se o usuário tem apenas 1 inventário, não está no modo noredirect e não acabou de criar um novo
+        if (list.length === 1 && !noRedirect && !novoInventario) {
+          const unico = list[0];
+          const nomeSlug = typeof unico === "string" ? unico : unico.nome;
+          setRedirecionando(true);
+          router.replace(`/inventario/${nomeSlug}`);
+        }
+      })
       .catch(() => setInventarios([]));
-  }, [atualizar]); // <- importante!
+  }, [atualizar, novoInventario, router]);
+
+  if (redirecionando) {
+    const unico = inventarios[0];
+    const nomeExibicao =
+      typeof unico === "string"
+        ? unico
+        : unico?.nomeExibicao || unico?.nome || "";
+
+    return (
+      <div
+        style={{
+          textAlign: "center",
+          padding: "40px 20px",
+          backgroundColor: "#f8f9fa",
+          borderRadius: "8px",
+          border: "1px solid #dee2e6",
+          maxWidth: "600px",
+          margin: "20px auto",
+        }}
+      >
+        <div
+          style={{
+            fontSize: "18px",
+            fontWeight: "bold",
+            color: "#007bff",
+            marginBottom: "12px",
+          }}
+        >
+          🚀 Redirecionando para &quot;{nomeExibicao}&quot;...
+        </div>
+        <div style={{ fontSize: "14px", color: "#6c757d" }}>
+          Como você possui 1 inventário ativo, abriremos diretamente.
+        </div>
+        <div style={{ marginTop: "16px", fontSize: "13px" }}>
+          Para criar um novo inventário ou ver a tela inicial,{" "}
+          <Link
+            href="/?noredirect=true"
+            style={{ color: "#007bff", textDecoration: "underline" }}
+          >
+            clique aqui
+          </Link>
+          .
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -27,11 +93,17 @@ export default function Listar({ atualizar, novoInventario }) {
           margin: "0 auto",
         }}
       >
-        {inventarios.map((nome) => {
-          const isNovo = novoInventario && nome === novoInventario;
+        {inventarios.map((inv) => {
+          const nomeSlug = typeof inv === "string" ? inv : inv.nome;
+          const nomeExibicao =
+            typeof inv === "string" ? inv : inv.nomeExibicao || inv.nome;
+          const isNovo =
+            novoInventario &&
+            (nomeSlug === novoInventario || nomeExibicao === novoInventario);
+
           return (
             <div
-              key={nome}
+              key={nomeSlug}
               style={{
                 width: "100%",
                 padding: isNovo ? "12px 16px" : "8px 12px",
@@ -64,8 +136,8 @@ export default function Listar({ atualizar, novoInventario }) {
                 </span>
               )}
               <Button
-                onClick={() => router.push(`/inventario/${nome}`)}
-                aria-label={`Abrir inventário ${nome}`}
+                onClick={() => router.push(`/inventario/${nomeSlug}`)}
+                aria-label={`Abrir inventário ${nomeExibicao}`}
                 style={{
                   width: "100%",
                   padding: "12px 16px",
@@ -96,17 +168,12 @@ export default function Listar({ atualizar, novoInventario }) {
                   e.target.style.boxShadow = "none";
                 }}
               >
-                <span aria-hidden="true">📋</span> {nome}
+                <span aria-hidden="true">📋</span> {nomeExibicao}
               </Button>
             </div>
           );
         })}
       </div>
-      {/* <div style={{ marginTop: "24px", textAlign: "center" }}>
-        <Button onClick={() => router.push("/dashboard")}>
-          📊 Dashboard dos seus inventários
-        </Button>
-      </div> */}
     </div>
   );
 }

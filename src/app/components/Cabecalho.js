@@ -9,7 +9,7 @@ export default function Cabecalho() {
   return (
     <div className="app-cabecalho">
       <h1>
-        <Link href={"/"}>Sistema de Inventário</Link>
+        <Link href={"/?noredirect=true"}>Sistema de Inventário</Link>
       </h1>
 
       <div>
