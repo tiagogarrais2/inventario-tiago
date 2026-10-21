@@ -18,6 +18,7 @@ export default function RelatorioPorServidorPage({ params }) {
   const [error, setError] = useState("");
   const [hasAccess, setHasAccess] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
+  const [nomeExibicao, setNomeExibicao] = useState("");
   const [accessLoading, setAccessLoading] = useState(true);
   const [servidoresFiltrados, setServidoresFiltrados] = useState([]);
   const [todosServidores, setTodosServidores] = useState([]);
