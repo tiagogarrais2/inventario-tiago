@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import GerenciadorPermissoes from "../../components/GerenciadorPermissoes";
 import Button from "../../components/Button";
 import TimerText from "../../components/TimerText";
 
@@ -24,7 +23,6 @@ export default function InventarioPage({ params }) {
   const [isOwner, setIsOwner] = useState(false);
   const [nomeExibicao, setNomeExibicao] = useState("");
   const [accessLoading, setAccessLoading] = useState(true);
-  const [showPermissoes, setShowPermissoes] = useState(false);
   const [excluindoInventario, setExcluindoInventario] = useState(false);
   const [duplicandoInventario, setDuplicandoInventario] = useState(false);
   const [showAccessDeniedTimer, setShowAccessDeniedTimer] = useState(false);
@@ -487,16 +485,6 @@ export default function InventarioPage({ params }) {
 
   return (
     <div>
-      {/* Gerenciador de Permissões Modal */}
-      {showPermissoes && (
-        <GerenciadorPermissoes
-          inventarioNome={nome}
-          nomeExibicao={nomeExibicao}
-          isOwner={isOwner}
-          onClose={() => setShowPermissoes(false)}
-        />
-      )}
-
       {/* Notificação persistente */}
       {notificacao && (
         <div
@@ -538,10 +526,10 @@ export default function InventarioPage({ params }) {
           {isOwner && (
             <>
               <Button
-                onClick={() => setShowPermissoes(true)}
+                onClick={() => router.push(`/inventario/${nome}/permissoes`)}
                 className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded transition duration-200"
               >
-                Gerenciar Acesso
+                🔐 Gerenciar Acesso
               </Button>
               <Button
                 onClick={handleDuplicarInventario}

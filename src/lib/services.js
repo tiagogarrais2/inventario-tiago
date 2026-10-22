@@ -1236,13 +1236,19 @@ class PermissaoService {
     const inventario = await InventarioService.findByName(nomeInventario);
     if (!inventario) return [];
 
-    return await prisma.permissao.findMany({
+    const permissoes = await prisma.permissao.findMany({
       where: { inventarioId: inventario.id },
       include: {
         usuario: {
           select: { nome: true, email: true },
         },
       },
+    });
+
+    return permissoes.sort((a, b) => {
+      const nomeA = a.usuario?.nome || a.usuario?.email || "";
+      const nomeB = b.usuario?.nome || b.usuario?.email || "";
+      return nomeA.localeCompare(nomeB, "pt-BR", { sensitivity: "base" });
     });
   }
 

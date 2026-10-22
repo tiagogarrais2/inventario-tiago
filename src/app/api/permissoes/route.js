@@ -66,6 +66,7 @@ export async function GET(request) {
     return NextResponse.json({
       permissoes,
       cargoProprietario: inventarioData.cargoProprietario || "Servidor(a)",
+      nomeExibicao: inventarioData.nomeExibicao || inventario,
     });
   } catch (error) {
     console.error("Erro ao listar permissões:", error);
@@ -84,7 +85,7 @@ export async function GET(request) {
   }
 }
 
-// POST - Adicionar nova permissão
+// POST - Adicionar nova permissão (individual ou em lote)
 export async function POST(request) {
   const session = await getServerSession(authOptions);
 
@@ -92,11 +93,14 @@ export async function POST(request) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
 
-  const { inventarioNome, emailUsuario, cargo } = await request.json();
+  const body = await request.json();
+  const { inventarioNome, emailUsuario, emails, cargo } = body;
 
-  if (!inventarioNome || !emailUsuario) {
+  const isLote = Array.isArray(emails);
+
+  if (!inventarioNome || (!emailUsuario && (!isLote || emails.length === 0))) {
     return NextResponse.json(
-      { error: "Nome do inventário e email do usuário são obrigatórios" },
+      { error: "Nome do inventário e email(s) do(s) usuário(s) são obrigatórios" },
       { status: 400 }
     );
   }
@@ -117,7 +121,10 @@ export async function POST(request) {
       await AuditoriaService.log(
         "TENTATIVA_ADICIONAR_PERMISSAO_NEGADA",
         session.user,
-        { emailAlvo: emailUsuario, motivo: "Usuario nao e proprietario" },
+        {
+          emailAlvo: isLote ? emails : emailUsuario,
+          motivo: "Usuario nao e proprietario",
+        },
         inventarioNome
       );
 
@@ -127,8 +134,92 @@ export async function POST(request) {
       );
     }
 
+    // Fluxo em lote
+    if (isLote) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const emailsUnicos = [
+        ...new Set(
+          emails
+            .map((e) => (typeof e === "string" ? e.trim().toLowerCase() : ""))
+            .filter((e) => e.length > 0)
+        ),
+      ];
+
+      const adicionados = [];
+      const jaPossuiamAcesso = [];
+      const invalidos = [];
+      const cargoEscolhido = cargo || "Servidor(a)";
+      const emailProprietario = (session.user.email || "").toLowerCase();
+
+      for (const emailAlvo of emailsUnicos) {
+        if (!emailRegex.test(emailAlvo)) {
+          invalidos.push(emailAlvo);
+          continue;
+        }
+
+        if (emailAlvo === emailProprietario) {
+          jaPossuiamAcesso.push(emailAlvo);
+          continue;
+        }
+
+        let usuarioAlvo = await UsuarioService.findByEmail(emailAlvo);
+        if (!usuarioAlvo) {
+          usuarioAlvo = await UsuarioService.findOrCreateFromSession({
+            email: emailAlvo,
+            name: emailAlvo.split("@")[0],
+          });
+        }
+
+        const permissaoExistente =
+          await PermissaoService.findByUserAndInventario(
+            usuarioAlvo.id,
+            inventarioData.id
+          );
+
+        if (permissaoExistente) {
+          jaPossuiamAcesso.push(emailAlvo);
+          continue;
+        }
+
+        await PermissaoService.create({
+          usuarioId: usuarioAlvo.id,
+          inventarioId: inventarioData.id,
+          cargo: cargoEscolhido,
+        });
+
+        adicionados.push(emailAlvo);
+      }
+
+      if (adicionados.length > 0) {
+        await AuditoriaService.log(
+          "PERMISSOES_CONCEDIDAS_LOTE",
+          session.user,
+          {
+            cargo: cargoEscolhido,
+            totalAdicionados: adicionados.length,
+            adicionados,
+            jaPossuiamAcesso,
+          },
+          inventarioNome
+        );
+      }
+
+      return NextResponse.json({
+        message:
+          adicionados.length > 0
+            ? `${adicionados.length} permissão(ões) concedida(s) com sucesso!`
+            : "Nenhuma nova permissão concedida (todos os e-mails informados já possuíam acesso ou eram inválidos).",
+        adicionados,
+        jaPossuiamAcesso,
+        invalidos,
+      });
+    }
+
+    // Fluxo individual (compatibilidade total)
+    const emailNormalizado = emailUsuario.trim().toLowerCase();
+
     // Não pode dar permissão para si mesmo
-    if (emailUsuario === session.user.email) {
+    if (emailNormalizado === (session.user.email || "").toLowerCase()) {
       return NextResponse.json(
         { error: "Você já é o proprietário deste inventário" },
         { status: 400 }
@@ -136,12 +227,12 @@ export async function POST(request) {
     }
 
     // Buscar ou criar o usuário alvo
-    let usuarioAlvo = await UsuarioService.findByEmail(emailUsuario);
+    let usuarioAlvo = await UsuarioService.findByEmail(emailNormalizado);
     if (!usuarioAlvo) {
       // Criar usuário automaticamente se não existir
       usuarioAlvo = await UsuarioService.findOrCreateFromSession({
-        email: emailUsuario,
-        name: emailUsuario.split("@")[0], // Use a parte antes do @ como nome padrão
+        email: emailNormalizado,
+        name: emailNormalizado.split("@")[0], // Use a parte antes do @ como nome padrão
       });
     }
 
@@ -168,7 +259,7 @@ export async function POST(request) {
     await AuditoriaService.log(
       "PERMISSAO_CONCEDIDA",
       session.user,
-      { emailAlvo: emailUsuario },
+      { emailAlvo: emailNormalizado },
       inventarioNome
     );
 
@@ -176,7 +267,7 @@ export async function POST(request) {
       message: "Permissão concedida com sucesso",
       permissao: {
         id: novaPermissao.id,
-        email: emailUsuario,
+        email: emailNormalizado,
         concedidaPor: session.user.email,
         concedidaEm: novaPermissao.createdAt,
         ativa: true,
@@ -188,7 +279,7 @@ export async function POST(request) {
     await AuditoriaService.log(
       "ERRO_CONCEDER_PERMISSAO",
       session.user,
-      { erro: error.message, emailAlvo: emailUsuario },
+      { erro: error.message, emailAlvo: isLote ? emails : emailUsuario },
       inventarioNome
     );
 
