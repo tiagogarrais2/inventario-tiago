@@ -877,6 +877,62 @@ class ItemInventarioService {
     });
   }
 
+  static async salvarJustificativa(
+    nomeInventario,
+    numero,
+    justificativaData,
+    sessionUser = null,
+  ) {
+    const inventario = await InventarioService.findByName(nomeInventario);
+    if (!inventario) throw new Error("Inventário não encontrado");
+
+    const item = await prisma.itemInventario.findFirst({
+      where: {
+        inventarioId: inventario.id,
+        numero: numero.toString(),
+      },
+    });
+
+    if (!item) {
+      throw new Error(
+        `Item ${numero} não encontrado no inventário ${nomeInventario}`,
+      );
+    }
+
+    const existingExtras =
+      item.dadosExtras && typeof item.dadosExtras === "object"
+        ? item.dadosExtras
+        : {};
+
+    const justificativaCompleta = {
+      motivo: justificativaData.motivo,
+      condicaoEstimada: justificativaData.condicaoEstimada,
+      relevanciaAtual: justificativaData.relevanciaAtual,
+      detalhes: justificativaData.detalhes || "",
+      usuarioEmail: sessionUser?.email || "",
+      usuarioNome: sessionUser?.name || sessionUser?.email || "",
+      dataJustificativa: new Date().toISOString(),
+    };
+
+    const novosDadosExtras = {
+      ...existingExtras,
+      justificativa: justificativaCompleta,
+    };
+
+    const itemAtualizado = await prisma.itemInventario.update({
+      where: { id: item.id },
+      data: {
+        dadosExtras: novosDadosExtras,
+        updatedAt: new Date(),
+      },
+    });
+
+    return {
+      ...itemAtualizado,
+      justificativa: justificativaCompleta,
+    };
+  }
+
   static async delete(id) {
     return await prisma.itemInventario.delete({
       where: { id },

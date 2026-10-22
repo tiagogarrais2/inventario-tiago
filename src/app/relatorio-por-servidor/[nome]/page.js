@@ -31,6 +31,19 @@ export default function RelatorioPorServidorPage({ params }) {
     isOpen: modalAberto,
     onClose: () => setModalAberto(false),
   });
+  const [modalJustificativaAberto, setModalJustificativaAberto] =
+    useState(false);
+  const { modalRef: modalJustificativaRef } = useFocusTrap({
+    isOpen: modalJustificativaAberto,
+    onClose: () => setModalJustificativaAberto(false),
+  });
+  const [salvandoJustificativa, setSalvandoJustificativa] = useState(false);
+  const [justificativaForm, setJustificativaForm] = useState({
+    motivo: "",
+    condicaoEstimada: "",
+    relevanciaAtual: "",
+    detalhes: "",
+  });
   const [itemSelecionado, setItemSelecionado] = useState(null);
   const [salas, setSalas] = useState([]);
   const [filtroInventario, setFiltroInventario] = useState("todos");
@@ -66,6 +79,30 @@ export default function RelatorioPorServidorPage({ params }) {
     "Ocioso",
     "Recuperável",
     "Antieconômico",
+  ];
+
+  // Opções para Justificativa de Bem Não Encontrado
+  const MOTIVOS_NAO_LOCALIZACAO = [
+    "Não reconheço este bem / Nunca esteve sob minha guarda",
+    "Bem sofreu desgaste natural, deterioração ou descarte pelo tempo de uso",
+    "Bem enviado para manutenção externa fora do campus",
+    "Bem extraviado / desaparecido",
+    "Outro motivo",
+  ];
+
+  const CONDICOES_ESTIMADAS = [
+    "Tecnologicamente defasado / Obsoleto",
+    "Provavelmente inservível / Irrecuperável pelo tempo de uso",
+    "Antieconômico",
+    "Tecnologicamente atualizado / Em condições de uso normal",
+    "Não sei avaliar",
+  ];
+
+  const RELEVANCIAS_ATUAIS = [
+    "Inútil / Sem utilidade atual para o setor",
+    "Baixa relevância / Função já suprida por equipamentos mais modernos",
+    "Útil, porém não essencial",
+    "Relevante / Necessário para as atividades atuais",
   ];
 
   // Verificar permissões de acesso
@@ -327,6 +364,91 @@ export default function RelatorioPorServidorPage({ params }) {
     }
   };
 
+  // Função para abrir modal de justificativa de bem não encontrado
+  const abrirModalJustificativa = (item) => {
+    setItemSelecionado(item);
+    const justAtual = item.justificativa || {};
+    setJustificativaForm({
+      motivo: justAtual.motivo || "",
+      condicaoEstimada: justAtual.condicaoEstimada || "",
+      relevanciaAtual: justAtual.relevanciaAtual || "",
+      detalhes: justAtual.detalhes || "",
+    });
+    setModalJustificativaAberto(true);
+  };
+
+  // Função para salvar justificativa de bem não encontrado
+  const enviarJustificativa = async () => {
+    if (!itemSelecionado) return;
+
+    if (
+      !justificativaForm.motivo ||
+      !justificativaForm.condicaoEstimada ||
+      !justificativaForm.relevanciaAtual
+    ) {
+      alert(
+        "Por favor, selecione uma opção nos 3 blocos obrigatórios do formulário."
+      );
+      return;
+    }
+
+    if (
+      justificativaForm.motivo === "Outro motivo" &&
+      !justificativaForm.detalhes.trim()
+    ) {
+      alert(
+        "Ao selecionar 'Outro motivo', o campo de Detalhamento / Observações passa a ser obrigatório."
+      );
+      return;
+    }
+
+    setSalvandoJustificativa(true);
+    try {
+      const response = await fetch("/api/justificar-item", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          nome: nome,
+          numero: itemSelecionado.numero,
+          motivo: justificativaForm.motivo,
+          condicaoEstimada: justificativaForm.condicaoEstimada,
+          relevanciaAtual: justificativaForm.relevanciaAtual,
+          detalhes: justificativaForm.detalhes,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        const novosItensPorServidor = { ...itensPorServidor };
+        const servidor = itemSelecionado.cargaAtual || "Servidor não definido";
+
+        if (novosItensPorServidor[servidor]) {
+          novosItensPorServidor[servidor] = novosItensPorServidor[servidor].map(
+            (item) =>
+              item.numero === itemSelecionado.numero
+                ? { ...item, justificativa: data.justificativa }
+                : item
+          );
+        }
+
+        setItensPorServidor(novosItensPorServidor);
+        setModalJustificativaAberto(false);
+        setItemSelecionado(null);
+        alert("Justificativa registrada com sucesso!");
+      } else {
+        throw new Error(data.error || "Erro ao registrar justificativa");
+      }
+    } catch (error) {
+      console.error("Erro ao registrar justificativa:", error);
+      alert(error.message || "Erro ao registrar justificativa. Tente novamente.");
+    } finally {
+      setSalvandoJustificativa(false);
+    }
+  };
+
   // Loading de autenticação
   if (status === "loading" || accessLoading) {
     return (
@@ -394,6 +516,10 @@ export default function RelatorioPorServidorPage({ params }) {
       return itens.filter((i) => i.dataInventario);
     if (filtroInventario === "naoInventariados")
       return itens.filter((i) => !i.dataInventario);
+    if (filtroInventario === "justificados")
+      return itens.filter((i) => !i.dataInventario && i.justificativa);
+    if (filtroInventario === "pendentesSemJustificativa")
+      return itens.filter((i) => !i.dataInventario && !i.justificativa);
     return itens;
   };
 
@@ -401,6 +527,9 @@ export default function RelatorioPorServidorPage({ params }) {
   const totalGeral = Object.values(itensPorServidor).flat();
   const totalInventariados = totalGeral.filter((i) => i.dataInventario).length;
   const totalNaoInventariados = totalGeral.length - totalInventariados;
+  const totalJustificados = totalGeral.filter(
+    (i) => !i.dataInventario && i.justificativa
+  ).length;
 
   const servidoresParaExibir = (() => {
     let lista = mostrarTodosServidores
@@ -584,6 +713,20 @@ export default function RelatorioPorServidorPage({ params }) {
           >
             ⏳ {totalNaoInventariados} pendentes
           </span>
+          {totalJustificados > 0 && (
+            <span
+              style={{
+                padding: "4px 10px",
+                backgroundColor: "#d97706",
+                color: "white",
+                borderRadius: "12px",
+                fontSize: "14px",
+              }}
+            >
+              📄 {totalJustificados}{" "}
+              {totalJustificados === 1 ? "justificado" : "justificados"}
+            </span>
+          )}
           <span
             style={{
               padding: "4px 10px",
@@ -777,7 +920,13 @@ export default function RelatorioPorServidorPage({ params }) {
               <option value="todos">Mostrar todos os bens</option>
               <option value="inventariados">Apenas inventariados ✅</option>
               <option value="naoInventariados">
-                Apenas não inventariados ⏳
+                Apenas não inventariados (todos) ⏳
+              </option>
+              <option value="pendentesSemJustificativa">
+                Não inventariados (sem justificativa) ❌
+              </option>
+              <option value="justificados">
+                Não encontrados justificados 📄
               </option>
             </select>
           </div>
@@ -839,6 +988,9 @@ export default function RelatorioPorServidorPage({ params }) {
         const invServidor = itensDoServidor.filter(
           (i) => i.dataInventario
         ).length;
+        const justServidor = itensDoServidor.filter(
+          (i) => !i.dataInventario && i.justificativa
+        ).length;
         const pendServidor = totalServidor - invServidor;
 
         return (
@@ -861,6 +1013,17 @@ export default function RelatorioPorServidorPage({ params }) {
                 <span style={{ color: "#dc3545" }}>
                   {pendServidor} {pendServidor === 1 ? "pendente" : "pendentes"}
                 </span>
+                {justServidor > 0 && (
+                  <>
+                    {" "}
+                    (sendo{" "}
+                    <span style={{ color: "#856404", fontWeight: "bold" }}>
+                      {justServidor}{" "}
+                      {justServidor === 1 ? "justificado" : "justificados"}
+                    </span>
+                    )
+                  </>
+                )}
                 )
               </span>
             </h2>
@@ -893,13 +1056,21 @@ export default function RelatorioPorServidorPage({ params }) {
                         ? "2px solid #007bff"
                         : item.dataInventario
                           ? "2px solid #28a745"
-                          : item.temCorrecoes
-                            ? "2px solid #ff9800"
-                            : "1px solid #ccc",
+                          : item.justificativa
+                            ? "2px solid #e0a800"
+                            : item.temCorrecoes
+                              ? "2px solid #ff9800"
+                              : "1px solid #ccc",
                       backgroundColor: item.dataInventario
                         ? "#d4edda"
-                        : "#f8d7da", // Verde para inventariado, vermelho para não
-                      color: item.dataInventario ? "#155724" : "#721c24",
+                        : item.justificativa
+                          ? "#fff3cd"
+                          : "#f8d7da", // Verde para inventariado, âmbar para justificado, vermelho para pendente
+                      color: item.dataInventario
+                        ? "#155724"
+                        : item.justificativa
+                          ? "#664d03"
+                          : "#721c24",
                       borderRadius: "5px",
                       position: "relative",
                     }}
@@ -920,6 +1091,24 @@ export default function RelatorioPorServidorPage({ params }) {
                         }}
                       >
                         ✅ INVENTARIADO
+                      </div>
+                    )}
+                    {/* Badge JUSTIFICADO - para itens não encontrados que já possuem justificativa */}
+                    {!item.dataInventario && item.justificativa && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: "-8px",
+                          right: item.temCorrecoes ? "125px" : "10px",
+                          backgroundColor: "#d39e00",
+                          color: "white",
+                          padding: "2px 8px",
+                          fontSize: "12px",
+                          borderRadius: "10px",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        📄 JUSTIFICADO
                       </div>
                     )}
                     {/* Badge CORRIGIDO - posição depende se tem INVENTARIADO */}
@@ -1203,9 +1392,74 @@ export default function RelatorioPorServidorPage({ params }) {
                           )}
                       </>
                     )}
-                    {/* Botão de inventário apenas para itens não inventariados */}
+                    {/* Exibição da justificativa registrada para bens não encontrados */}
+                    {!item.dataInventario && item.justificativa && (
+                      <div
+                        style={{
+                          marginTop: "10px",
+                          padding: "10px 12px",
+                          backgroundColor: "#fff8e1",
+                          border: "1px solid #ffecb3",
+                          borderRadius: "6px",
+                          fontSize: "13px",
+                          color: "#5c4500",
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontWeight: "bold",
+                            marginBottom: "6px",
+                            color: "#856404",
+                          }}
+                        >
+                          📄 JUSTIFICATIVA DE NÃO LOCALIZAÇÃO REGISTRADA:
+                        </div>
+                        <div style={{ marginBottom: "3px" }}>
+                          <strong>Motivo:</strong> {item.justificativa.motivo}
+                        </div>
+                        <div style={{ marginBottom: "3px" }}>
+                          <strong>Condição estimada:</strong>{" "}
+                          {item.justificativa.condicaoEstimada}
+                        </div>
+                        <div style={{ marginBottom: "3px" }}>
+                          <strong>Relevância atual:</strong>{" "}
+                          {item.justificativa.relevanciaAtual}
+                        </div>
+                        {item.justificativa.detalhes && (
+                          <div style={{ marginBottom: "3px" }}>
+                            <strong>Detalhamento / Observações:</strong>{" "}
+                            {item.justificativa.detalhes}
+                          </div>
+                        )}
+                        <div
+                          style={{
+                            marginTop: "6px",
+                            fontSize: "12px",
+                            color: "#6c757d",
+                            fontStyle: "italic",
+                          }}
+                        >
+                          Justificado por:{" "}
+                          {item.justificativa.usuarioNome ||
+                            item.justificativa.usuarioEmail ||
+                            "Servidor"}{" "}
+                          {item.justificativa.dataJustificativa &&
+                            `em ${new Date(
+                              item.justificativa.dataJustificativa
+                            ).toLocaleString("pt-BR")}`}
+                        </div>
+                      </div>
+                    )}
+                    {/* Botões de inventário e justificativa apenas para itens não inventariados */}
                     {!item.dataInventario && (
-                      <div style={{ marginTop: "10px" }}>
+                      <div
+                        style={{
+                          marginTop: "10px",
+                          display: "flex",
+                          flexWrap: "wrap",
+                          gap: "10px",
+                        }}
+                      >
                         <Button
                           onClick={() => abrirModalInventario(item)}
                           style={{
@@ -1226,6 +1480,35 @@ export default function RelatorioPorServidorPage({ params }) {
                           }}
                         >
                           📝 Inventariar Item
+                        </Button>
+                        <Button
+                          onClick={() => abrirModalJustificativa(item)}
+                          style={{
+                            backgroundColor: item.justificativa
+                              ? "#e0a800"
+                              : "#dc3545",
+                            color: "white",
+                            padding: "6px 12px",
+                            border: "none",
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                            fontSize: "14px",
+                            fontWeight: "bold",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.target.style.backgroundColor = item.justificativa
+                              ? "#c69500"
+                              : "#c82333";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.backgroundColor = item.justificativa
+                              ? "#e0a800"
+                              : "#dc3545";
+                          }}
+                        >
+                          {item.justificativa
+                            ? "✏️ Editar Justificativa"
+                            : "⚠️ Justificar Bem Não Encontrado"}
                         </Button>
                       </div>
                     )}
@@ -1515,6 +1798,423 @@ export default function RelatorioPorServidorPage({ params }) {
                 }}
                 onMouseLeave={(e) => {
                   e.target.style.backgroundColor = "#6c757d";
+                }}
+              >
+                ❌ Cancelar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Justificativa de Bem Não Encontrado */}
+      {modalJustificativaAberto && itemSelecionado && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0,0,0,0.55)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 1000,
+            padding: "16px",
+          }}
+        >
+          <div
+            ref={modalJustificativaRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-justificativa-titulo"
+            tabIndex={-1}
+            style={{
+              backgroundColor: "white",
+              padding: "24px",
+              borderRadius: "8px",
+              maxWidth: "680px",
+              width: "100%",
+              maxHeight: "90vh",
+              overflowY: "auto",
+              boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
+            }}
+          >
+            <h3
+              id="modal-justificativa-titulo"
+              style={{ marginTop: 0, marginBottom: "12px", color: "#333" }}
+            >
+              ⚠️ Justificar Bem Não Encontrado: {itemSelecionado.numero}
+            </h3>
+
+            {/* Aviso importante no topo do modal */}
+            <div
+              style={{
+                backgroundColor: "#e7f3fe",
+                borderLeft: "4px solid #2196f3",
+                padding: "10px 14px",
+                borderRadius: "4px",
+                marginBottom: "16px",
+                fontSize: "13px",
+                color: "#0c5460",
+              }}
+            >
+              <strong>💡 Atenção:</strong> Se você sabe onde este bem está
+              fisicamente no campus (mesmo em outra sala, sob responsabilidade
+              de outro servidor ou sem etiqueta), não utilize esta justificativa
+              — feche esta janela e utilize o botão{" "}
+              <strong>&quot;📝 Inventariar Item&quot;</strong> para atualizar
+              sua localização ou carga atual.
+            </div>
+
+            {/* Cabeçalho de informações do bem para auxiliar a análise */}
+            <div
+              style={{
+                backgroundColor: "#f8f9fa",
+                border: "1px solid #dee2e6",
+                borderRadius: "6px",
+                padding: "12px",
+                marginBottom: "18px",
+                fontSize: "13px",
+                color: "#495057",
+              }}
+            >
+              <div style={{ marginBottom: "4px" }}>
+                <strong>Tombo:</strong> {itemSelecionado.numero} |{" "}
+                <strong>Sala de origem:</strong>{" "}
+                {itemSelecionado.sala || "N/A"}
+              </div>
+              <div style={{ marginBottom: "4px" }}>
+                <strong>Descrição:</strong>{" "}
+                {itemSelecionado.descricao || "N/A"}
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "12px",
+                  marginTop: "6px",
+                  fontSize: "12px",
+                  color: "#6c757d",
+                }}
+              >
+                {itemSelecionado.dataEntrada && (
+                  <span>
+                    <strong>Entrada no patrimônio:</strong>{" "}
+                    {itemSelecionado.dataEntrada}
+                  </span>
+                )}
+                {itemSelecionado.dataCarga && (
+                  <span>
+                    <strong>Data da carga:</strong>{" "}
+                    {itemSelecionado.dataCarga}
+                  </span>
+                )}
+                {itemSelecionado.valorAquisicao && (
+                  <span>
+                    <strong>Valor de aquisição:</strong> R${" "}
+                    {itemSelecionado.valorAquisicao}
+                  </span>
+                )}
+                {itemSelecionado.valorDepreciado && (
+                  <span>
+                    <strong>Valor depreciado:</strong> R${" "}
+                    {itemSelecionado.valorDepreciado}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* BLOCO 1: Motivo da Não Localização */}
+            <div style={{ marginBottom: "18px" }}>
+              <div
+                style={{
+                  fontWeight: "bold",
+                  marginBottom: "8px",
+                  color: "#212529",
+                  fontSize: "14px",
+                }}
+              >
+                1. Motivo da Não Localização{" "}
+                <span style={{ color: "#dc3545" }}>*</span>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "8px",
+                }}
+              >
+                {MOTIVOS_NAO_LOCALIZACAO.map((opcao) => (
+                  <label
+                    key={opcao.valor}
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: "8px",
+                      padding: "8px 10px",
+                      border:
+                        justificativaForm.motivo === opcao.valor
+                          ? "2px solid #007bff"
+                          : "1px solid #ced4da",
+                      backgroundColor:
+                        justificativaForm.motivo === opcao.valor
+                          ? "#f0f7ff"
+                          : "#fff",
+                      borderRadius: "6px",
+                      cursor: "pointer",
+                      fontSize: "13px",
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="motivoNaoLocalizacao"
+                      value={opcao.valor}
+                      checked={justificativaForm.motivo === opcao.valor}
+                      onChange={(e) =>
+                        setJustificativaForm({
+                          ...justificativaForm,
+                          motivo: e.target.value,
+                        })
+                      }
+                      style={{ marginTop: "3px" }}
+                    />
+                    <span>{opcao.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* BLOCO 2: Condição Tecnológica e Física Estimada */}
+            <div style={{ marginBottom: "18px" }}>
+              <div
+                style={{
+                  fontWeight: "bold",
+                  marginBottom: "4px",
+                  color: "#212529",
+                  fontSize: "14px",
+                }}
+              >
+                2. Condição Tecnológica e Física Estimada{" "}
+                <span style={{ color: "#dc3545" }}>*</span>
+              </div>
+              <div
+                style={{
+                  fontSize: "12px",
+                  color: "#6c757d",
+                  marginBottom: "8px",
+                }}
+              >
+                Caso este bem estivesse fisicamente disponível hoje, como você
+                avalia sua condição considerando a idade e o histórico dele?
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "8px",
+                }}
+              >
+                {CONDICOES_ESTIMADAS.map((opcao) => (
+                  <label
+                    key={opcao.valor}
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: "8px",
+                      padding: "8px 10px",
+                      border:
+                        justificativaForm.condicaoEstimada === opcao.valor
+                          ? "2px solid #007bff"
+                          : "1px solid #ced4da",
+                      backgroundColor:
+                        justificativaForm.condicaoEstimada === opcao.valor
+                          ? "#f0f7ff"
+                          : "#fff",
+                      borderRadius: "6px",
+                      cursor: "pointer",
+                      fontSize: "13px",
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="condicaoEstimada"
+                      value={opcao.valor}
+                      checked={
+                        justificativaForm.condicaoEstimada === opcao.valor
+                      }
+                      onChange={(e) =>
+                        setJustificativaForm({
+                          ...justificativaForm,
+                          condicaoEstimada: e.target.value,
+                        })
+                      }
+                      style={{ marginTop: "3px" }}
+                    />
+                    <span>{opcao.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* BLOCO 3: Relevância e Utilidade Atual para o Setor */}
+            <div style={{ marginBottom: "18px" }}>
+              <div
+                style={{
+                  fontWeight: "bold",
+                  marginBottom: "4px",
+                  color: "#212529",
+                  fontSize: "14px",
+                }}
+              >
+                3. Relevância e Utilidade Atual para as Atividades{" "}
+                <span style={{ color: "#dc3545" }}>*</span>
+              </div>
+              <div
+                style={{
+                  fontSize: "12px",
+                  color: "#6c757d",
+                  marginBottom: "8px",
+                }}
+              >
+                Qual seria a utilidade prática deste item hoje para o
+                desempenho das atividades do seu setor?
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "8px",
+                }}
+              >
+                {RELEVANCIAS_ATUAIS.map((opcao) => (
+                  <label
+                    key={opcao.valor}
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: "8px",
+                      padding: "8px 10px",
+                      border:
+                        justificativaForm.relevanciaAtual === opcao.valor
+                          ? "2px solid #007bff"
+                          : "1px solid #ced4da",
+                      backgroundColor:
+                        justificativaForm.relevanciaAtual === opcao.valor
+                          ? "#f0f7ff"
+                          : "#fff",
+                      borderRadius: "6px",
+                      cursor: "pointer",
+                      fontSize: "13px",
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="relevanciaAtual"
+                      value={opcao.valor}
+                      checked={
+                        justificativaForm.relevanciaAtual === opcao.valor
+                      }
+                      onChange={(e) =>
+                        setJustificativaForm({
+                          ...justificativaForm,
+                          relevanciaAtual: e.target.value,
+                        })
+                      }
+                      style={{ marginTop: "3px" }}
+                    />
+                    <span>{opcao.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* BLOCO 4: Detalhamento / Observações Adicionais */}
+            <div style={{ marginBottom: "20px" }}>
+              <label
+                style={{
+                  display: "block",
+                  fontWeight: "bold",
+                  marginBottom: "6px",
+                  color: "#212529",
+                  fontSize: "14px",
+                }}
+              >
+                4. Detalhamento / Observações Adicionais{" "}
+                {justificativaForm.motivo === "Outro motivo" ? (
+                  <span style={{ color: "#dc3545" }}>* (Obrigatório)</span>
+                ) : (
+                  <span
+                    style={{
+                      fontWeight: "normal",
+                      fontSize: "12px",
+                      color: "#6c757d",
+                    }}
+                  >
+                    (Opcional)
+                  </span>
+                )}
+                <textarea
+                  value={justificativaForm.detalhes}
+                  onChange={(e) =>
+                    setJustificativaForm({
+                      ...justificativaForm,
+                      detalhes: e.target.value,
+                    })
+                  }
+                  placeholder="Descreva informações adicionais relevantes sobre o histórico, paradeiro ou condição deste bem..."
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    marginTop: "6px",
+                    border: "1px solid #ced4da",
+                    borderRadius: "6px",
+                    minHeight: "80px",
+                    fontSize: "13px",
+                    fontFamily: "inherit",
+                  }}
+                />
+              </label>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                gap: "10px",
+                justifyContent: "flex-end",
+              }}
+            >
+              <Button
+                onClick={enviarJustificativa}
+                disabled={salvandoJustificativa}
+                style={{
+                  backgroundColor: salvandoJustificativa
+                    ? "#6c757d"
+                    : "#28a745",
+                  color: "white",
+                  padding: "8px 16px",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: salvandoJustificativa ? "not-allowed" : "pointer",
+                  fontWeight: "bold",
+                }}
+              >
+                {salvandoJustificativa
+                  ? "⏳ Salvando..."
+                  : "✅ Salvar Justificativa"}
+              </Button>
+              <Button
+                onClick={() => setModalJustificativaAberto(false)}
+                disabled={salvandoJustificativa}
+                style={{
+                  backgroundColor: "#6c757d",
+                  color: "white",
+                  padding: "8px 16px",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  fontWeight: "bold",
                 }}
               >
                 ❌ Cancelar
