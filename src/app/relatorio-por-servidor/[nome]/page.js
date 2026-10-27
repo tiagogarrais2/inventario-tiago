@@ -268,10 +268,10 @@ export default function RelatorioPorServidorPage({ params }) {
       dataInventario: new Date().toISOString().split("T")[0],
       inventariante: session?.user?.email || "",
       salaEncontrada: item.salaEncontrada || item.sala || "",
-      statusInventario: item.statusInventario || "Em Uso",
+      statusInventario: item.statusInventario || item.status || "Em Uso",
       cargaAtual: item.cargaAtual || "",
       estadoConservacao: item.estadoConservacao || "Bom",
-      observacoes: item.observacoesInventario || "",
+      observacoes: item.observacoesInventario || item.observacoes || "",
     });
     setModalAberto(true);
   };
@@ -290,6 +290,8 @@ export default function RelatorioPorServidorPage({ params }) {
       return;
     }
 
+    const dataIsoAtual = new Date().toISOString();
+
     try {
       const response = await fetch("/api/update-inventario", {
         method: "POST",
@@ -301,7 +303,7 @@ export default function RelatorioPorServidorPage({ params }) {
           numero: itemSelecionado.numero,
           salaEncontrada: formData.salaEncontrada,
           sala: itemSelecionado.salaEncontrada || itemSelecionado.sala,
-          dataInventario: new Date().toISOString(),
+          dataInventario: dataIsoAtual,
           status: formData.statusInventario,
           estadoConservacao: formData.estadoConservacao,
           cargaAtual: formData.cargaAtual,
@@ -314,6 +316,10 @@ export default function RelatorioPorServidorPage({ params }) {
         // Atualizar o estado local
         const novosItensPorServidor = { ...itensPorServidor };
         const servidor = formData.cargaAtual;
+        const inventarianteObj = {
+          nome: session?.user?.name || "",
+          email: session?.user?.email || formData.inventariante,
+        };
 
         // Remover item do servidor antigo se mudou
         if (
@@ -339,22 +345,29 @@ export default function RelatorioPorServidorPage({ params }) {
           novosItensPorServidor[servidor][itemIndex] = {
             ...novosItensPorServidor[servidor][itemIndex],
             ...formData,
-            dataInventario: formData.dataInventario,
+            dataInventario: dataIsoAtual,
             observacoesInventario: formData.observacoes,
+            inventariante: inventarianteObj,
           };
         } else {
           novosItensPorServidor[servidor].push({
             ...itemSelecionado,
             ...formData,
-            dataInventario: formData.dataInventario,
+            dataInventario: dataIsoAtual,
             observacoesInventario: formData.observacoes,
+            inventariante: inventarianteObj,
           });
         }
 
+        const eraJaInventariado = !!itemSelecionado.dataInventario;
         setItensPorServidor(novosItensPorServidor);
         setModalAberto(false);
         setItemSelecionado(null);
-        alert("Item inventariado com sucesso!");
+        alert(
+          eraJaInventariado
+            ? "Inventário do item atualizado com sucesso!"
+            : "Item inventariado com sucesso!"
+        );
       } else {
         throw new Error("Erro ao inventariar item");
       }
@@ -1450,8 +1463,8 @@ export default function RelatorioPorServidorPage({ params }) {
                         </div>
                       </div>
                     )}
-                    {/* Botões de inventário e justificativa apenas para itens não inventariados */}
-                    {!item.dataInventario && (
+                    {/* Botões de inventário e justificativa para itens não inventariados */}
+                    {!item.dataInventario ? (
                       <div
                         style={{
                           marginTop: "10px",
@@ -1511,6 +1524,38 @@ export default function RelatorioPorServidorPage({ params }) {
                             : "⚠️ Justificar Bem Não Encontrado"}
                         </Button>
                       </div>
+                    ) : (
+                      /* Botão para itens já inventariados realizarem novo inventário / atualização */
+                      <div
+                        style={{
+                          marginTop: "10px",
+                          display: "flex",
+                          flexWrap: "wrap",
+                          gap: "10px",
+                        }}
+                      >
+                        <Button
+                          onClick={() => abrirModalInventario(item)}
+                          style={{
+                            backgroundColor: "#0d6efd",
+                            color: "white",
+                            padding: "6px 12px",
+                            border: "none",
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                            fontSize: "14px",
+                            fontWeight: "bold",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.target.style.backgroundColor = "#0b5ed7";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.backgroundColor = "#0d6efd";
+                          }}
+                        >
+                          🔄 Fazer Novo Inventário
+                        </Button>
+                      </div>
                     )}
                   </li>
                 ))}
@@ -1553,7 +1598,9 @@ export default function RelatorioPorServidorPage({ params }) {
             }}
           >
             <h3 id="modal-inventario-titulo" style={{ marginTop: 0 }}>
-              Inventariar Item: {itemSelecionado.numero}
+              {itemSelecionado.dataInventario
+                ? `🔄 Novo Inventário / Atualização: ${itemSelecionado.numero}`
+                : `Inventariar Item: ${itemSelecionado.numero}`}
             </h3>
             <p style={{ marginBottom: "15px" }}>
               <strong>Descrição:</strong> {itemSelecionado.descricao || "N/A"}
@@ -1765,7 +1812,9 @@ export default function RelatorioPorServidorPage({ params }) {
               <Button
                 onClick={enviarInventario}
                 style={{
-                  backgroundColor: "#28a745",
+                  backgroundColor: itemSelecionado.dataInventario
+                    ? "#0d6efd"
+                    : "#28a745",
                   color: "white",
                   padding: "8px 16px",
                   border: "none",
@@ -1774,13 +1823,19 @@ export default function RelatorioPorServidorPage({ params }) {
                   fontWeight: "bold",
                 }}
                 onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = "#218838";
+                  e.target.style.backgroundColor = itemSelecionado.dataInventario
+                    ? "#0b5ed7"
+                    : "#218838";
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = "#28a745";
+                  e.target.style.backgroundColor = itemSelecionado.dataInventario
+                    ? "#0d6efd"
+                    : "#28a745";
                 }}
               >
-                ✅ Confirmar Inventário
+                {itemSelecionado.dataInventario
+                  ? "🔄 Salvar e Atualizar Data"
+                  : "✅ Confirmar Inventário"}
               </Button>
               <Button
                 onClick={() => setModalAberto(false)}
