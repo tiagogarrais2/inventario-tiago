@@ -85,17 +85,69 @@ export async function POST(request) {
       );
     }
 
+    // Construir histórico de conferências em dadosExtras
+    const dadosExtrasAtuais =
+      itemExistente.dadosExtras && typeof itemExistente.dadosExtras === "object"
+        ? { ...itemExistente.dadosExtras }
+        : {};
+
+    const historicoPrevio = Array.isArray(dadosExtrasAtuais.historicoConferencias)
+      ? [...dadosExtrasAtuais.historicoConferencias]
+      : [];
+
+    // Se ainda não existia histórico gravado mas o item já tinha dataInventario anterior
+    if (historicoPrevio.length === 0 && itemExistente.dataInventario) {
+      historicoPrevio.push({
+        ordem: 1,
+        data:
+          typeof itemExistente.dataInventario.toISOString === "function"
+            ? itemExistente.dataInventario.toISOString()
+            : itemExistente.dataInventario,
+        inventarianteNome:
+          itemExistente.inventariante?.nome ||
+          itemExistente.inventariante?.email ||
+          "Inventariante anterior",
+        inventarianteEmail: itemExistente.inventariante?.email || "",
+        salaEncontrada:
+          itemExistente.salaEncontrada || itemExistente.sala || "",
+        status:
+          itemExistente.statusInventario || itemExistente.status || "",
+        estadoConservacao: itemExistente.estadoConservacao || "",
+        observacoes: itemExistente.observacoesInventario || "",
+      });
+    }
+
+    const dataIsoConferencia = dataInventario || new Date().toISOString();
+    const novaConferencia = {
+      ordem: historicoPrevio.length + 1,
+      data: dataIsoConferencia,
+      inventarianteNome:
+        session.user.name || session.user.email || "Servidor",
+      inventarianteEmail: session.user.email,
+      salaEncontrada:
+        salaEncontrada || itemExistente.salaEncontrada || itemExistente.sala || "",
+      status:
+        status || itemExistente.statusInventario || itemExistente.status || "",
+      estadoConservacao:
+        estadoConservacao || itemExistente.estadoConservacao || "",
+      observacoes: observacoes || "",
+    };
+
+    const novoHistorico = [...historicoPrevio, novaConferencia];
+    dadosExtrasAtuais.historicoConferencias = novoHistorico;
+
     // Preparar dados de atualização
     const updateData = {
-      dataInventario: dataInventario || new Date().toISOString(),
+      dataInventario: dataIsoConferencia,
       salaEncontrada: salaEncontrada || null,
       statusInventario: status || null,
       estadoConservacao: estadoConservacao || null,
       cargaAtual: cargaAtual || null,
       observacoesInventario: observacoes || null,
+      dadosExtras: dadosExtrasAtuais,
     };
 
-    console.log(`💾 Atualizando item no banco:`, updateData);
+    console.log(`💾 Atualizando item no banco com histórico de conferências:`, updateData);
 
     // Atualizar o item no banco
     const itemAtualizado = await ItemInventarioService.updateInventario(
@@ -194,6 +246,7 @@ export async function POST(request) {
       {
         success: true,
         item: itemAtualizado,
+        historicoConferencias: novoHistorico,
       },
       { status: 200 }
     );

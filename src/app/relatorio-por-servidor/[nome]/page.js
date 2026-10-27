@@ -37,6 +37,12 @@ export default function RelatorioPorServidorPage({ params }) {
     isOpen: modalJustificativaAberto,
     onClose: () => setModalJustificativaAberto(false),
   });
+  const [modalHistoricoAberto, setModalHistoricoAberto] = useState(false);
+  const [itemHistoricoSelecionado, setItemHistoricoSelecionado] = useState(null);
+  const { modalRef: modalHistoricoRef } = useFocusTrap({
+    isOpen: modalHistoricoAberto,
+    onClose: () => setModalHistoricoAberto(false),
+  });
   const [salvandoJustificativa, setSalvandoJustificativa] = useState(false);
   const [justificativaForm, setJustificativaForm] = useState({
     motivo: "",
@@ -261,6 +267,42 @@ export default function RelatorioPorServidorPage({ params }) {
     fetchRelatorio();
   }, [nome, hasAccess, accessLoading]);
 
+  // Função auxiliar para obter a lista de conferências do item
+  const obterConferenciasItem = (item) => {
+    if (!item) return [];
+    if (
+      Array.isArray(item.historicoConferencias) &&
+      item.historicoConferencias.length > 0
+    ) {
+      return item.historicoConferencias;
+    }
+    if (item.dataInventario) {
+      return [
+        {
+          ordem: 1,
+          data: item.dataInventario,
+          inventarianteNome:
+            item.inventariante?.nome ||
+            item.inventariante?.email ||
+            item.inventariante ||
+            "Servidor",
+          inventarianteEmail: item.inventariante?.email || "",
+          salaEncontrada: item.salaEncontrada || item.sala || "N/A",
+          status: item.statusInventario || item.status || "N/A",
+          estadoConservacao: item.estadoConservacao || "N/A",
+          observacoes: item.observacoesInventario || "",
+        },
+      ];
+    }
+    return [];
+  };
+
+  // Função para abrir modal com linha do tempo de conferências
+  const abrirModalHistorico = (item) => {
+    setItemHistoricoSelecionado(item);
+    setModalHistoricoAberto(true);
+  };
+
   // Função para abrir modal de inventário
   const abrirModalInventario = (item) => {
     setItemSelecionado(item);
@@ -313,6 +355,7 @@ export default function RelatorioPorServidorPage({ params }) {
       });
 
       if (response.ok) {
+        const resultData = await response.json();
         // Atualizar o estado local
         const novosItensPorServidor = { ...itensPorServidor };
         const servidor = formData.cargaAtual;
@@ -320,6 +363,24 @@ export default function RelatorioPorServidorPage({ params }) {
           nome: session?.user?.name || "",
           email: session?.user?.email || formData.inventariante,
         };
+
+        const conferenciasPrevias = obterConferenciasItem(itemSelecionado);
+        const historicoAtualizado =
+          resultData.historicoConferencias || [
+            ...conferenciasPrevias,
+            {
+              ordem: conferenciasPrevias.length + 1,
+              data: dataIsoAtual,
+              inventarianteNome:
+                inventarianteObj.nome || inventarianteObj.email || "Servidor",
+              inventarianteEmail: inventarianteObj.email,
+              salaEncontrada:
+                formData.salaEncontrada || itemSelecionado.sala || "",
+              status: formData.statusInventario,
+              estadoConservacao: formData.estadoConservacao,
+              observacoes: formData.observacoes,
+            },
+          ];
 
         // Remover item do servidor antigo se mudou
         if (
@@ -348,6 +409,7 @@ export default function RelatorioPorServidorPage({ params }) {
             dataInventario: dataIsoAtual,
             observacoesInventario: formData.observacoes,
             inventariante: inventarianteObj,
+            historicoConferencias: historicoAtualizado,
           };
         } else {
           novosItensPorServidor[servidor].push({
@@ -356,6 +418,7 @@ export default function RelatorioPorServidorPage({ params }) {
             dataInventario: dataIsoAtual,
             observacoesInventario: formData.observacoes,
             inventariante: inventarianteObj,
+            historicoConferencias: historicoAtualizado,
           });
         }
 
@@ -1219,9 +1282,60 @@ export default function RelatorioPorServidorPage({ params }) {
                     {item.inventariante?.nome || item.inventariante || "N/A"}{" "}
                     <br />
                     <strong>Data do Inventário:</strong>{" "}
-                    {item.dataInventario
-                      ? new Date(item.dataInventario).toLocaleDateString()
-                      : "Não inventariado"}
+                    {item.dataInventario ? (
+                      <>
+                        <span>{new Date(item.dataInventario).toLocaleDateString()}</span>
+                        {(() => {
+                          const totalConf = obterConferenciasItem(item).length;
+                          return (
+                            <span
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => abrirModalHistorico(item)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === " ") {
+                                  e.preventDefault();
+                                  abrirModalHistorico(item);
+                                }
+                              }}
+                              title={`Clique para ver o histórico de inventários deste bem (${totalConf} conferência${totalConf === 1 ? "" : "s"})`}
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "4px",
+                                marginLeft: "8px",
+                                padding: "2px 8px",
+                                backgroundColor: "#e9ecef",
+                                color: "#495057",
+                                border: "1px solid #ced4da",
+                                borderRadius: "12px",
+                                fontSize: "12px",
+                                fontWeight: "500",
+                                cursor: "pointer",
+                                verticalAlign: "middle",
+                                lineHeight: "1.2",
+                                width: "fit-content",
+                                transition: "all 0.15s ease",
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = "#dee2e6";
+                                e.currentTarget.style.borderColor = "#adb5bd";
+                                e.currentTarget.style.color = "#212529";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = "#e9ecef";
+                                e.currentTarget.style.borderColor = "#ced4da";
+                                e.currentTarget.style.color = "#495057";
+                              }}
+                            >
+                              🕒 Histórico de inventários ({totalConf})
+                            </span>
+                          );
+                        })()}
+                      </>
+                    ) : (
+                      "Não inventariado"
+                    )}
                     {item.observacoesInventario && (
                       <>
                         <br />
@@ -2273,6 +2387,330 @@ export default function RelatorioPorServidorPage({ params }) {
                 }}
               >
                 ❌ Cancelar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Linha do Tempo de Conferências */}
+      {modalHistoricoAberto && itemHistoricoSelecionado && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0,0,0,0.55)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 1000,
+            padding: "16px",
+          }}
+        >
+          <div
+            ref={modalHistoricoRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-historico-titulo"
+            tabIndex={-1}
+            style={{
+              backgroundColor: "white",
+              padding: "24px",
+              borderRadius: "8px",
+              maxWidth: "650px",
+              width: "100%",
+              maxHeight: "85vh",
+              overflowY: "auto",
+              boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                borderBottom: "1px solid #e9ecef",
+                paddingBottom: "12px",
+                marginBottom: "16px",
+              }}
+            >
+              <div>
+                <h3
+                  id="modal-historico-titulo"
+                  style={{ margin: 0, color: "#1f2937", fontSize: "18px" }}
+                >
+                  📜 Linha do Tempo de Conferências: {itemHistoricoSelecionado.numero}
+                </h3>
+                <p
+                  style={{
+                    margin: "4px 0 0 0",
+                    fontSize: "13px",
+                    color: "#6c757d",
+                  }}
+                >
+                  {itemHistoricoSelecionado.descricao || "Sem descrição"}
+                </p>
+              </div>
+              <Button
+                onClick={() => setModalHistoricoAberto(false)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  fontSize: "20px",
+                  cursor: "pointer",
+                  color: "#6c757d",
+                  padding: "0 4px",
+                }}
+              >
+                ✕
+              </Button>
+            </div>
+
+            {/* Metadados resumidos do bem */}
+            <div
+              style={{
+                backgroundColor: "#f8f9fa",
+                border: "1px solid #e9ecef",
+                borderRadius: "6px",
+                padding: "10px 14px",
+                marginBottom: "20px",
+                fontSize: "12px",
+                color: "#495057",
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "16px",
+              }}
+            >
+              <div>
+                <strong>Sala original:</strong>{" "}
+                {itemHistoricoSelecionado.sala || "N/A"}
+              </div>
+              <div>
+                <strong>Carga atual:</strong>{" "}
+                {itemHistoricoSelecionado.cargaAtual || "N/A"}
+              </div>
+              {itemHistoricoSelecionado.dataEntrada && (
+                <div>
+                  <strong>Entrada:</strong>{" "}
+                  {itemHistoricoSelecionado.dataEntrada}
+                </div>
+              )}
+            </div>
+
+            {/* Linha do tempo das conferências */}
+            {(() => {
+              const conferencias = obterConferenciasItem(itemHistoricoSelecionado);
+              if (conferencias.length === 0) {
+                return (
+                  <div
+                    style={{
+                      textAlign: "center",
+                      padding: "20px",
+                      color: "#6c757d",
+                      fontStyle: "italic",
+                    }}
+                  >
+                    Nenhuma conferência registrada para este bem.
+                  </div>
+                );
+              }
+
+              // Inverte para exibir a mais recente primeiro
+              const conferenciasOrdenadas = [...conferencias].reverse();
+
+              return (
+                <div style={{ position: "relative", paddingLeft: "24px" }}>
+                  {/* Linha vertical conectora */}
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: "7px",
+                      top: "8px",
+                      bottom: "16px",
+                      width: "2px",
+                      backgroundColor: "#dee2e6",
+                    }}
+                  />
+
+                  {conferenciasOrdenadas.map((conf, idx) => {
+                    const isMaisRecente = idx === 0;
+                    const dataFormatada = conf.data
+                      ? new Date(conf.data).toLocaleString("pt-BR")
+                      : "Data não registrada";
+
+                    return (
+                      <div
+                        key={idx}
+                        style={{
+                          position: "relative",
+                          marginBottom: "20px",
+                        }}
+                      >
+                        {/* Ponto / marcador na linha */}
+                        <div
+                          style={{
+                            position: "absolute",
+                            left: "-24px",
+                            top: "4px",
+                            width: "14px",
+                            height: "14px",
+                            borderRadius: "50%",
+                            backgroundColor: isMaisRecente
+                              ? "#28a745"
+                              : "#6c757d",
+                            border: "3px solid white",
+                            boxShadow: "0 0 0 1px #ced4da",
+                          }}
+                        />
+
+                        {/* Card da conferência */}
+                        <div
+                          style={{
+                            backgroundColor: isMaisRecente
+                              ? "#f0fff4"
+                              : "#f8f9fa",
+                            border: isMaisRecente
+                              ? "1px solid #c6f6d5"
+                              : "1px solid #e9ecef",
+                            borderRadius: "6px",
+                            padding: "12px 14px",
+                            fontSize: "13px",
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              flexWrap: "wrap",
+                              gap: "8px",
+                              marginBottom: "8px",
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontWeight: "bold",
+                                color: isMaisRecente ? "#22543d" : "#212529",
+                              }}
+                            >
+                              {conf.ordem
+                                ? `${conf.ordem}ª Conferência`
+                                : `Conferência #${conferencias.length - idx}`}
+                              {isMaisRecente && (
+                                <span
+                                  style={{
+                                    marginLeft: "8px",
+                                    fontSize: "11px",
+                                    backgroundColor: "#28a745",
+                                    color: "white",
+                                    padding: "2px 6px",
+                                    borderRadius: "10px",
+                                    fontWeight: "bold",
+                                  }}
+                                >
+                                  Mais recente
+                                </span>
+                              )}
+                            </span>
+                            <span
+                              style={{
+                                fontSize: "12px",
+                                color: "#6c757d",
+                              }}
+                            >
+                              📅 {dataFormatada}
+                            </span>
+                          </div>
+
+                          <div style={{ marginBottom: "4px" }}>
+                            <strong>👤 Inventariante:</strong>{" "}
+                            {conf.inventarianteNome || "Servidor"}
+                            {conf.inventarianteEmail &&
+                              ` (${conf.inventarianteEmail})`}
+                          </div>
+
+                          <div style={{ marginBottom: "4px" }}>
+                            <strong>📍 Sala encontrada:</strong>{" "}
+                            {conf.salaEncontrada || "Não informada"}
+                            {itemHistoricoSelecionado.sala &&
+                              conf.salaEncontrada &&
+                              conf.salaEncontrada !==
+                                itemHistoricoSelecionado.sala && (
+                                <span
+                                  style={{
+                                    color: "#9c27b0",
+                                    fontWeight: "bold",
+                                    marginLeft: "6px",
+                                    fontSize: "12px",
+                                  }}
+                                >
+                                  (Item movido - origem:{" "}
+                                  {itemHistoricoSelecionado.sala})
+                                </span>
+                              )}
+                          </div>
+
+                          <div style={{ marginBottom: "4px" }}>
+                            <strong>⚙️ Status:</strong>{" "}
+                            {conf.status || "N/A"}{" "}
+                            {conf.estadoConservacao && (
+                              <>
+                                • <strong>Conservação:</strong>{" "}
+                                {conf.estadoConservacao}
+                              </>
+                            )}
+                          </div>
+
+                          {conf.observacoes && (
+                            <div
+                              style={{
+                                marginTop: "6px",
+                                paddingTop: "6px",
+                                borderTop: "1px dashed #dee2e6",
+                                fontStyle: "italic",
+                                color: "#495057",
+                              }}
+                            >
+                              <strong>📝 Observações:</strong> {conf.observacoes}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+
+            <div
+              style={{
+                marginTop: "20px",
+                display: "flex",
+                justifyContent: "flex-end",
+              }}
+            >
+              <Button
+                onClick={() => setModalHistoricoAberto(false)}
+                style={{
+                  backgroundColor: "#6c757d",
+                  color: "white",
+                  padding: "8px 16px",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = "#5a6268";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = "#6c757d";
+                }}
+              >
+                ✕ Fechar
               </Button>
             </div>
           </div>
