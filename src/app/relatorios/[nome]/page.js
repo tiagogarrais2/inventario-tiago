@@ -7,6 +7,7 @@ import { useFocusTrap } from "../../lib/useFocusTrap";
 
 export default function RelatoriosPage({ params }) {
   const [nome, setNome] = useState("");
+  const [nomeExibicao, setNomeExibicao] = useState("");
 
   useEffect(() => {
     // Resolver params de forma assíncrona
@@ -131,6 +132,9 @@ export default function RelatoriosPage({ params }) {
 
         if (response.ok) {
           setHasAccess(data.hasAccess);
+          if (data.nomeExibicao) {
+            setNomeExibicao(data.nomeExibicao);
+          }
         } else {
           setHasAccess(false);
         }
@@ -182,10 +186,28 @@ export default function RelatoriosPage({ params }) {
   }
 
   return (
-    <div>
-      {/* Cabeçalho */}
-      <div>
-        <h2>
+    <div style={{ maxWidth: "800px", margin: "0 auto" }}>
+      {/* Navegação Superior */}
+      <div style={{ marginBottom: "20px" }}>
+        <Button
+          onClick={() => router.push(`/inventario/${nome}`)}
+          style={{
+            backgroundColor: "#6c757d",
+            color: "white",
+            padding: "8px 16px",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer",
+            fontSize: "14px",
+            fontWeight: "500",
+            width: "auto",
+            display: "inline-block",
+            marginBottom: "16px",
+          }}
+        >
+          ← Voltar ao Inventário
+        </Button>
+        <h2 style={{ textAlign: "left", margin: "0 0 6px 0" }}>
           Relatórios:{" "}
           <a
             href={`/inventario/${nome}`}
@@ -202,58 +224,264 @@ export default function RelatoriosPage({ params }) {
             }}
             title="Clique para voltar ao inventário"
           >
-            {nome}
+            {nomeExibicao || nome}
           </a>
         </h2>
+        <p style={{ color: "#6b7280", margin: 0, fontSize: "14px" }}>
+          Consulte indicadores, relatórios operacionais e documentos consolidados deste inventário.
+        </p>
       </div>
 
-      {/* Lista de Relatórios Disponíveis */}
-      <div>
-        {/* Dashboard */}
-        <Button onClick={() => router.push(`/inventario/${nome}/dashboard`)}>
-          📊 Painel de Controle
-        </Button>
-        {/* Relatório Geral */}
-        <Button onClick={() => router.push(`/relatorio/${nome}`)}>
-          🏢 Itens organizados por sala
-        </Button>
-        {/* Relatório por Carga Atual */}
-        <Button onClick={() => router.push(`/relatorio-por-servidor/${nome}`)}>
-          👥 Itens organizados por servidor
-        </Button>
-        {/* Relatório de Itens Movidos */}
-        <Button
-          onClick={() => router.push(`/relatorios/${nome}/itens-movidos`)}
+      {/* Categoria 1: Visão Geral e Indicadores */}
+      <section
+        style={{
+          backgroundColor: "#fff",
+          border: "1px solid #e5e7eb",
+          borderRadius: "8px",
+          padding: "20px",
+          marginBottom: "24px",
+          boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
+        }}
+      >
+        <h3
+          style={{
+            textAlign: "left",
+            fontSize: "1.2rem",
+            color: "#1f2937",
+            marginTop: 0,
+            marginBottom: "4px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+          }}
         >
-          🚚 Itens Movidos
-        </Button>
-        {/* Relatório por Valor Financeiro */}
-        <Button
-          onClick={() => router.push(`/relatorios/${nome}/itens-por-valor`)}
+          📊 Visão Geral e Indicadores
+        </h3>
+        <p
+          style={{
+            fontSize: "14px",
+            color: "#6b7280",
+            marginBottom: "16px",
+            textAlign: "left",
+          }}
         >
-          💰 Itens ordenados por valor
-        </Button>
-        {/* Busca por nome */}
-        <Button
-          onClick={() => router.push(`/relatorios/${nome}/busca-por-nome`)}
+          Acompanhamento visual do andamento e estatísticas gerais de conferência.
+        </p>
+
+        <div>
+          <Button onClick={() => router.push(`/inventario/${nome}/dashboard`)}>
+            📊 Painel de Controle (Dashboard)
+          </Button>
+          <p
+            style={{
+              fontSize: "13px",
+              color: "#6b7280",
+              margin: "-4px 0 8px 4px",
+              textAlign: "left",
+            }}
+          >
+            Indicadores de progresso, gráficos de conferência, estatísticas de bens e status geral.
+          </p>
+        </div>
+      </section>
+
+      {/* Categoria 2: Relatórios Operacionais e de Localização */}
+      <section
+        style={{
+          backgroundColor: "#fff",
+          border: "1px solid #e5e7eb",
+          borderRadius: "8px",
+          padding: "20px",
+          marginBottom: "24px",
+          boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
+        }}
+      >
+        <h3
+          style={{
+            textAlign: "left",
+            fontSize: "1.2rem",
+            color: "#1f2937",
+            marginTop: 0,
+            marginBottom: "4px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+          }}
         >
-          🔍 Buscar itens por nome
-        </Button>
-        {/* Relatório Final */}
-        <Button onClick={() => router.push(`/relatorio-final/${nome}`)}>
-          📄 Relatório Final
-        </Button>
-        <Button
-          onClick={abrirModalExportacao}
-          disabled={exportandoJson}
-          style={{ backgroundColor: "#059669", color: "#fff" }}
+          📋 Relatórios Operacionais e de Localização
+        </h3>
+        <p
+          style={{
+            fontSize: "14px",
+            color: "#6b7280",
+            marginBottom: "16px",
+            textAlign: "left",
+          }}
         >
-          {exportandoJson
-            ? "⏳ Exportando inventário JSON..."
-            : "⬇️ Exportar inventário completo (JSON)"}
-        </Button>
-        <hr />
-      </div>
+          Consultas detalhadas por sala, servidor responsável e movimentações físicas.
+        </p>
+
+        <div>
+          <Button onClick={() => router.push(`/relatorio/${nome}`)}>
+            🏢 Itens por Sala
+          </Button>
+          <p
+            style={{
+              fontSize: "13px",
+              color: "#6b7280",
+              margin: "-4px 0 16px 4px",
+              textAlign: "left",
+            }}
+          >
+            Listagem completa de bens agrupados por ambiente físico e sala.
+          </p>
+        </div>
+
+        <div>
+          <Button onClick={() => router.push(`/relatorio-por-servidor/${nome}`)}>
+            👥 Itens por Servidor
+          </Button>
+          <p
+            style={{
+              fontSize: "13px",
+              color: "#6b7280",
+              margin: "-4px 0 16px 4px",
+              textAlign: "left",
+            }}
+          >
+            Bens organizados por servidor responsável, justificativas e histórico de conferências.
+          </p>
+        </div>
+
+        <div>
+          <Button
+            onClick={() => router.push(`/relatorios/${nome}/itens-movidos`)}
+          >
+            🚚 Itens Movidos
+          </Button>
+          <p
+            style={{
+              fontSize: "13px",
+              color: "#6b7280",
+              margin: "-4px 0 16px 4px",
+              textAlign: "left",
+            }}
+          >
+            Bens encontrados em salas diferentes da sua localização cadastrada originalmente.
+          </p>
+        </div>
+
+        <div>
+          <Button
+            onClick={() => router.push(`/relatorios/${nome}/busca-por-nome`)}
+          >
+            🔍 Buscar Itens por Nome
+          </Button>
+          <p
+            style={{
+              fontSize: "13px",
+              color: "#6b7280",
+              margin: "-4px 0 8px 4px",
+              textAlign: "left",
+            }}
+          >
+            Pesquisa rápida e filtragem de itens pela descrição ou denominação.
+          </p>
+        </div>
+      </section>
+
+      {/* Categoria 3: Relatórios Financeiros e Conclusão */}
+      <section
+        style={{
+          backgroundColor: "#fff",
+          border: "1px solid #e5e7eb",
+          borderRadius: "8px",
+          padding: "20px",
+          marginBottom: "24px",
+          boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
+        }}
+      >
+        <h3
+          style={{
+            textAlign: "left",
+            fontSize: "1.2rem",
+            color: "#1f2937",
+            marginTop: 0,
+            marginBottom: "4px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+          }}
+        >
+          💰 Relatórios Financeiros e Conclusão
+        </h3>
+        <p
+          style={{
+            fontSize: "14px",
+            color: "#6b7280",
+            marginBottom: "16px",
+            textAlign: "left",
+          }}
+        >
+          Valores contábeis, documento consolidado oficial e exportação completa dos dados.
+        </p>
+
+        <div>
+          <Button
+            onClick={() => router.push(`/relatorios/${nome}/itens-por-valor`)}
+          >
+            💰 Itens Ordenados por Valor
+          </Button>
+          <p
+            style={{
+              fontSize: "13px",
+              color: "#6b7280",
+              margin: "-4px 0 16px 4px",
+              textAlign: "left",
+            }}
+          >
+            Classificação patrimonial dos bens por valor contábil em ordem decrescente.
+          </p>
+        </div>
+
+        <div>
+          <Button onClick={() => router.push(`/relatorio-final/${nome}`)}>
+            📄 Relatório Final Consolidado
+          </Button>
+          <p
+            style={{
+              fontSize: "13px",
+              color: "#6b7280",
+              margin: "-4px 0 16px 4px",
+              textAlign: "left",
+            }}
+          >
+            Documento consolidado de encerramento do inventário com resumo estatístico e comissão.
+          </p>
+        </div>
+
+        <div>
+          <Button
+            onClick={abrirModalExportacao}
+            disabled={exportandoJson}
+            style={{ backgroundColor: "#059669", color: "#fff" }}
+          >
+            {exportandoJson
+              ? "⏳ Exportando inventário JSON..."
+              : "⬇️ Exportar Inventário Completo (JSON)"}
+          </Button>
+          <p
+            style={{
+              fontSize: "13px",
+              color: "#6b7280",
+              margin: "-4px 0 8px 4px",
+              textAlign: "left",
+            }}
+          >
+            Exportação de todos os itens e metadados em formato JSON, registrada em log de auditoria.
+          </p>
+        </div>
+      </section>
 
       {modalExportacaoAberto && (
         <div

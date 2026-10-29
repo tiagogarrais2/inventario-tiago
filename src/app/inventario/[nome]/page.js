@@ -522,57 +522,23 @@ export default function InventarioPage({ params }) {
 
       <div>
         <h2>{nomeExibicao || nome}</h2>
-        <div>
-          {isOwner && (
-            <>
-              <Button
-                onClick={() => router.push(`/inventario/${nome}/permissoes`)}
-                className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded transition duration-200"
-              >
-                🔐 Gerenciar Acesso
-              </Button>
-              <Button
-                onClick={handleDuplicarInventario}
-                disabled={duplicandoInventario || excluindoInventario}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-200"
-                style={{
-                  opacity: duplicandoInventario ? 0.7 : 1,
-                }}
-              >
-                {duplicandoInventario ? "Duplicando..." : "📋 Duplicar Inventário"}
-              </Button>
-              <Button
-                onClick={handleExcluirInventario}
-                disabled={excluindoInventario || duplicandoInventario}
-                className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-200"
-                style={{
-                  opacity: excluindoInventario ? 0.7 : 1,
-                }}
-              >
-                {excluindoInventario ? "Excluindo..." : "🗑️ Excluir Inventário"}
-              </Button>
-            </>
-          )}
-        </div>
       </div>
-      <Button onClick={() => router.push(`/relatorios/${nome}`)}>
-        📈 Relatórios
-      </Button>
-      <Button onClick={() => router.push(`/inventario/${nome}/inventariar`)}>
-        📝 Realizar Inventário
-      </Button>
-      <Button
-        onClick={() => router.push(`/relatorio-por-servidor/${nome}?meus=true`)}
-      >
-        📋 Meu inventário
-      </Button>
-      {isOwner && (
-        <Button onClick={() => router.push(`/inventario/${nome}/emails`)}>
-          📧 Disparar Emails
-        </Button>
-      )}
 
-      <div>
+      <div style={{ marginBottom: "24px" }}>
+        <Button onClick={() => router.push(`/inventario/${nome}/inventariar`)}>
+          📝 Realizar Inventário
+        </Button>
+        <Button
+          onClick={() => router.push(`/relatorio-por-servidor/${nome}?meus=true`)}
+        >
+          📋 Meu inventário
+        </Button>
+        <Button onClick={() => router.push(`/relatorios/${nome}`)}>
+          📈 Relatórios
+        </Button>
+      </div>
+
+      <div style={{ marginBottom: "24px" }}>
         <h3>Opções Avançadas</h3>
         <Button onClick={() => router.push(`/lote-cadastrar?nome=${nome}`)}>
           📦 Cadastro em Lote
@@ -581,6 +547,44 @@ export default function InventarioPage({ params }) {
           🏷️ Cadastrar Bem Sem Etiqueta
         </Button>
       </div>
+
+      {isOwner && (
+        <div style={{ marginBottom: "24px" }}>
+          <h3>Opções do(a) Administrador(a)</h3>
+          <Button
+            onClick={() => router.push(`/inventario/${nome}/permissoes`)}
+            className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded transition duration-200"
+          >
+            🔐 Gerenciar Acesso
+          </Button>
+          <Button
+            onClick={() => router.push(`/inventario/${nome}/emails`)}
+            className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-200"
+          >
+            📧 Disparar Emails
+          </Button>
+          <Button
+            onClick={handleDuplicarInventario}
+            disabled={duplicandoInventario || excluindoInventario}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-200"
+            style={{
+              opacity: duplicandoInventario ? 0.7 : 1,
+            }}
+          >
+            {duplicandoInventario ? "Duplicando..." : "📋 Duplicar Inventário"}
+          </Button>
+          <Button
+            onClick={handleExcluirInventario}
+            disabled={excluindoInventario || duplicandoInventario}
+            className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-200"
+            style={{
+              opacity: excluindoInventario ? 0.7 : 1,
+            }}
+          >
+            {excluindoInventario ? "Excluindo..." : "🗑️ Excluir Inventário"}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

@@ -720,24 +720,6 @@ export default function RelatorioPorServidorPage({ params }) {
         </a>
       </h2>
 
-      {isOwner && (
-        <Button
-          onClick={() => router.push(`/inventario/${nome}/emails`)}
-          style={{
-            marginBottom: "15px",
-            backgroundColor: "#28a745",
-            color: "white",
-            border: "none",
-            padding: "8px 16px",
-            borderRadius: "4px",
-            cursor: "pointer",
-            fontWeight: "bold",
-          }}
-        >
-          📧 Disparar Emails para Servidores
-        </Button>
-      )}
-
       {/* Resumo Geral */}
       <div
         style={{
