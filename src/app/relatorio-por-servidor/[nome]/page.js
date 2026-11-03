@@ -2099,18 +2099,18 @@ export default function RelatorioPorServidorPage({ params }) {
               >
                 {MOTIVOS_NAO_LOCALIZACAO.map((opcao) => (
                   <label
-                    key={opcao.valor}
+                    key={opcao}
                     style={{
                       display: "flex",
-                      alignItems: "flex-start",
+                      alignItems: "center",
                       gap: "8px",
                       padding: "8px 10px",
                       border:
-                        justificativaForm.motivo === opcao.valor
+                        justificativaForm.motivo === opcao
                           ? "2px solid #007bff"
                           : "1px solid #ced4da",
                       backgroundColor:
-                        justificativaForm.motivo === opcao.valor
+                        justificativaForm.motivo === opcao
                           ? "#f0f7ff"
                           : "#fff",
                       borderRadius: "6px",
@@ -2121,17 +2121,22 @@ export default function RelatorioPorServidorPage({ params }) {
                     <input
                       type="radio"
                       name="motivoNaoLocalizacao"
-                      value={opcao.valor}
-                      checked={justificativaForm.motivo === opcao.valor}
+                      value={opcao}
+                      checked={justificativaForm.motivo === opcao}
                       onChange={(e) =>
                         setJustificativaForm({
                           ...justificativaForm,
                           motivo: e.target.value,
                         })
                       }
-                      style={{ marginTop: "3px" }}
+                      style={{
+                        width: "auto",
+                        display: "inline-block",
+                        margin: 0,
+                        cursor: "pointer",
+                      }}
                     />
-                    <span>{opcao.label}</span>
+                    <span>{opcao}</span>
                   </label>
                 ))}
               </div>
@@ -2169,18 +2174,18 @@ export default function RelatorioPorServidorPage({ params }) {
               >
                 {CONDICOES_ESTIMADAS.map((opcao) => (
                   <label
-                    key={opcao.valor}
+                    key={opcao}
                     style={{
                       display: "flex",
-                      alignItems: "flex-start",
+                      alignItems: "center",
                       gap: "8px",
                       padding: "8px 10px",
                       border:
-                        justificativaForm.condicaoEstimada === opcao.valor
+                        justificativaForm.condicaoEstimada === opcao
                           ? "2px solid #007bff"
                           : "1px solid #ced4da",
                       backgroundColor:
-                        justificativaForm.condicaoEstimada === opcao.valor
+                        justificativaForm.condicaoEstimada === opcao
                           ? "#f0f7ff"
                           : "#fff",
                       borderRadius: "6px",
@@ -2191,9 +2196,9 @@ export default function RelatorioPorServidorPage({ params }) {
                     <input
                       type="radio"
                       name="condicaoEstimada"
-                      value={opcao.valor}
+                      value={opcao}
                       checked={
-                        justificativaForm.condicaoEstimada === opcao.valor
+                        justificativaForm.condicaoEstimada === opcao
                       }
                       onChange={(e) =>
                         setJustificativaForm({
@@ -2201,9 +2206,14 @@ export default function RelatorioPorServidorPage({ params }) {
                           condicaoEstimada: e.target.value,
                         })
                       }
-                      style={{ marginTop: "3px" }}
+                      style={{
+                        width: "auto",
+                        display: "inline-block",
+                        margin: 0,
+                        cursor: "pointer",
+                      }}
                     />
-                    <span>{opcao.label}</span>
+                    <span>{opcao}</span>
                   </label>
                 ))}
               </div>
@@ -2241,18 +2251,18 @@ export default function RelatorioPorServidorPage({ params }) {
               >
                 {RELEVANCIAS_ATUAIS.map((opcao) => (
                   <label
-                    key={opcao.valor}
+                    key={opcao}
                     style={{
                       display: "flex",
-                      alignItems: "flex-start",
+                      alignItems: "center",
                       gap: "8px",
                       padding: "8px 10px",
                       border:
-                        justificativaForm.relevanciaAtual === opcao.valor
+                        justificativaForm.relevanciaAtual === opcao
                           ? "2px solid #007bff"
                           : "1px solid #ced4da",
                       backgroundColor:
-                        justificativaForm.relevanciaAtual === opcao.valor
+                        justificativaForm.relevanciaAtual === opcao
                           ? "#f0f7ff"
                           : "#fff",
                       borderRadius: "6px",
@@ -2263,9 +2273,9 @@ export default function RelatorioPorServidorPage({ params }) {
                     <input
                       type="radio"
                       name="relevanciaAtual"
-                      value={opcao.valor}
+                      value={opcao}
                       checked={
-                        justificativaForm.relevanciaAtual === opcao.valor
+                        justificativaForm.relevanciaAtual === opcao
                       }
                       onChange={(e) =>
                         setJustificativaForm({
@@ -2273,9 +2283,14 @@ export default function RelatorioPorServidorPage({ params }) {
                           relevanciaAtual: e.target.value,
                         })
                       }
-                      style={{ marginTop: "3px" }}
+                      style={{
+                        width: "auto",
+                        display: "inline-block",
+                        margin: 0,
+                        cursor: "pointer",
+                      }}
                     />
-                    <span>{opcao.label}</span>
+                    <span>{opcao}</span>
                   </label>
                 ))}
               </div>
