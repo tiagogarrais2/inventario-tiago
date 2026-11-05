@@ -24,8 +24,11 @@ export async function POST(request) {
       inventario,
       assunto,
       mensagem,
+      tipoFiltro,
       filtroMin,
       filtroMax,
+      qtdMin,
+      qtdMax,
       emailsManuais,
     } = await request.json();
 
@@ -104,25 +107,42 @@ export async function POST(request) {
       });
     }
 
-    // Modo filtro: validação dos filtros obrigatórios
-    if (filtroMin == null || filtroMax == null) {
-      return NextResponse.json(
-        {
-          error:
-            "Informe filtroMin e filtroMax para envio por filtro, ou emailsManuais para envio manual.",
-        },
-        { status: 400 }
-      );
-    }
+    // Modo filtro: validação dos filtros
+    const isPorQuantidade = tipoFiltro === "quantidade";
 
-    if (filtroMin < 0 || filtroMax > 100 || filtroMin > filtroMax) {
-      return NextResponse.json(
-        {
-          error:
-            "Faixa de filtro inválida. Min deve ser <= Max, entre 0 e 100.",
-        },
-        { status: 400 }
-      );
+    if (isPorQuantidade) {
+      if (qtdMin == null || qtdMin < 0) {
+        return NextResponse.json(
+          { error: "Informe um valor mínimo válido para a quantidade de pendências." },
+          { status: 400 }
+        );
+      }
+      if (qtdMax != null && qtdMax !== "" && Number(qtdMax) < Number(qtdMin)) {
+        return NextResponse.json(
+          { error: "Quantidade mínima não pode ser maior que a máxima." },
+          { status: 400 }
+        );
+      }
+    } else {
+      if (filtroMin == null || filtroMax == null) {
+        return NextResponse.json(
+          {
+            error:
+              "Informe filtroMin e filtroMax para envio por filtro, ou emailsManuais para envio manual.",
+          },
+          { status: 400 }
+        );
+      }
+
+      if (filtroMin < 0 || filtroMax > 100 || filtroMin > filtroMax) {
+        return NextResponse.json(
+          {
+            error:
+              "Faixa de filtro inválida. Min deve ser <= Max, entre 0 e 100.",
+          },
+          { status: 400 }
+        );
+      }
     }
 
     const proprietario = await isOwner(inventario, session.user.email);
@@ -139,7 +159,7 @@ export async function POST(request) {
       ItemInventarioService.findByInventario(inventario),
     ]);
 
-    // Calcular % de pendência de cada servidor
+    // Calcular % e quantidade de pendência de cada servidor
     const itensPorServidor = {};
     for (const item of itens) {
       const srv = item.cargaAtual || "Servidor não definido";
@@ -149,15 +169,29 @@ export async function POST(request) {
       if (!item.dataInventario) itensPorServidor[srv].pendentes++;
     }
 
-    // Filtrar servidores pela faixa de % pendente e que tenham email
+    // Filtrar servidores pela faixa selecionada (% ou quantidade) e que tenham email
     const destinatarios = [];
+    const minQtdNum = isPorQuantidade ? Number(qtdMin) : 0;
+    const maxQtdNum =
+      isPorQuantidade && qtdMax != null && qtdMax !== ""
+        ? Number(qtdMax)
+        : Infinity;
+
     for (const srv of servidores) {
       const stats = itensPorServidor[srv.nome];
       if (!stats || !srv.email) continue;
 
       const pct = stats.total > 0 ? (stats.pendentes / stats.total) * 100 : 0;
 
-      if (pct >= filtroMin && pct <= filtroMax) {
+      let atendeFiltro = false;
+      if (isPorQuantidade) {
+        atendeFiltro =
+          stats.pendentes >= minQtdNum && stats.pendentes <= maxQtdNum;
+      } else {
+        atendeFiltro = pct >= filtroMin && pct <= filtroMax;
+      }
+
+      if (atendeFiltro) {
         destinatarios.push({
           nome: srv.nome,
           email: srv.email,
@@ -196,8 +230,8 @@ export async function POST(request) {
       assunto,
       mensagem,
       destinatarios,
-      filtroMin,
-      filtroMax,
+      filtroMin: isPorQuantidade ? (qtdMin != null ? Number(qtdMin) : 0) : (filtroMin != null ? Number(filtroMin) : 0),
+      filtroMax: isPorQuantidade ? (qtdMax != null && qtdMax !== "" ? Number(qtdMax) : 999999) : (filtroMax != null ? Number(filtroMax) : 100),
       totalEnviados: destinatarios.length,
       status,
       erroDetalhes,

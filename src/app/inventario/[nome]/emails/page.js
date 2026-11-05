@@ -21,8 +21,11 @@ export default function EmailsPage({ params }) {
   const [historicoAberto, setHistoricoAberto] = useState(false);
 
   // Filtro
+  const [tipoEscala, setTipoEscala] = useState("porcentagem"); // "porcentagem" | "quantidade"
   const [filtroMin, setFiltroMin] = useState(0);
   const [filtroMax, setFiltroMax] = useState(100);
+  const [qtdMin, setQtdMin] = useState(1);
+  const [qtdMax, setQtdMax] = useState("");
 
   // Composição
   const [assunto, setAssunto] = useState("");
@@ -302,8 +305,15 @@ export default function EmailsPage({ params }) {
     .filter((s) => {
       const stats = itensPorServidor[s.nome];
       if (!stats) return false;
-      const pct = stats.total > 0 ? (stats.pendentes / stats.total) * 100 : 0;
-      return pct >= filtroMin && pct <= filtroMax;
+
+      if (tipoEscala === "quantidade") {
+        const minQtd = qtdMin !== "" ? Number(qtdMin) : 0;
+        const maxQtd = qtdMax !== "" && qtdMax != null ? Number(qtdMax) : Infinity;
+        return stats.pendentes >= minQtd && stats.pendentes <= maxQtd;
+      } else {
+        const pct = stats.total > 0 ? (stats.pendentes / stats.total) * 100 : 0;
+        return pct >= filtroMin && pct <= filtroMax;
+      }
     })
     .map((s) => {
       const stats = itensPorServidor[s.nome] || { total: 0, pendentes: 0 };
@@ -311,7 +321,11 @@ export default function EmailsPage({ params }) {
         stats.total > 0 ? Math.round((stats.pendentes / stats.total) * 100) : 0;
       return { ...s, ...stats, pct, email: emailsEditados[s.nome] || s.email };
     })
-    .sort((a, b) => b.pct - a.pct);
+    .sort((a, b) =>
+      tipoEscala === "quantidade"
+        ? b.pendentes - a.pendentes || b.pct - a.pct
+        : b.pct - a.pct || b.pendentes - a.pendentes
+    );
 
   const comEmail = servidoresFiltrados.filter((s) => s.email);
   const semEmail = servidoresFiltrados.filter((s) => !s.email);
@@ -381,8 +395,13 @@ export default function EmailsPage({ params }) {
       return;
     }
 
+    const descricaoFaixa =
+      tipoEscala === "quantidade"
+        ? `${qtdMin || 0} a ${qtdMax !== "" && qtdMax != null ? qtdMax : "∞"} itens pendentes`
+        : `${filtroMin}% a ${filtroMax}% de pendência`;
+
     const confirmar = confirm(
-      `Enviar email para ${comEmail.length} servidor(es) em CCO?\n\nAssunto: ${assunto}\nFaixa: ${filtroMin}% a ${filtroMax}% de pendência`
+      `Enviar email para ${comEmail.length} servidor(es) em CCO?\n\nAssunto: ${assunto}\nFiltro: ${descricaoFaixa}`
     );
     if (!confirmar) return;
 
@@ -395,8 +414,11 @@ export default function EmailsPage({ params }) {
           inventario: nome,
           assunto,
           mensagem,
+          tipoFiltro: tipoEscala,
           filtroMin,
           filtroMax,
+          qtdMin,
+          qtdMax,
         }),
       });
       const data = await res.json();
@@ -607,7 +629,7 @@ export default function EmailsPage({ params }) {
               </button>
             </div>
 
-            {/* Filtro de % */}
+            {/* Filtro por Pendência (% ou Quantidade) */}
             {modoEnvio === "filtro" && (
               <div
                 style={{
@@ -618,179 +640,432 @@ export default function EmailsPage({ params }) {
                   marginBottom: "20px",
                 }}
               >
-                <h4 style={{ margin: "0 0 10px 0" }}>
-                  🎯 Filtro por Pendência
-                </h4>
                 <div
                   style={{
                     display: "flex",
-                    gap: "15px",
+                    justifyContent: "space-between",
                     alignItems: "center",
+                    marginBottom: "12px",
                     flexWrap: "wrap",
+                    gap: "10px",
                   }}
                 >
-                  <div>
-                    <label style={{ fontWeight: "bold", fontSize: "14px" }}>
-                      Mínimo (%):
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={filtroMin}
-                      onChange={(e) =>
-                        setFiltroMin(
-                          Math.min(100, Math.max(0, Number(e.target.value)))
-                        )
-                      }
-                      style={{
-                        width: "80px",
-                        padding: "6px",
-                        marginLeft: "8px",
-                        border: "1px solid #ccc",
-                        borderRadius: "4px",
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ fontWeight: "bold", fontSize: "14px" }}>
-                      Máximo (%):
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={filtroMax}
-                      onChange={(e) =>
-                        setFiltroMax(
-                          Math.min(100, Math.max(0, Number(e.target.value)))
-                        )
-                      }
-                      style={{
-                        width: "80px",
-                        padding: "6px",
-                        marginLeft: "8px",
-                        border: "1px solid #ccc",
-                        borderRadius: "4px",
-                      }}
-                    />
-                  </div>
+                  <h4 style={{ margin: 0 }}>🎯 Filtro por Pendência</h4>
                   <div
                     style={{
-                      padding: "6px 12px",
+                      display: "flex",
+                      gap: "6px",
                       backgroundColor: "#e9ecef",
-                      borderRadius: "4px",
-                      fontSize: "14px",
+                      padding: "3px",
+                      borderRadius: "6px",
                     }}
                   >
-                    {servidoresFiltrados.length} servidor(es) na faixa •{" "}
-                    <strong style={{ color: "#28a745" }}>
-                      {comEmail.length} com email
-                    </strong>{" "}
-                    •{" "}
-                    <strong style={{ color: "#dc3545" }}>
-                      {semEmail.length} sem email
-                    </strong>
+                    <button
+                      type="button"
+                      onClick={() => setTipoEscala("porcentagem")}
+                      style={{
+                        padding: "4px 10px",
+                        fontSize: "12px",
+                        fontWeight: tipoEscala === "porcentagem" ? "bold" : "normal",
+                        backgroundColor:
+                          tipoEscala === "porcentagem" ? "#007bff" : "transparent",
+                        color: tipoEscala === "porcentagem" ? "#fff" : "#495057",
+                        border: "none",
+                        borderRadius: "4px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      📊 Porcentagem (%)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTipoEscala("quantidade")}
+                      style={{
+                        padding: "4px 10px",
+                        fontSize: "12px",
+                        fontWeight: tipoEscala === "quantidade" ? "bold" : "normal",
+                        backgroundColor:
+                          tipoEscala === "quantidade" ? "#007bff" : "transparent",
+                        color: tipoEscala === "quantidade" ? "#fff" : "#495057",
+                        border: "none",
+                        borderRadius: "4px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      🔢 Quantidade de itens
+                    </button>
                   </div>
                 </div>
-                {/* Atalhos */}
-                <div
-                  style={{
-                    marginTop: "10px",
-                    display: "flex",
-                    gap: "8px",
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <span style={{ fontSize: "13px", color: "#6c757d" }}>
-                    Atalhos:
-                  </span>
-                  <button
-                    onClick={() => {
-                      setFiltroMin(100);
-                      setFiltroMax(100);
-                    }}
-                    style={{
-                      padding: "2px 8px",
-                      fontSize: "12px",
-                      border: "1px solid #ccc",
-                      borderRadius: "3px",
-                      cursor: "pointer",
-                      backgroundColor: "#fff3cd",
-                      color: "black",
-                    }}
-                  >
-                    100% pendentes
-                  </button>
-                  <button
-                    onClick={() => {
-                      setFiltroMin(50);
-                      setFiltroMax(100);
-                    }}
-                    style={{
-                      padding: "2px 8px",
-                      fontSize: "12px",
-                      border: "1px solid #ccc",
-                      borderRadius: "3px",
-                      cursor: "pointer",
-                      backgroundColor: "#f8d7da",
-                      color: "black",
-                    }}
-                  >
-                    50%+ pendentes
-                  </button>
-                  <button
-                    onClick={() => {
-                      setFiltroMin(30);
-                      setFiltroMax(60);
-                    }}
-                    style={{
-                      padding: "2px 8px",
-                      fontSize: "12px",
-                      border: "1px solid #ccc",
-                      borderRadius: "3px",
-                      cursor: "pointer",
-                      backgroundColor: "#d4edda",
-                      color: "black",
-                    }}
-                  >
-                    30% a 60%
-                  </button>
-                  <button
-                    onClick={() => {
-                      setFiltroMin(1);
-                      setFiltroMax(100);
-                    }}
-                    style={{
-                      padding: "2px 8px",
-                      fontSize: "12px",
-                      border: "1px solid #ccc",
-                      borderRadius: "3px",
-                      cursor: "pointer",
-                      backgroundColor: "#d1ecf1",
-                      color: "black",
-                    }}
-                  >
-                    Qualquer pendência
-                  </button>
-                  <button
-                    onClick={() => {
-                      setFiltroMin(0);
-                      setFiltroMax(100);
-                    }}
-                    style={{
-                      padding: "2px 8px",
-                      fontSize: "12px",
-                      border: "1px solid #ccc",
-                      borderRadius: "3px",
-                      cursor: "pointer",
-                      backgroundColor: "#e9ecef",
-                      color: "black",
-                    }}
-                  >
-                    Todos
-                  </button>
-                </div>
+
+                {tipoEscala === "porcentagem" ? (
+                  <>
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "15px",
+                        alignItems: "center",
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <div>
+                        <label style={{ fontWeight: "bold", fontSize: "14px" }}>
+                          Mínimo (%):
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={filtroMin}
+                          onChange={(e) =>
+                            setFiltroMin(
+                              Math.min(100, Math.max(0, Number(e.target.value)))
+                            )
+                          }
+                          style={{
+                            width: "80px",
+                            padding: "6px",
+                            marginLeft: "8px",
+                            border: "1px solid #ccc",
+                            borderRadius: "4px",
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ fontWeight: "bold", fontSize: "14px" }}>
+                          Máximo (%):
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={filtroMax}
+                          onChange={(e) =>
+                            setFiltroMax(
+                              Math.min(100, Math.max(0, Number(e.target.value)))
+                            )
+                          }
+                          style={{
+                            width: "80px",
+                            padding: "6px",
+                            marginLeft: "8px",
+                            border: "1px solid #ccc",
+                            borderRadius: "4px",
+                          }}
+                        />
+                      </div>
+                      <div
+                        style={{
+                          padding: "6px 12px",
+                          backgroundColor: "#e9ecef",
+                          borderRadius: "4px",
+                          fontSize: "14px",
+                        }}
+                      >
+                        {servidoresFiltrados.length} servidor(es) na faixa •{" "}
+                        <strong style={{ color: "#28a745" }}>
+                          {comEmail.length} com email
+                        </strong>{" "}
+                        •{" "}
+                        <strong style={{ color: "#dc3545" }}>
+                          {semEmail.length} sem email
+                        </strong>
+                      </div>
+                    </div>
+                    {/* Atalhos Porcentagem */}
+                    <div
+                      style={{
+                        marginTop: "10px",
+                        display: "flex",
+                        gap: "8px",
+                        flexWrap: "wrap",
+                        alignItems: "center",
+                      }}
+                    >
+                      <span style={{ fontSize: "13px", color: "#6c757d" }}>
+                        Atalhos:
+                      </span>
+                      <button
+                        onClick={() => {
+                          setFiltroMin(100);
+                          setFiltroMax(100);
+                        }}
+                        style={{
+                          padding: "2px 8px",
+                          fontSize: "12px",
+                          border: "1px solid #ccc",
+                          borderRadius: "3px",
+                          cursor: "pointer",
+                          backgroundColor: "#fff3cd",
+                          color: "black",
+                        }}
+                      >
+                        100% pendentes
+                      </button>
+                      <button
+                        onClick={() => {
+                          setFiltroMin(50);
+                          setFiltroMax(100);
+                        }}
+                        style={{
+                          padding: "2px 8px",
+                          fontSize: "12px",
+                          border: "1px solid #ccc",
+                          borderRadius: "3px",
+                          cursor: "pointer",
+                          backgroundColor: "#f8d7da",
+                          color: "black",
+                        }}
+                      >
+                        50%+ pendentes
+                      </button>
+                      <button
+                        onClick={() => {
+                          setFiltroMin(30);
+                          setFiltroMax(60);
+                        }}
+                        style={{
+                          padding: "2px 8px",
+                          fontSize: "12px",
+                          border: "1px solid #ccc",
+                          borderRadius: "3px",
+                          cursor: "pointer",
+                          backgroundColor: "#d4edda",
+                          color: "black",
+                        }}
+                      >
+                        30% a 60%
+                      </button>
+                      <button
+                        onClick={() => {
+                          setFiltroMin(1);
+                          setFiltroMax(100);
+                        }}
+                        style={{
+                          padding: "2px 8px",
+                          fontSize: "12px",
+                          border: "1px solid #ccc",
+                          borderRadius: "3px",
+                          cursor: "pointer",
+                          backgroundColor: "#d1ecf1",
+                          color: "black",
+                        }}
+                      >
+                        Qualquer pendência
+                      </button>
+                      <button
+                        onClick={() => {
+                          setFiltroMin(0);
+                          setFiltroMax(100);
+                        }}
+                        style={{
+                          padding: "2px 8px",
+                          fontSize: "12px",
+                          border: "1px solid #ccc",
+                          borderRadius: "3px",
+                          cursor: "pointer",
+                          backgroundColor: "#e9ecef",
+                          color: "black",
+                        }}
+                      >
+                        Todos (0% a 100%)
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "15px",
+                        alignItems: "center",
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <div>
+                        <label style={{ fontWeight: "bold", fontSize: "14px" }}>
+                          Mínimo de itens:
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={qtdMin}
+                          onChange={(e) =>
+                            setQtdMin(
+                              e.target.value === ""
+                                ? ""
+                                : Math.max(0, Number(e.target.value))
+                            )
+                          }
+                          style={{
+                            width: "90px",
+                            padding: "6px",
+                            marginLeft: "8px",
+                            border: "1px solid #ccc",
+                            borderRadius: "4px",
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ fontWeight: "bold", fontSize: "14px" }}>
+                          Máximo de itens:
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          placeholder="Sem limite"
+                          value={qtdMax}
+                          onChange={(e) =>
+                            setQtdMax(
+                              e.target.value === ""
+                                ? ""
+                                : Math.max(0, Number(e.target.value))
+                            )
+                          }
+                          style={{
+                            width: "100px",
+                            padding: "6px",
+                            marginLeft: "8px",
+                            border: "1px solid #ccc",
+                            borderRadius: "4px",
+                          }}
+                        />
+                      </div>
+                      <div
+                        style={{
+                          padding: "6px 12px",
+                          backgroundColor: "#e9ecef",
+                          borderRadius: "4px",
+                          fontSize: "14px",
+                        }}
+                      >
+                        {servidoresFiltrados.length} servidor(es) na faixa •{" "}
+                        <strong style={{ color: "#28a745" }}>
+                          {comEmail.length} com email
+                        </strong>{" "}
+                        •{" "}
+                        <strong style={{ color: "#dc3545" }}>
+                          {semEmail.length} sem email
+                        </strong>
+                      </div>
+                    </div>
+                    {/* Atalhos Quantidade */}
+                    <div
+                      style={{
+                        marginTop: "10px",
+                        display: "flex",
+                        gap: "8px",
+                        flexWrap: "wrap",
+                        alignItems: "center",
+                      }}
+                    >
+                      <span style={{ fontSize: "13px", color: "#6c757d" }}>
+                        Atalhos:
+                      </span>
+                      <button
+                        onClick={() => {
+                          setQtdMin(1);
+                          setQtdMax("");
+                        }}
+                        style={{
+                          padding: "2px 8px",
+                          fontSize: "12px",
+                          border: "1px solid #ccc",
+                          borderRadius: "3px",
+                          cursor: "pointer",
+                          backgroundColor: "#d1ecf1",
+                          color: "black",
+                        }}
+                      >
+                        1+ itens
+                      </button>
+                      <button
+                        onClick={() => {
+                          setQtdMin(5);
+                          setQtdMax("");
+                        }}
+                        style={{
+                          padding: "2px 8px",
+                          fontSize: "12px",
+                          border: "1px solid #ccc",
+                          borderRadius: "3px",
+                          cursor: "pointer",
+                          backgroundColor: "#d4edda",
+                          color: "black",
+                        }}
+                      >
+                        5+ itens
+                      </button>
+                      <button
+                        onClick={() => {
+                          setQtdMin(10);
+                          setQtdMax("");
+                        }}
+                        style={{
+                          padding: "2px 8px",
+                          fontSize: "12px",
+                          border: "1px solid #ccc",
+                          borderRadius: "3px",
+                          cursor: "pointer",
+                          backgroundColor: "#fff3cd",
+                          color: "black",
+                        }}
+                      >
+                        10+ itens
+                      </button>
+                      <button
+                        onClick={() => {
+                          setQtdMin(20);
+                          setQtdMax("");
+                        }}
+                        style={{
+                          padding: "2px 8px",
+                          fontSize: "12px",
+                          border: "1px solid #ccc",
+                          borderRadius: "3px",
+                          cursor: "pointer",
+                          backgroundColor: "#f8d7da",
+                          color: "black",
+                        }}
+                      >
+                        20+ itens
+                      </button>
+                      <button
+                        onClick={() => {
+                          setQtdMin(50);
+                          setQtdMax("");
+                        }}
+                        style={{
+                          padding: "2px 8px",
+                          fontSize: "12px",
+                          border: "1px solid #ccc",
+                          borderRadius: "3px",
+                          cursor: "pointer",
+                          backgroundColor: "#f5c6cb",
+                          color: "black",
+                        }}
+                      >
+                        50+ itens
+                      </button>
+                      <button
+                        onClick={() => {
+                          setQtdMin(0);
+                          setQtdMax("");
+                        }}
+                        style={{
+                          padding: "2px 8px",
+                          fontSize: "12px",
+                          border: "1px solid #ccc",
+                          borderRadius: "3px",
+                          cursor: "pointer",
+                          backgroundColor: "#e9ecef",
+                          color: "black",
+                        }}
+                      >
+                        Todos (0+)
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             )}
 
@@ -1820,8 +2095,12 @@ export default function EmailsPage({ params }) {
                     {envio.remetente?.nome || envio.remetente?.email}
                   </div>
                   <div style={{ fontSize: "13px", marginBottom: "5px" }}>
-                    <strong>Filtro:</strong> {envio.filtroMin}% a{" "}
-                    {envio.filtroMax}% de pendência
+                    <strong>Filtro:</strong>{" "}
+                    {envio.filtroMin == null && envio.filtroMax == null
+                      ? "Envio manual"
+                      : envio.filtroMax > 100
+                      ? `${envio.filtroMin} a ${envio.filtroMax >= 999999 ? "∞" : envio.filtroMax} itens pendentes`
+                      : `${envio.filtroMin}% a ${envio.filtroMax}% de pendência`}
                   </div>
                   <div style={{ fontSize: "13px", marginBottom: "5px" }}>
                     <strong>Status:</strong>{" "}
