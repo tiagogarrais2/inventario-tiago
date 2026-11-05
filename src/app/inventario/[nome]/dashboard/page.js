@@ -545,6 +545,271 @@ function InventarioDashboardClient({ nomeInventario }) {
           </div>
         </div>
 
+        {/* Ritmo de Conferência dos Últimos Dias */}
+        <div
+          style={{
+            backgroundColor: "white",
+            borderRadius: "8px",
+            boxShadow: "var(--shadow)",
+            marginBottom: "32px",
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              padding: "20px 24px",
+              borderBottom: "1px solid var(--border-color)",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "10px",
+            }}
+          >
+            <div>
+              <h2
+                style={{
+                  fontSize: "20px",
+                  fontWeight: "700",
+                  color: "var(--primary-color)",
+                  margin: "0 0 4px 0",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                }}
+              >
+                <span>📅</span>
+                Ritmo de Conferência Recente
+              </h2>
+              <p
+                style={{
+                  fontSize: "13px",
+                  color: "var(--text-color)",
+                  opacity: 0.7,
+                  margin: 0,
+                }}
+              >
+                Acompanhamento da velocidade de trabalho e itens conferidos por período
+              </p>
+            </div>
+            <div
+              style={{
+                fontSize: "12px",
+                backgroundColor: "var(--light-bg)",
+                padding: "4px 10px",
+                borderRadius: "12px",
+                fontWeight: "500",
+                color: "var(--text-color)",
+              }}
+            >
+              Últimos 14 dias
+            </div>
+          </div>
+
+          <div style={{ padding: "24px" }}>
+            {/* 4 Cards de Resumo Rápido */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+                gap: "16px",
+                marginBottom: "24px",
+              }}
+            >
+              <div
+                style={{
+                  backgroundColor: "#f0fdf4",
+                  border: "1px solid #bbf7d0",
+                  borderRadius: "8px",
+                  padding: "16px",
+                  textAlign: "center",
+                }}
+              >
+                <div style={{ fontSize: "12px", color: "#166534", fontWeight: "600", textTransform: "uppercase" }}>
+                  Hoje
+                </div>
+                <div style={{ fontSize: "28px", fontWeight: "bold", color: "#15803d", marginTop: "4px" }}>
+                  {dados?.estatisticas?.ritmo?.hoje ?? 0}
+                </div>
+                <div style={{ fontSize: "11px", color: "#166534", opacity: 0.8, marginTop: "2px" }}>
+                  itens conferidos
+                </div>
+              </div>
+
+              <div
+                style={{
+                  backgroundColor: "#eff6ff",
+                  border: "1px solid #bfdbfe",
+                  borderRadius: "8px",
+                  padding: "16px",
+                  textAlign: "center",
+                }}
+              >
+                <div style={{ fontSize: "12px", color: "#1e40af", fontWeight: "600", textTransform: "uppercase" }}>
+                  Ontem
+                </div>
+                <div style={{ fontSize: "28px", fontWeight: "bold", color: "#2563eb", marginTop: "4px" }}>
+                  {dados?.estatisticas?.ritmo?.ontem ?? 0}
+                </div>
+                <div style={{ fontSize: "11px", color: "#1e40af", opacity: 0.8, marginTop: "2px" }}>
+                  itens conferidos
+                </div>
+              </div>
+
+              <div
+                style={{
+                  backgroundColor: "#faf5ff",
+                  border: "1px solid #e9d5ff",
+                  borderRadius: "8px",
+                  padding: "16px",
+                  textAlign: "center",
+                }}
+              >
+                <div style={{ fontSize: "12px", color: "#6b21a8", fontWeight: "600", textTransform: "uppercase" }}>
+                  Últimos 7 dias
+                </div>
+                <div style={{ fontSize: "28px", fontWeight: "bold", color: "#7e22ce", marginTop: "4px" }}>
+                  {dados?.estatisticas?.ritmo?.ultimos7Dias ?? 0}
+                </div>
+                <div style={{ fontSize: "11px", color: "#6b21a8", opacity: 0.8, marginTop: "2px" }}>
+                  média ~{Math.round((dados?.estatisticas?.ritmo?.ultimos7Dias || 0) / 7)}/dia
+                </div>
+              </div>
+
+              <div
+                style={{
+                  backgroundColor: "#fffbeb",
+                  border: "1px solid #fde68a",
+                  borderRadius: "8px",
+                  padding: "16px",
+                  textAlign: "center",
+                }}
+              >
+                <div style={{ fontSize: "12px", color: "#92400e", fontWeight: "600", textTransform: "uppercase" }}>
+                  Últimos 30 dias
+                </div>
+                <div style={{ fontSize: "28px", fontWeight: "bold", color: "#b45309", marginTop: "4px" }}>
+                  {dados?.estatisticas?.ritmo?.ultimos30Dias ?? 0}
+                </div>
+                <div style={{ fontSize: "11px", color: "#92400e", opacity: 0.8, marginTop: "2px" }}>
+                  média ~{Math.round((dados?.estatisticas?.ritmo?.ultimos30Dias || 0) / 30)}/dia
+                </div>
+              </div>
+            </div>
+
+            {/* Gráfico de Barras Diário (Últimos 14 dias) */}
+            {dados?.estatisticas?.ritmo?.historicoDias && (
+              <div>
+                <h4
+                  style={{
+                    fontSize: "14px",
+                    fontWeight: "600",
+                    color: "var(--text-color)",
+                    margin: "0 0 16px 0",
+                  }}
+                >
+                  Itens conferidos dia a dia (Últimas 2 semanas)
+                </h4>
+
+                {(() => {
+                  const dias = dados.estatisticas.ritmo.historicoDias;
+                  const maxQtd = Math.max(...dias.map((d) => d.quantidade), 1);
+                  const totalPeriodo = dias.reduce((acc, cur) => acc + cur.quantidade, 0);
+
+                  if (totalPeriodo === 0) {
+                    return (
+                      <div
+                        style={{
+                          padding: "20px",
+                          textAlign: "center",
+                          color: "var(--text-color)",
+                          opacity: 0.6,
+                          backgroundColor: "var(--light-bg)",
+                          borderRadius: "6px",
+                          fontSize: "13px",
+                        }}
+                      >
+                        Nenhum item foi inventariado nos últimos 14 dias.
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "flex-end",
+                        justifyContent: "space-between",
+                        gap: "6px",
+                        height: "150px",
+                        padding: "10px 0 0 0",
+                        borderBottom: "2px solid #e5e7eb",
+                      }}
+                    >
+                      {dias.map((d, idx) => {
+                        const alturaPct = Math.round((d.quantidade / maxQtd) * 100);
+                        const isHoje = idx === dias.length - 1;
+                        return (
+                          <div
+                            key={d.data}
+                            style={{
+                              flex: 1,
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "center",
+                              height: "100%",
+                              justifyContent: "flex-end",
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: "11px",
+                                fontWeight: "bold",
+                                color: d.quantidade > 0 ? (isHoje ? "#15803d" : "#2563eb") : "#9ca3af",
+                                marginBottom: "4px",
+                              }}
+                            >
+                              {d.quantidade > 0 ? d.quantidade : ""}
+                            </span>
+                            <div
+                              title={`${d.dataFormatada}: ${d.quantidade} item(ns)`}
+                              style={{
+                                width: "100%",
+                                maxWidth: "34px",
+                                height: `${Math.max(alturaPct, d.quantidade > 0 ? 8 : 2)}%`,
+                                backgroundColor: d.quantidade === 0
+                                  ? "#e5e7eb"
+                                  : isHoje
+                                  ? "#22c55e"
+                                  : "#3b82f6",
+                                borderRadius: "4px 4px 0 0",
+                                transition: "height 0.3s ease",
+                                cursor: "pointer",
+                              }}
+                            />
+                            <span
+                              style={{
+                                fontSize: "10px",
+                                color: isHoje ? "#15803d" : "var(--text-color)",
+                                fontWeight: isHoje ? "bold" : "normal",
+                                opacity: isHoje ? 1 : 0.7,
+                                marginTop: "6px",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {isHoje ? "Hoje" : d.dataFormatada}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Progresso por Sala */}
         <div
           className="page-break-before no-break-inside"

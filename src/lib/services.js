@@ -391,25 +391,112 @@ class InventarioService {
 
   static async getEstatisticasInventario(inventarioId) {
     try {
-      // Buscar estatísticas específicas do inventário
-      const [totalItens, itensInventariados, totalCorrecoes, totalSalas] =
-        await Promise.all([
-          prisma.itemInventario.count({
-            where: { inventarioId },
-          }),
-          prisma.itemInventario.count({
-            where: {
-              inventarioId,
-              dataInventario: { not: null },
+      // Datas para cálculo do ritmo diário e recente
+      const agora = new Date();
+      const inicioHoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
+      const inicioOntem = new Date(inicioHoje);
+      inicioOntem.setDate(inicioOntem.getDate() - 1);
+      const inicio7Dias = new Date(inicioHoje);
+      inicio7Dias.setDate(inicio7Dias.getDate() - 6); // últimos 7 dias incluindo hoje
+      const inicio30Dias = new Date(inicioHoje);
+      inicio30Dias.setDate(inicio30Dias.getDate() - 29); // últimos 30 dias incluindo hoje
+
+      // Buscar estatísticas gerais e recortes temporais
+      const [
+        totalItens,
+        itensInventariados,
+        totalCorrecoes,
+        totalSalas,
+        itensHoje,
+        itensOntem,
+        itensUltimos7Dias,
+        itensUltimos30Dias,
+        itensRecentesPorData,
+      ] = await Promise.all([
+        prisma.itemInventario.count({
+          where: { inventarioId },
+        }),
+        prisma.itemInventario.count({
+          where: {
+            inventarioId,
+            dataInventario: { not: null },
+          },
+        }),
+        prisma.correcaoItem.count({
+          where: { inventarioId },
+        }),
+        prisma.sala.count({
+          where: { inventarioId },
+        }),
+        prisma.itemInventario.count({
+          where: {
+            inventarioId,
+            dataInventario: { gte: inicioHoje },
+          },
+        }),
+        prisma.itemInventario.count({
+          where: {
+            inventarioId,
+            dataInventario: {
+              gte: inicioOntem,
+              lt: inicioHoje,
             },
-          }),
-          prisma.correcaoItem.count({
-            where: { inventarioId },
-          }),
-          prisma.sala.count({
-            where: { inventarioId },
-          }),
-        ]);
+          },
+        }),
+        prisma.itemInventario.count({
+          where: {
+            inventarioId,
+            dataInventario: { gte: inicio7Dias },
+          },
+        }),
+        prisma.itemInventario.count({
+          where: {
+            inventarioId,
+            dataInventario: { gte: inicio30Dias },
+          },
+        }),
+        // Buscar itens dos últimos 14 dias para compor o histórico dia a dia
+        prisma.itemInventario.findMany({
+          where: {
+            inventarioId,
+            dataInventario: {
+              gte: new Date(inicioHoje.getTime() - 13 * 24 * 60 * 60 * 1000),
+            },
+          },
+          select: {
+            dataInventario: true,
+          },
+        }),
+      ]);
+
+      // Agrupar contagem por dia para os últimos 14 dias
+      const contagemPorDiaMap = {};
+      for (let i = 13; i >= 0; i--) {
+        const d = new Date(inicioHoje.getTime() - i * 24 * 60 * 60 * 1000);
+        const chaveDia = d.toISOString().split("T")[0]; // YYYY-MM-DD
+        contagemPorDiaMap[chaveDia] = 0;
+      }
+
+      itensRecentesPorData.forEach((item) => {
+        if (item.dataInventario) {
+          const d = new Date(item.dataInventario);
+          const chaveDia = d.toISOString().split("T")[0];
+          if (contagemPorDiaMap[chaveDia] !== undefined) {
+            contagemPorDiaMap[chaveDia]++;
+          }
+        }
+      });
+
+      const historicoDias = Object.keys(contagemPorDiaMap)
+        .sort()
+        .map((dataIso) => {
+          const [ano, mes, dia] = dataIso.split("-");
+          return {
+            data: dataIso,
+            dataFormatada: `${dia}/${mes}`,
+            quantidade: contagemPorDiaMap[dataIso],
+          };
+        });
 
       const itensNaoInventariados = totalItens - itensInventariados;
       const percentualConcluido =
@@ -424,6 +511,13 @@ class InventarioService {
         totalCorrecoes,
         totalSalas,
         percentualConcluido,
+        ritmo: {
+          hoje: itensHoje,
+          ontem: itensOntem,
+          ultimos7Dias: itensUltimos7Dias,
+          ultimos30Dias: itensUltimos30Dias,
+          historicoDias,
+        },
       };
     } catch (error) {
       console.error(
